@@ -1,0 +1,75 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: rooms
+// Fields:
+//   - name: string (required)
+//   - description: string (optional)
+//
+// Collection: bookings
+// Fields:
+//   - roomId: string (required)
+//   - date: string (required, YYYY-MM-DD)
+//   - startTime: string (required, HH:mm)
+//   - endTime: string (required, HH:mm)
+//   - userName: string (required)
+//   - userEmail: string (required)
+//   - createdAt: timestamp (required)
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "bbrendaribeiroc@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function isValidBooking(data) {
+      return data.keys().hasAll(['roomId', 'date', 'startTime', 'endTime', 'userName', 'userEmail', 'createdAt']) &&
+             data.roomId is string && data.roomId.size() > 0 &&
+             data.date is string && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
+             data.startTime is string && data.startTime.matches('^\\d{2}:\\d{2}$') &&
+             data.endTime is string && data.endTime.matches('^\\d{2}:\\d{2}$') &&
+             data.userName is string && data.userName.size() > 0 && data.userName.size() < 100 &&
+             data.userEmail is string && data.userEmail.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$') &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /rooms/{roomId} {
+      allow read: if true; // Publicly readable to see room names
+      allow write: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      // For availability check, we need to read bookings. 
+      // To prevent PII leak, we could restrict read to admin, 
+      // but then how do users check availability?
+      // For this prototype, we allow read but warn the user.
+      allow read: if true; 
+      
+      allow create: if isValidBooking(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
