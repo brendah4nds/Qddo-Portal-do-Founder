@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   collection, 
   deleteDoc, 
   doc, 
-  setDoc 
+  setDoc,
+  onSnapshot,
+  query,
+  orderBy
 } from 'firebase/firestore';
 import { 
   signOut,
@@ -13,10 +16,13 @@ import {
   Settings, 
   AlertCircle, 
   Trash2, 
-  Plus
+  Plus,
+  Globe,
+  Lock,
+  CheckSquare
 } from 'lucide-react';
-import { db, auth } from '../firebase';
-import { Room, Booking } from '../types';
+import { db, auth, handleFirestoreError, OperationType } from '../firebase';
+import { Room, Booking, Challenge } from '../types';
 import { ConfirmationModal } from './ConfirmationModal';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -48,7 +54,8 @@ export function AdminPanel({
   isAdmin: boolean;
   founders?: any[];
 }) {
-  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders'>('bookings');
+  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges'>('bookings');
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [newHour, setNewHour] = useState('');
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -102,6 +109,18 @@ export function AdminPanel({
     return dateB.getTime() - dateA.getTime();
   });
 
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const q = query(collection(db, 'challenges'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const allChallenges = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+      setChallenges(allChallenges);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'challenges'));
+
+    return () => unsubscribe();
+  }, [isAdmin]);
+
   const handleDelete = async (id: string) => {
     setModalConfig({
       isOpen: true,
@@ -112,6 +131,24 @@ export function AdminPanel({
       onConfirm: async () => {
         try {
           await deleteDoc(doc(db, 'bookings', id));
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
+  };
+
+  const handleDeleteChallenge = (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Excluir Desafio',
+      message: 'Tem certeza que deseja excluir este desafio? Esta ação não pode ser desfeita.',
+      variant: 'danger',
+      confirmText: 'Excluir',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'challenges', id));
+          setModalConfig(prev => ({ ...prev, isOpen: false }));
         } catch (error) {
           console.error(error);
         }
@@ -177,6 +214,15 @@ export function AdminPanel({
           )}
         >
           Usuários
+        </button>
+        <button 
+          onClick={() => setAdminTab('challenges')}
+          className={cn(
+            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
+            adminTab === 'challenges' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          Desafios
         </button>
       </div>
 
@@ -285,6 +331,69 @@ export function AdminPanel({
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {adminTab === 'challenges' && (
+        <section className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-stone-50 border-b border-stone-100">
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Desafio</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Tipo</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Status</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Autor</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {challenges.map(challenge => {
+                  const founder = founders.find(f => f.id === challenge.founderId);
+                  return (
+                    <tr key={challenge.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                      <td className="px-8 py-6">
+                        <div className="font-bold text-stone-900">{challenge.title}</div>
+                        <div className="text-xs text-stone-400 line-clamp-1">{challenge.description}</div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-2 text-xs font-bold text-stone-600">
+                          {challenge.type === 'private' ? <Lock size={12} /> : <Globe size={12} />}
+                          {challenge.type === 'private' ? 'Privado' : 'Público'}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
+                          challenge.status === 'completed' ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                        )}>
+                          {challenge.status === 'completed' ? 'Concluído' : 'Aberto'}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="font-bold text-stone-900 text-xs">{founder?.name || 'Desconhecido'}</div>
+                        <div className="text-[10px] text-stone-400">@{challenge.founderId.slice(0, 8)}</div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <button 
+                          onClick={() => handleDeleteChallenge(challenge.id)}
+                          className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
+                        >
+                          <Trash2 size={14} />
+                          <span>Excluir</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {challenges.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-20 text-center text-stone-400 italic">Nenhum desafio encontrado.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

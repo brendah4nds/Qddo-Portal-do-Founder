@@ -40,11 +40,13 @@ function cn(...inputs: ClassValue[]) {
 export function FounderPortal({ 
   user, 
   activeSubTab,
-  isAdmin
+  isAdmin,
+  founders = []
 }: { 
   user: User | null; 
   activeSubTab: string;
   isAdmin: boolean;
+  founders?: any[];
 }) {
   const [founder, setFounder] = useState<Founder | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -224,7 +226,7 @@ export function FounderPortal({
     );
   }
 
-  if (!founder) {
+  if (!founder && !isAdmin) {
     return (
       <div className="text-center py-20">
         <h2 className="text-3xl font-serif italic mb-4">Perfil não encontrado</h2>
@@ -244,7 +246,7 @@ export function FounderPortal({
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between mb-12">
         <div>
-          <h2 className="text-4xl font-serif italic mb-2">Olá, {founder.name}</h2>
+          <h2 className="text-4xl font-serif italic mb-2">Olá, {founder?.name || user.displayName || 'Admin'}</h2>
           <p className="text-stone-500 font-serif italic">Portal Founders • {activeSubTab.replace('-', ' ')}</p>
         </div>
         <button 
@@ -483,7 +485,9 @@ export function FounderPortal({
                         <div className="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center text-stone-400">
                           <UserIcon size={12} />
                         </div>
-                        <span className="text-xs font-bold text-stone-900">@{challenge.founderId.slice(0, 6)}</span>
+                        <span className="text-xs font-bold text-stone-900">
+                          {founders.find(f => f.id === challenge.founderId)?.name || `@${challenge.founderId.slice(0, 6)}`}
+                        </span>
                       </div>
                     </div>
                   )}

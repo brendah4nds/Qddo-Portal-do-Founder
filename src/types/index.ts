@@ -30,6 +30,7 @@ export interface Founder {
     bio: string;
   };
   registeredAt: any;
+  role?: 'user' | 'admin';
 }
 
 export interface Challenge {

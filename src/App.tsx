@@ -373,6 +373,7 @@ export default function App() {
                 user={user} 
                 activeSubTab={activeSubTab}
                 isAdmin={isAdmin}
+                founders={allFounders}
               />
             ) : view === 'chat' ? (
               <Chat user={user} />
