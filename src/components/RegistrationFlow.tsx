@@ -30,7 +30,8 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
           name: formData.companyName,
           bio: formData.companyBio
         },
-        registeredAt: serverTimestamp()
+        registeredAt: serverTimestamp(),
+        role: 'user'
       });
       onComplete();
     } catch (error) {

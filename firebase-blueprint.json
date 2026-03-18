@@ -71,7 +71,8 @@
             "bio": { "type": "string" }
           }
         },
-        "registeredAt": { "type": "string", "format": "date-time" }
+        "registeredAt": { "type": "string", "format": "date-time" },
+        "role": { "type": "string", "enum": ["user", "admin"] }
       },
       "required": ["name", "username", "registeredAt"]
     },

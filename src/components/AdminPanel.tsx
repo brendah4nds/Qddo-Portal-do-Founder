@@ -37,7 +37,8 @@ export function AdminPanel({
   rooms, 
   bookings, 
   businessHours,
-  isAdmin 
+  isAdmin,
+  founders = []
 }: { 
   user: User | null; 
   onLogin: () => void; 
@@ -45,8 +46,9 @@ export function AdminPanel({
   bookings: Booking[]; 
   businessHours: string[];
   isAdmin: boolean;
+  founders?: any[];
 }) {
-  const [adminTab, setAdminTab] = useState<'bookings' | 'settings'>('bookings');
+  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders'>('bookings');
   const [newHour, setNewHour] = useState('');
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -167,6 +169,15 @@ export function AdminPanel({
         >
           Configurações
         </button>
+        <button 
+          onClick={() => setAdminTab('founders')}
+          className={cn(
+            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
+            adminTab === 'founders' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          Usuários
+        </button>
       </div>
 
       {adminTab === 'bookings' && (
@@ -214,6 +225,66 @@ export function AdminPanel({
                     <td colSpan={4} className="px-8 py-20 text-center text-stone-400 italic">Nenhum agendamento encontrado.</td>
                   </tr>
                 )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {adminTab === 'founders' && (
+        <section className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-stone-50 border-b border-stone-100">
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Nome</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Empresa</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Role</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {founders.map(founder => (
+                  <tr key={founder.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                    <td className="px-8 py-6">
+                      <div className="font-bold text-stone-900">{founder.name}</div>
+                      <div className="text-xs text-stone-400">@{founder.username}</div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="font-serif italic text-stone-700">{founder.company?.name || 'N/A'}</div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <span className={cn(
+                        "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                        founder.role === 'admin' ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-400"
+                      )}>
+                        {founder.role || 'user'}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      {founder.id !== user.uid && (
+                        <button 
+                          onClick={async () => {
+                            const newRole = founder.role === 'admin' ? 'user' : 'admin';
+                            setModalConfig({
+                              isOpen: true,
+                              title: "Alterar Permissão",
+                              message: `Deseja alterar o cargo de ${founder.name} para ${newRole}?`,
+                              confirmText: "Confirmar",
+                              variant: "primary",
+                              onConfirm: async () => {
+                                await setDoc(doc(db, 'founders', founder.id), { ...founder, role: newRole });
+                              }
+                            });
+                          }}
+                          className="text-xs font-bold text-stone-900 hover:underline"
+                        >
+                          Tornar {founder.role === 'admin' ? 'User' : 'Admin'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

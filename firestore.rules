@@ -73,7 +73,8 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && 
-        (request.auth.token.email == "bbrendaribeiroc@gmail.com" && request.auth.token.email_verified == true);
+        (request.auth.token.email == "bbrendaribeiroc@gmail.com" || 
+         get(/databases/$(database)/documents/founders/$(request.auth.uid)).data.role == 'admin');
     }
 
     function isOwner(userId) {
@@ -95,7 +96,8 @@ service cloud.firestore {
       return data.keys().hasAll(['name', 'username', 'registeredAt']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
              data.username is string && data.username.size() > 0 && data.username.size() < 50 &&
-             data.registeredAt is timestamp;
+             data.registeredAt is timestamp &&
+             (!('role' in data) || data.role in ['user', 'admin']);
     }
 
     function isValidChallenge(data) {
@@ -142,7 +144,12 @@ service cloud.firestore {
 
     match /founders/{founderId} {
       allow read: if true;
-      allow write: if isOwner(founderId) && isValidFounder(request.resource.data);
+      allow write: if isAuthenticated() && (
+        isAdmin() || 
+        (isOwner(founderId) && isValidFounder(request.resource.data) && 
+         (!('role' in request.resource.data) || 
+          request.resource.data.role == (resource == null ? 'user' : resource.data.role)))
+      );
     }
 
     match /challenges/{challengeId} {
@@ -150,10 +157,10 @@ service cloud.firestore {
                     isOwner(resource.data.founderId) || 
                     isAdmin();
       allow create: if isAuthenticated() && 
-                      isOwner(request.resource.data.founderId) && 
+                      (isOwner(request.resource.data.founderId) || isAdmin()) && 
                       isValidChallenge(request.resource.data);
       allow update: if isAuthenticated() && 
-                      isOwner(resource.data.founderId) && 
+                      (isOwner(resource.data.founderId) || isAdmin()) && 
                       isValidChallenge(request.resource.data);
       allow delete: if isAuthenticated() && 
                       (isOwner(resource.data.founderId) || isAdmin());
@@ -162,7 +169,10 @@ service cloud.firestore {
     match /comments/{commentId} {
       allow read: if isAuthenticated(); 
       allow create: if isAuthenticated() && 
-                      isOwner(request.resource.data.userId) && 
+                      (isOwner(request.resource.data.userId) || isAdmin()) && 
+                      isValidComment(request.resource.data);
+      allow update: if isAuthenticated() && 
+                      (isOwner(resource.data.userId) || isAdmin()) && 
                       isValidComment(request.resource.data);
       allow delete: if isAuthenticated() && 
                       (isOwner(resource.data.userId) || isAdmin());

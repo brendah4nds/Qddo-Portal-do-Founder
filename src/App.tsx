@@ -67,6 +67,7 @@ export default function App() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [founderData, setFounderData] = useState<any>(null);
   const [checkingFounder, setCheckingFounder] = useState(true);
+  const [allFounders, setAllFounders] = useState<any[]>([]);
 
   const toggleTopic = (topic: string) => {
     setExpandedTopics(prev => 
@@ -146,12 +147,21 @@ export default function App() {
       }
     }, (err) => handleFirestoreError(err, OperationType.GET, 'settings/global'));
 
+    let foundersUnsubscribe = () => {};
+    if (user?.email === ADMIN_EMAIL || founderData?.role === 'admin') {
+      foundersUnsubscribe = onSnapshot(collection(db, 'founders'), (snapshot) => {
+        const foundersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setAllFounders(foundersData);
+      }, (err) => handleFirestoreError(err, OperationType.LIST, 'founders'));
+    }
+
     return () => {
       roomsUnsubscribe();
       bookingsUnsubscribe();
       settingsUnsubscribe();
+      foundersUnsubscribe();
     };
-  }, [user]);
+  }, [user, founderData]);
 
   const seedRooms = async () => {
     const initialRooms = [
@@ -180,7 +190,7 @@ export default function App() {
 
   const handleLogout = () => signOut(auth);
 
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isAdmin = user?.email === ADMIN_EMAIL || founderData?.role === 'admin';
 
   if (loading || (user && checkingFounder)) {
     return (
@@ -356,6 +366,7 @@ export default function App() {
                 bookings={bookings} 
                 businessHours={businessHours}
                 isAdmin={isAdmin}
+                founders={allFounders}
               />
             ) : view === 'portal' ? (
               <FounderPortal 
