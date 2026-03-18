@@ -31,7 +31,8 @@ import {
   CheckSquare,
   LayoutDashboard,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  MessageSquare
 } from 'lucide-react';
 import { db, auth, handleFirestoreError, OperationType } from './firebase';
 import { Room, Booking, BookingStatus } from './types';
@@ -40,6 +41,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { FounderPortal } from './components/FounderPortal';
 import { LandingPage } from './components/LandingPage';
 import { RegistrationFlow } from './components/RegistrationFlow';
+import { Chat } from './components/Chat';
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "bbrendaribeiroc@gmail.com";
 
@@ -55,7 +57,7 @@ export default function App() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [businessHours, setBusinessHours] = useState<string[]>(DEFAULT_BUSINESS_HOURS);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'booking' | 'admin' | 'portal'>('booking');
+  const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat'>('booking');
   const [activeSubTab, setActiveSubTab] = useState<string>('escolha-sala');
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
@@ -305,16 +307,21 @@ export default function App() {
                     { id: 'checkin', label: 'Checkin', icon: CheckSquare },
                     { id: 'empresa', label: 'Empresa', icon: Building2 },
                     { id: 'desafios-privados', label: 'Desafios Privados', icon: Lock },
-                    { id: 'desafios-publicos', label: 'Desafios Públicos', icon: Globe }
+                    { id: 'desafios-publicos', label: 'Desafios Públicos', icon: Globe },
+                    { id: 'bate-papo', label: 'Bate-papo', icon: MessageSquare }
                   ].map(sub => (
                     <button
                       key={sub.id}
                       onClick={() => {
-                        setView('portal');
+                        if (sub.id === 'bate-papo') {
+                          setView('chat');
+                        } else {
+                          setView('portal');
+                        }
                         setActiveSubTab(sub.id);
                       }}
                       className={`block w-full text-left px-4 py-2 text-sm transition-all rounded-r-lg ${
-                        view === 'portal' && activeSubTab === sub.id 
+                        (view === 'portal' || view === 'chat') && activeSubTab === sub.id 
                         ? "text-stone-900 font-bold border-l-2 border-stone-900 -ml-[2px] bg-stone-50" 
                         : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
                       }`}
@@ -356,6 +363,8 @@ export default function App() {
                 activeSubTab={activeSubTab}
                 isAdmin={isAdmin}
               />
+            ) : view === 'chat' ? (
+              <Chat user={user} />
             ) : (
               <BookingFlow 
                 rooms={rooms} 

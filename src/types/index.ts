@@ -44,3 +44,23 @@ export interface Challenge {
   createdAt: any;
   completedAt?: any;
 }
+
+export interface Comment {
+  id: string;
+  challengeId: string;
+  userId: string;
+  userName: string;
+  userPhoto?: string;
+  text: string;
+  createdAt: any;
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderPhoto?: string;
+  receiverId?: string; // If undefined, it's a public message
+  text: string;
+  createdAt: any;
+}

@@ -38,6 +38,22 @@
 //   - createdAt: timestamp (required)
 //   - completedAt: timestamp (optional)
 //
+// Collection: comments
+// Fields:
+//   - challengeId: string (required)
+//   - authorId: string (required)
+//   - authorName: string (required)
+//   - content: string (required)
+//   - createdAt: timestamp (required)
+//
+// Collection: messages
+// Fields:
+//   - chatId: string (required)
+//   - senderId: string (required)
+//   - senderName: string (required)
+//   - content: string (required)
+//   - createdAt: timestamp (required)
+//
 // ===============================================================
 
 rules_version = '2';
@@ -88,6 +104,24 @@ service cloud.firestore {
              data.createdAt is timestamp;
     }
 
+    function isValidComment(data) {
+      return data.keys().hasAll(['challengeId', 'authorId', 'authorName', 'content', 'createdAt']) &&
+             data.challengeId is string &&
+             data.authorId is string &&
+             data.authorName is string && data.authorName.size() > 0 &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 1000 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['chatId', 'senderId', 'senderName', 'content', 'createdAt']) &&
+             data.chatId is string &&
+             data.senderId is string &&
+             data.senderName is string && data.senderName.size() > 0 &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 2000 &&
+             data.createdAt is timestamp;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -120,6 +154,24 @@ service cloud.firestore {
                       isValidChallenge(request.resource.data);
       allow delete: if isAuthenticated() && 
                       (isOwner(resource.data.founderId) || isAdmin());
+    }
+
+    match /comments/{commentId} {
+      allow read: if isAuthenticated(); // Simplified for now, but ideally checks challenge visibility
+      allow create: if isAuthenticated() && 
+                      isOwner(request.resource.data.authorId) && 
+                      isValidComment(request.resource.data);
+      allow delete: if isAuthenticated() && 
+                      (isOwner(resource.data.authorId) || isAdmin());
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && 
+                    (resource.data.chatId == 'public' || 
+                     resource.data.chatId.contains(request.auth.uid));
+      allow create: if isAuthenticated() && 
+                      isOwner(request.resource.data.senderId) && 
+                      isValidMessage(request.resource.data);
     }
 
     match /settings/{settingId} {

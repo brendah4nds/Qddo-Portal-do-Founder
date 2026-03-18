@@ -23,10 +23,12 @@ import {
   Clock,
   ArrowRight,
   HelpCircle,
-  CheckSquare
+  CheckSquare,
+  MessageCircle
 } from 'lucide-react';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { Founder, Challenge } from '../types';
+import { ChallengeComments } from './ChallengeComments';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -49,6 +51,7 @@ export function FounderPortal({
   const [registering, setRegistering] = useState(false);
   const [showNewChallenge, setShowNewChallenge] = useState(false);
   const [completingChallenge, setCompletingChallenge] = useState<Challenge | null>(null);
+  const [expandedChallengeId, setExpandedChallengeId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -367,75 +370,92 @@ export function FounderPortal({
             <div 
               key={challenge.id}
               className={cn(
-                "bg-white rounded-3xl p-8 border transition-all flex flex-col sm:flex-row gap-8",
-                challenge.status === 'completed' ? "border-emerald-100 bg-emerald-50/10" : "border-stone-200 hover:border-stone-400 hover:shadow-xl"
+                "bg-white rounded-3xl p-8 border transition-all flex flex-col gap-8",
+                challenge.status === 'completed' ? "border-emerald-100 bg-emerald-50/10" : "border-stone-200 hover:border-stone-400 hover:shadow-xl",
+                expandedChallengeId === challenge.id && "border-stone-900 shadow-2xl"
               )}
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={cn(
-                    "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5",
-                    challenge.type === 'private' ? "bg-stone-100 text-stone-500" : "bg-blue-50 text-blue-500"
-                  )}>
-                    {challenge.type === 'private' ? <Lock size={12} /> : <Globe size={12} />}
-                    {challenge.type === 'private' ? 'Privado' : 'Público'}
+              <div className="flex flex-col sm:flex-row gap-8">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={cn(
+                      "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5",
+                      challenge.type === 'private' ? "bg-stone-100 text-stone-500" : "bg-blue-50 text-blue-500"
+                    )}>
+                      {challenge.type === 'private' ? <Lock size={12} /> : <Globe size={12} />}
+                      {challenge.type === 'private' ? 'Privado' : 'Público'}
+                    </div>
+                    {challenge.status === 'completed' && (
+                      <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+                        <CheckCircle2 size={12} />
+                        Concluído
+                      </div>
+                    )}
                   </div>
+                  
+                  <h3 className="text-2xl font-serif italic mb-2">{challenge.title}</h3>
+                  <p className="text-stone-500 text-sm mb-6 leading-relaxed">{challenge.description}</p>
+                  
                   {challenge.status === 'completed' && (
-                    <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
-                      <CheckCircle2 size={12} />
-                      Concluído
+                    <div className="mt-6 p-6 bg-white rounded-2xl border border-emerald-100 space-y-4">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Ajudado por</span>
+                        <p className="font-bold text-stone-900">{challenge.helperName}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Solução</span>
+                        <p className="text-sm text-stone-600 italic">"{challenge.resolutionDescription}"</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-6 flex items-center gap-4">
+                    <button 
+                      onClick={() => setExpandedChallengeId(expandedChallengeId === challenge.id ? null : challenge.id)}
+                      className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors flex items-center gap-2"
+                    >
+                      <MessageCircle size={16} />
+                      {expandedChallengeId === challenge.id ? 'Fechar Comentários' : 'Ver Comentários'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="sm:w-48 flex flex-col justify-between border-t sm:border-t-0 sm:border-l border-stone-100 pt-6 sm:pt-0 sm:pl-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-stone-400">
+                      <Clock size={16} />
+                      <span className="text-[10px] font-bold uppercase">
+                        {challenge.createdAt?.seconds ? new Date(challenge.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '...'}
+                      </span>
+                    </div>
+                    {challenge.status === 'open' && challenge.founderId === user.uid && (
+                      <button 
+                        onClick={() => setCompletingChallenge(challenge)}
+                        className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/10"
+                      >
+                        Concluir
+                        <ArrowRight size={18} />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {challenge.founderId !== user.uid && (
+                    <div className="mt-4 pt-4 border-t border-stone-50">
+                      <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Founder</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center text-stone-400">
+                          <UserIcon size={12} />
+                        </div>
+                        <span className="text-xs font-bold text-stone-900">@{challenge.founderId.slice(0, 6)}</span>
+                      </div>
                     </div>
                   )}
                 </div>
-                
-                <h3 className="text-2xl font-serif italic mb-2">{challenge.title}</h3>
-                <p className="text-stone-500 text-sm mb-6 leading-relaxed">{challenge.description}</p>
-                
-                {challenge.status === 'completed' && (
-                  <div className="mt-6 p-6 bg-white rounded-2xl border border-emerald-100 space-y-4">
-                    <div>
-                      <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Ajudado por</span>
-                      <p className="font-bold text-stone-900">{challenge.helperName}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Solução</span>
-                      <p className="text-sm text-stone-600 italic">"{challenge.resolutionDescription}"</p>
-                    </div>
-                  </div>
-                )}
               </div>
 
-              <div className="sm:w-48 flex flex-col justify-between border-t sm:border-t-0 sm:border-l border-stone-100 pt-6 sm:pt-0 sm:pl-8">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-stone-400">
-                    <Clock size={16} />
-                    <span className="text-[10px] font-bold uppercase">
-                      {new Date(challenge.createdAt?.seconds * 1000).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                  {challenge.status === 'open' && challenge.founderId === user.uid && (
-                    <button 
-                      onClick={() => setCompletingChallenge(challenge)}
-                      className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/10"
-                    >
-                      Concluir
-                      <ArrowRight size={18} />
-                    </button>
-                  )}
-                </div>
-                
-                {challenge.founderId !== user.uid && (
-                  <div className="mt-4 pt-4 border-t border-stone-50">
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Founder</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center text-stone-400">
-                        <UserIcon size={12} />
-                      </div>
-                      <span className="text-xs font-bold text-stone-900">@{challenge.founderId.slice(0, 6)}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {expandedChallengeId === challenge.id && (
+                <ChallengeComments challengeId={challenge.id} user={user} />
+              )}
             </div>
           ))
         )}
