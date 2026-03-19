@@ -12,7 +12,8 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
     instagram: '',
     bio: '',
     companyName: '',
-    companyBio: ''
+    companyBio: '',
+    cnpj: ''
   });
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -28,7 +29,8 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
         bio: formData.bio,
         company: {
           name: formData.companyName,
-          bio: formData.companyBio
+          bio: formData.companyBio,
+          cnpj: formData.cnpj
         },
         registeredAt: serverTimestamp(),
         role: 'user'
@@ -113,6 +115,16 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                   placeholder="Nome da sua startup/negócio"
                   value={formData.companyName}
                   onChange={e => setFormData({ ...formData, companyName: e.target.value })}
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">CNPJ</label>
+                <input 
+                  type="text" 
+                  placeholder="00.000.000/0000-00"
+                  value={formData.cnpj}
+                  onChange={e => setFormData({ ...formData, cnpj: e.target.value })}
                   className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
                 />
               </div>

@@ -280,6 +280,14 @@ export function CheckinSystem({
               </div>
 
               <div className="bg-stone-50 p-8 rounded-3xl border border-stone-100">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Score QDDO</span>
+                <div className="flex items-end gap-3">
+                  <span className="text-4xl font-serif italic text-stone-900">{currentMonthCheckins * 10}</span>
+                  <span className="text-xs font-bold text-stone-400 mb-1">pts</span>
+                </div>
+              </div>
+
+              <div className="bg-stone-50 p-8 rounded-3xl border border-stone-100">
                 <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Status Atual</span>
                 <div className="flex items-center gap-2">
                   <div className={cn(

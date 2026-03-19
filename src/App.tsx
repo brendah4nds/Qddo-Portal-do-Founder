@@ -8,7 +8,9 @@ import {
   collection, 
   onSnapshot, 
   doc, 
-  setDoc
+  setDoc,
+  query,
+  where
 } from 'firebase/firestore';
 import { 
   signInWithPopup, 
@@ -19,8 +21,17 @@ import {
 } from 'firebase/auth';
 import { 
   startOfToday,
-  startOfDay
+  startOfDay,
+  subHours,
+  subDays,
+  startOfWeek,
+  endOfWeek,
+  isWithinInterval,
+  format,
+  startOfMonth,
+  endOfMonth
 } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { 
   LogOut,
   Calendar,
@@ -41,16 +52,20 @@ import {
   ShieldCheck,
   AlertTriangle,
   Trophy,
-  CalendarDays
+  CalendarDays,
+  X,
+  Plus
 } from 'lucide-react';
 import { db, auth, handleFirestoreError, OperationType } from './firebase';
-import { Room, Booking, BookingStatus } from './types';
+import { Room, Booking, BookingStatus, Challenge } from './types';
 import { BookingFlow } from './components/BookingFlow';
 import { AdminPanel } from './components/AdminPanel';
 import { FounderPortal } from './components/FounderPortal';
 import { LandingPage } from './components/LandingPage';
 import { RegistrationFlow } from './components/RegistrationFlow';
 import { Chat } from './components/Chat';
+
+const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "bbrendaribeiroc@gmail.com";
 
@@ -62,12 +77,15 @@ const DEFAULT_BUSINESS_HOURS = Array.from({ length: 21 }, (_, i) => {
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
+  const [activeGeneralCategory, setActiveGeneralCategory] = useState<string | null>(null);
+
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [businessHours, setBusinessHours] = useState<string[]>(DEFAULT_BUSINESS_HOURS);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news'>('general');
   const [activeSubTab, setActiveSubTab] = useState<string>('general');
+  const [adminInitialTab, setAdminInitialTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news'>('bookings');
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
   const [bookingStatus, setBookingStatus] = useState<BookingStatus>('idle');
@@ -77,6 +95,9 @@ export default function App() {
   const [founderData, setFounderData] = useState<any>(null);
   const [checkingFounder, setCheckingFounder] = useState(true);
   const [allFounders, setAllFounders] = useState<any[]>([]);
+  const [allChallenges, setAllChallenges] = useState<Challenge[]>([]);
+  const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [userCheckins, setUserCheckins] = useState<any[]>([]);
 
   const toggleTopic = (topic: string) => {
     setExpandedTopics(prev => 
@@ -164,11 +185,33 @@ export default function App() {
       }, (err) => handleFirestoreError(err, OperationType.LIST, 'founders'));
     }
 
+    const challengesUnsubscribe = onSnapshot(collection(db, 'challenges'), (snapshot) => {
+      const challengesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+      setAllChallenges(challengesData);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'challenges'));
+
+    const newsUnsubscribe = onSnapshot(collection(db, 'news'), (snapshot) => {
+      const newsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setNewsItems(newsData);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'news'));
+
+    let checkinsUnsubscribe = () => {};
+    if (user) {
+      const q = query(collection(db, 'checkins'), where('userId', '==', user.uid));
+      checkinsUnsubscribe = onSnapshot(q, (snapshot) => {
+        const checkinsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setUserCheckins(checkinsData);
+      }, (err) => handleFirestoreError(err, OperationType.LIST, 'checkins'));
+    }
+
     return () => {
       roomsUnsubscribe();
       bookingsUnsubscribe();
       settingsUnsubscribe();
       foundersUnsubscribe();
+      challengesUnsubscribe();
+      newsUnsubscribe();
+      checkinsUnsubscribe();
     };
   }, [user, founderData]);
 
@@ -445,6 +488,7 @@ export default function App() {
                 businessHours={businessHours}
                 isAdmin={isAdmin}
                 founders={allFounders}
+                initialTab={adminInitialTab}
               />
             ) : view === 'portal' ? (
               <FounderPortal 
@@ -497,10 +541,165 @@ export default function App() {
                   <h2 className="text-4xl font-serif italic mb-2">Visão Geral</h2>
                   <p className="text-stone-500 font-serif italic">Bem-vindo ao painel geral da comunidade QDDO.</p>
                 </div>
+
+                {/* News Box */}
+                <div className="mb-12 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                  <div className="bg-stone-900 px-8 py-4 flex items-center gap-3">
+                    <Bell size={20} className="text-white" />
+                    <h3 className="text-white font-serif italic text-xl">News</h3>
+                  </div>
+                  <div className="p-8 space-y-6">
+                    {/* Filtered News Items */}
+                    {(() => {
+                      const now = new Date();
+                      const last24h = subHours(now, 24);
+                      const last72h = subDays(now, 3);
+                      const weekStart = startOfWeek(now, { weekStartsOn: 0 }); // Sunday
+                      const weekEnd = endOfWeek(now, { weekStartsOn: 0 });
+
+                      const relevantEvents = newsItems.filter(item => {
+                        if (item.category !== 'evento') return false;
+                        const eventDate = item.eventDate?.toDate ? item.eventDate.toDate() : new Date(item.eventDate);
+                        return isWithinInterval(eventDate, { start: weekStart, end: weekEnd });
+                      }).sort((a, b) => {
+                        const dateA = a.eventDate?.toDate ? a.eventDate.toDate() : new Date(a.eventDate);
+                        const dateB = b.eventDate?.toDate ? b.eventDate.toDate() : new Date(b.eventDate);
+                        return dateA.getTime() - dateB.getTime();
+                      });
+
+                      const publicChallenges = allChallenges
+                        .filter(c => c.type === 'public' && c.status === 'open')
+                        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+                        .slice(0, 1);
+
+                      const currentMonthStart = startOfMonth(now);
+                      const currentMonthEnd = endOfMonth(now);
+                      const currentMonthCheckins = userCheckins.filter(c => {
+                        const d = c.checkinTime?.toDate ? c.checkinTime.toDate() : new Date(c.checkinTime);
+                        return isWithinInterval(d, { start: currentMonthStart, end: currentMonthEnd });
+                      }).length;
+                      const userScore = currentMonthCheckins * 10;
+
+                      return (
+                        <div className="flex flex-col lg:flex-row gap-6 h-full min-h-[400px]">
+                          {/* Part 1: Eventos (66%) */}
+                          <div className="lg:w-[66%] bg-white rounded-[40px] p-8 border border-stone-200 shadow-sm flex flex-col">
+                            <div className="flex items-center justify-between mb-6">
+                              <h4 className="text-2xl font-serif italic text-stone-900 flex items-center gap-2">
+                                <CalendarDays className="text-amber-500" size={24} />
+                                Eventos da Semana
+                              </h4>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                                {format(weekStart, 'dd/MM')} - {format(weekEnd, 'dd/MM')}
+                              </span>
+                            </div>
+                            
+                            <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                              {relevantEvents.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-stone-50 rounded-3xl border border-dashed border-stone-200">
+                                  <p className="text-stone-400 italic">Nenhum evento programado para esta semana.</p>
+                                </div>
+                              ) : (
+                                relevantEvents.map((event, idx) => (
+                                  <div key={event.id || idx} className="p-6 bg-stone-50 rounded-3xl border border-stone-100 hover:border-stone-300 transition-all group">
+                                    <div className="flex items-start justify-between gap-4">
+                                      <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded-full">
+                                            {format(event.eventDate?.toDate ? event.eventDate.toDate() : new Date(event.eventDate), 'EEEE', { locale: ptBR })}
+                                          </span>
+                                          <span className="text-stone-400 text-[10px] font-bold uppercase">
+                                            {format(event.eventDate?.toDate ? event.eventDate.toDate() : new Date(event.eventDate), 'HH:mm')}
+                                          </span>
+                                        </div>
+                                        <h5 className="font-bold text-stone-900 mb-1 group-hover:text-amber-600 transition-colors">{event.title}</h5>
+                                        <p className="text-stone-500 text-xs line-clamp-2">{event.content}</p>
+                                      </div>
+                                      <div className="text-right shrink-0">
+                                        <div className="text-2xl font-serif italic text-stone-300 group-hover:text-amber-200 transition-colors">
+                                          {format(event.eventDate?.toDate ? event.eventDate.toDate() : new Date(event.eventDate), 'dd')}
+                                        </div>
+                                        <div className="text-[10px] font-bold uppercase text-stone-400">
+                                          {format(event.eventDate?.toDate ? event.eventDate.toDate() : new Date(event.eventDate), 'MMM', { locale: ptBR })}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Part 2: Desafios & Score (33%) */}
+                          <div className="lg:w-[33%] flex flex-col gap-6">
+                            {/* Top: Desafios Públicos */}
+                            <div className="flex-1 bg-stone-900 rounded-[40px] p-8 text-white shadow-xl shadow-stone-900/20 flex flex-col">
+                              <div className="flex items-center gap-2 mb-6">
+                                <Trophy className="text-amber-400" size={20} />
+                                <h4 className="text-lg font-serif italic">Desafios Públicos</h4>
+                              </div>
+                              
+                              <div className="flex-1 flex flex-col justify-center">
+                                {publicChallenges.length === 0 ? (
+                                  <p className="text-stone-500 italic text-sm text-center">Nenhum desafio público aberto no momento.</p>
+                                ) : (
+                                  <div className="space-y-4">
+                                    <div>
+                                      <p className="text-[10px] uppercase tracking-widest font-bold text-stone-500 mb-1">
+                                        Lançado por {allFounders.find(f => f.id === publicChallenges[0].founderId)?.name || 'Founder'}
+                                      </p>
+                                      <h5 className="text-xl font-bold leading-tight mb-2">{publicChallenges[0].title}</h5>
+                                      <p className="text-stone-400 text-xs line-clamp-3 italic">"{publicChallenges[0].description}"</p>
+                                    </div>
+                                    <button 
+                                      onClick={() => {
+                                        setView('portal');
+                                        setActiveSubTab('desafios-publicos');
+                                      }}
+                                      className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                    >
+                                      clique aqui para ajuda-lo a resolver <ArrowRight size={14} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Bottom: User Score */}
+                            <div className="flex-1 bg-emerald-500 rounded-[40px] p-8 text-white shadow-xl shadow-emerald-500/20 flex flex-col justify-center items-center text-center relative overflow-hidden">
+                              <div className="absolute -right-4 -top-4 opacity-10 rotate-12">
+                                <Trophy size={120} />
+                              </div>
+                              <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-100 mb-2 relative z-10">Seu Score QDDO</span>
+                              <div className="text-6xl font-serif italic mb-1 relative z-10">{userScore}</div>
+                              <span className="text-xs font-bold text-emerald-100 relative z-10">pontos este mês</span>
+                              
+                              <div className="mt-6 pt-6 border-t border-emerald-400/30 w-full relative z-10">
+                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-emerald-100">
+                                  <span>Check-ins</span>
+                                  <span>{currentMonthCheckins}</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-emerald-600/30 rounded-full mt-2 overflow-hidden">
+                                  <div 
+                                    className="h-full bg-white rounded-full transition-all duration-1000" 
+                                    style={{ width: `${Math.min((currentMonthCheckins / 20) * 100, 100)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                   {/* Infos */}
-                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                  <div 
+                    onClick={() => setActiveGeneralCategory('info')}
+                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                  >
                     <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                       <Info size={24} />
                     </div>
@@ -509,7 +708,10 @@ export default function App() {
                   </div>
                   
                   {/* Regras */}
-                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                  <div 
+                    onClick={() => setActiveGeneralCategory('regras')}
+                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                  >
                     <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                       <ShieldCheck size={24} />
                     </div>
@@ -518,7 +720,10 @@ export default function App() {
                   </div>
 
                   {/* Avisos */}
-                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                  <div 
+                    onClick={() => setActiveGeneralCategory('aviso')}
+                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                  >
                     <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                       <AlertTriangle size={24} />
                     </div>
@@ -527,7 +732,10 @@ export default function App() {
                   </div>
 
                   {/* Eventos */}
-                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                  <div 
+                    onClick={() => setActiveGeneralCategory('evento')}
+                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                  >
                     <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                       <CalendarDays size={24} />
                     </div>
@@ -536,7 +744,13 @@ export default function App() {
                   </div>
 
                   {/* Desafios */}
-                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                  <div 
+                    onClick={() => {
+                      setView('portal');
+                      setActiveSubTab('desafios-publicos');
+                    }}
+                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                  >
                     <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                       <Trophy size={24} />
                     </div>
@@ -545,7 +759,10 @@ export default function App() {
                   </div>
 
                   {/* Comunicação */}
-                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                  <div 
+                    onClick={() => setActiveGeneralCategory('comunicacao')}
+                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                  >
                     <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                       <MessageSquare size={24} />
                     </div>
@@ -553,6 +770,77 @@ export default function App() {
                     <p className="text-stone-400 text-sm">Canais oficiais de suporte e interação entre membros.</p>
                   </div>
                 </div>
+
+                {activeGeneralCategory && (
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                      <div className="p-8 border-b border-stone-100 flex items-center justify-between bg-stone-50">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-stone-900 text-white rounded-2xl flex items-center justify-center">
+                            {activeGeneralCategory === 'info' ? <Info size={24} /> :
+                             activeGeneralCategory === 'regras' ? <ShieldCheck size={24} /> :
+                             activeGeneralCategory === 'aviso' ? <AlertTriangle size={24} /> :
+                             activeGeneralCategory === 'evento' ? <CalendarDays size={24} /> :
+                             <MessageSquare size={24} />}
+                          </div>
+                          <div>
+                            <h3 className="text-2xl font-serif italic text-stone-900 capitalize">{activeGeneralCategory}</h3>
+                            <p className="text-stone-400 text-xs uppercase tracking-widest font-bold">Portal Founder</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => setActiveGeneralCategory(null)}
+                          className="w-10 h-10 rounded-full hover:bg-stone-200 flex items-center justify-center transition-colors"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                      <div className="p-8 max-h-[60vh] overflow-y-auto space-y-6">
+                        {newsItems.filter(item => item.category === activeGeneralCategory).length > 0 ? (
+                          newsItems
+                            .filter(item => item.category === activeGeneralCategory)
+                            .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+                            .map(item => (
+                              <div key={item.id} className="p-6 bg-stone-50 rounded-3xl border border-stone-100">
+                                <div className="flex justify-between items-start mb-2">
+                                  <h4 className="font-bold text-stone-900">{item.title}</h4>
+                                  <span className="text-[10px] text-stone-400 font-bold">
+                                    {item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : ''}
+                                  </span>
+                                </div>
+                                <p className="text-stone-600 text-sm leading-relaxed whitespace-pre-wrap">{item.content}</p>
+                                {item.eventDate && (
+                                  <div className="mt-4 flex items-center gap-2 text-emerald-600 font-bold text-xs">
+                                    <CalendarDays size={14} />
+                                    <span>Data do Evento: {new Date(item.eventDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                        ) : (
+                          <div className="text-center py-12">
+                            <p className="text-stone-400 italic">Nenhum conteúdo disponível nesta categoria.</p>
+                          </div>
+                        )}
+                      </div>
+                      {(user?.email === ADMIN_EMAIL || founderData?.role === 'admin') && (
+                        <div className="p-6 bg-stone-50 border-t border-stone-100 flex justify-center">
+                          <button 
+                            onClick={() => {
+                              setActiveGeneralCategory(null);
+                              setAdminInitialTab('news');
+                              setView('admin');
+                            }}
+                            className="bg-stone-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-stone-800 transition-all flex items-center gap-2"
+                          >
+                            <Plus size={18} />
+                            Adicionar Conteúdo
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="bg-stone-900 text-white p-12 rounded-[48px] relative overflow-hidden">
                   <div className="relative z-10">

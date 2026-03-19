@@ -65,6 +65,14 @@
 //   - checkoutTime: timestamp (optional)
 //   - status: string (enum: ['active', 'completed']) (required)
 //
+// Collection: news
+// Fields:
+//   - title: string (required)
+//   - content: string (required)
+//   - category: string (enum: ['aviso', 'info', 'evento', 'noticia']) (required)
+//   - createdAt: timestamp (required)
+//   - eventDate: timestamp (optional)
+//
 // ===============================================================
 
 rules_version = '2';
@@ -144,6 +152,15 @@ service cloud.firestore {
              (!('checkoutTime' in data) || data.checkoutTime is timestamp);
     }
 
+    function isValidNewsItem(data) {
+      return data.keys().hasAll(['title', 'content', 'category', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 &&
+             data.content is string && data.content.size() > 0 &&
+             data.category in ['aviso', 'info', 'evento', 'noticia'] &&
+             data.createdAt is timestamp &&
+             (!('eventDate' in data) || data.eventDate is timestamp);
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -211,6 +228,11 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isOwner(request.resource.data.userId) && isValidCheckin(request.resource.data);
       allow update: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin()) && isValidCheckin(request.resource.data);
       allow delete: if isAdmin();
+    }
+
+    match /news/{newsId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     match /settings/{settingId} {

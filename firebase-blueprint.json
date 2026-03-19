@@ -105,6 +105,19 @@
         "status": { "type": "string", "enum": ["active", "completed"] }
       },
       "required": ["userId", "date", "checkinTime", "status"]
+    },
+    "NewsItem": {
+      "title": "NewsItem",
+      "description": "An announcement, info, event or news post.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string", "enum": ["aviso", "info", "evento", "noticia"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "eventDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "category", "createdAt"]
     }
   },
   "firestore": {
@@ -127,6 +140,10 @@
     "/checkins/{checkinId}": {
       "schema": "Checkin",
       "description": "Collection of user check-ins."
+    },
+    "/news/{newsId}": {
+      "schema": "NewsItem",
+      "description": "Collection of news, announcements, and events."
     }
   }
 }

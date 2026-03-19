@@ -25,7 +25,8 @@ import {
   ArrowRight,
   HelpCircle,
   CheckSquare,
-  MessageCircle
+  MessageCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { Founder, Challenge } from '../types';
@@ -79,7 +80,30 @@ export function FounderPortal({
     resolutionDescription: ''
   });
 
+  const [cnpjInput, setCnpjInput] = useState('');
+  const [updatingCnpj, setUpdatingCnpj] = useState(false);
+
   const [selectedCompanyFounder, setSelectedCompanyFounder] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (founder?.company?.cnpj) {
+      setCnpjInput(founder.company.cnpj);
+    }
+  }, [founder]);
+
+  const handleUpdateCnpj = async () => {
+    if (!user || !cnpjInput) return;
+    setUpdatingCnpj(true);
+    try {
+      await updateDoc(doc(db, 'founders', user.uid), {
+        'company.cnpj': cnpjInput
+      });
+    } catch (error) {
+      console.error('Error updating CNPJ:', error);
+    } finally {
+      setUpdatingCnpj(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -430,6 +454,35 @@ export function FounderPortal({
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
                         <p className="font-bold text-stone-900 text-xl">{founder?.company?.name || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
+                        {founder?.company?.cnpj ? (
+                          <p className="font-bold text-stone-900">{founder.company.cnpj}</p>
+                        ) : (
+                          <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl space-y-3">
+                            <p className="text-xs text-rose-600 font-bold flex items-center gap-2">
+                              <AlertTriangle size={14} />
+                              Pendência: CNPJ não informado
+                            </p>
+                            <div className="flex gap-2">
+                              <input 
+                                type="text" 
+                                placeholder="00.000.000/0000-00"
+                                value={cnpjInput}
+                                onChange={e => setCnpjInput(e.target.value)}
+                                className="flex-1 px-4 py-2 bg-white border border-rose-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                              />
+                              <button 
+                                onClick={handleUpdateCnpj}
+                                disabled={updatingCnpj || !cnpjInput}
+                                className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-all disabled:opacity-50"
+                              >
+                                {updatingCnpj ? '...' : 'Salvar'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>

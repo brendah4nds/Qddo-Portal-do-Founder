@@ -19,11 +19,19 @@ import {
   Plus,
   Globe,
   Lock,
-  CheckSquare
+  CheckSquare,
+  Bell,
+  Info,
+  AlertTriangle,
+  CalendarDays,
+  Newspaper,
+  ShieldCheck,
+  MessageSquare
 } from 'lucide-react';
 import { db, auth, handleFirestoreError, OperationType } from '../firebase';
 import { Room, Booking, Challenge } from '../types';
 import { ConfirmationModal } from './ConfirmationModal';
+import { addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -44,7 +52,8 @@ export function AdminPanel({
   bookings, 
   businessHours,
   isAdmin,
-  founders = []
+  founders = [],
+  initialTab = 'bookings'
 }: { 
   user: User | null; 
   onLogin: () => void; 
@@ -53,10 +62,19 @@ export function AdminPanel({
   businessHours: string[];
   isAdmin: boolean;
   founders?: any[];
+  initialTab?: 'bookings' | 'settings' | 'founders' | 'challenges' | 'news';
 }) {
-  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges'>('bookings');
+  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news'>(initialTab);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [newsItems, setNewsItems] = useState<any[]>([]);
   const [newHour, setNewHour] = useState('');
+  const [newNews, setNewNews] = useState({
+    title: '',
+    content: '',
+    category: 'aviso' as 'aviso' | 'info' | 'evento' | 'noticia',
+    eventDate: ''
+  });
+  const [isAddingNews, setIsAddingNews] = useState(false);
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -118,7 +136,16 @@ export function AdminPanel({
       setChallenges(allChallenges);
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'challenges'));
 
-    return () => unsubscribe();
+    const newsQ = query(collection(db, 'news'), orderBy('createdAt', 'desc'));
+    const newsUnsubscribe = onSnapshot(newsQ, (snapshot) => {
+      const allNews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setNewsItems(allNews);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'news'));
+
+    return () => {
+      unsubscribe();
+      newsUnsubscribe();
+    };
   }, [isAdmin]);
 
   const handleDelete = async (id: string) => {
@@ -166,6 +193,41 @@ export function AdminPanel({
   const handleRemoveHour = async (hour: string) => {
     const updated = businessHours.filter(h => h !== hour);
     await setDoc(doc(db, 'settings', 'global'), { businessHours: updated });
+  };
+
+  const handleCreateNews = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNews.title || !newNews.content) return;
+
+    try {
+      await addDoc(collection(db, 'news'), {
+        ...newNews,
+        createdAt: serverTimestamp(),
+        eventDate: newNews.category === 'evento' ? Timestamp.fromDate(new Date(newNews.eventDate)) : null
+      });
+      setNewNews({ title: '', content: '', category: 'aviso', eventDate: '' });
+      setIsAddingNews(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDeleteNews = (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Excluir Notícia',
+      message: 'Tem certeza que deseja excluir esta notícia? Esta ação não pode ser desfeita.',
+      variant: 'danger',
+      confirmText: 'Excluir',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'news', id));
+          setModalConfig(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
   };
 
   return (
@@ -223,6 +285,15 @@ export function AdminPanel({
           )}
         >
           Desafios
+        </button>
+        <button 
+          onClick={() => setAdminTab('news')}
+          className={cn(
+            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
+            adminTab === 'news' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          News
         </button>
       </div>
 
@@ -396,6 +467,158 @@ export function AdminPanel({
                 )}
               </tbody>
             </table>
+          </div>
+        </section>
+      )}
+
+      {adminTab === 'news' && (
+        <section className="space-y-8 animate-in fade-in duration-500">
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-serif italic">Gerenciar News</h3>
+            <button 
+              onClick={() => setIsAddingNews(!isAddingNews)}
+              className="flex items-center gap-2 bg-stone-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/10"
+            >
+              <Plus size={20} />
+              Nova Notícia
+            </button>
+          </div>
+
+          {isAddingNews && (
+            <div className="bg-white rounded-[40px] p-12 border border-stone-200 shadow-sm animate-in zoom-in-95 duration-300">
+              <form onSubmit={handleCreateNews} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Título</label>
+                    <input 
+                      required
+                      type="text" 
+                      value={newNews.title}
+                      onChange={e => setNewNews({ ...newNews, title: e.target.value })}
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Categoria</label>
+                    <select 
+                      value={newNews.category}
+                      onChange={e => setNewNews({ ...newNews, category: e.target.value as any })}
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                    >
+                      <option value="aviso">Aviso</option>
+                      <option value="info">Info</option>
+                      <option value="evento">Evento</option>
+                      <option value="noticia">Notícia</option>
+                      <option value="regras">Regras</option>
+                      <option value="comunicacao">Comunicação</option>
+                    </select>
+                  </div>
+                </div>
+
+                {newNews.category === 'evento' && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Data do Evento</label>
+                    <input 
+                      required
+                      type="date" 
+                      value={newNews.eventDate}
+                      onChange={e => setNewNews({ ...newNews, eventDate: e.target.value })}
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Conteúdo</label>
+                  <textarea 
+                    required
+                    rows={4}
+                    value={newNews.content}
+                    onChange={e => setNewNews({ ...newNews, content: e.target.value })}
+                    className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <button 
+                    type="button"
+                    onClick={() => setIsAddingNews(false)}
+                    className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-2xl font-bold hover:bg-stone-50 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit"
+                    className="flex-1 bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/20"
+                  >
+                    Publicar
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-stone-50 border-b border-stone-100">
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Notícia</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Categoria</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Data</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {newsItems.map(item => (
+                    <tr key={item.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                      <td className="px-8 py-6">
+                        <div className="font-bold text-stone-900">{item.title}</div>
+                        <div className="text-xs text-stone-400 line-clamp-1">{item.content}</div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
+                          item.category === 'aviso' ? "bg-rose-50 text-rose-500" :
+                          item.category === 'info' ? "bg-blue-50 text-blue-500" :
+                          item.category === 'evento' ? "bg-emerald-50 text-emerald-500" :
+                          item.category === 'regras' ? "bg-amber-50 text-amber-500" :
+                          item.category === 'comunicacao' ? "bg-purple-50 text-purple-500" :
+                          "bg-stone-100 text-stone-500"
+                        )}>
+                          {item.category === 'aviso' ? <AlertTriangle size={12} /> :
+                           item.category === 'info' ? <Info size={12} /> :
+                           item.category === 'evento' ? <CalendarDays size={12} /> :
+                           item.category === 'regras' ? <ShieldCheck size={12} /> :
+                           item.category === 'comunicacao' ? <MessageSquare size={12} /> :
+                           <Newspaper size={12} />}
+                          {item.category}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="text-xs text-stone-600">
+                          {item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '...'}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <button 
+                          onClick={() => handleDeleteNews(item.id)}
+                          className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
+                        >
+                          <Trash2 size={14} />
+                          <span>Excluir</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {newsItems.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-8 py-20 text-center text-stone-400 italic">Nenhuma notícia publicada.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       )}
