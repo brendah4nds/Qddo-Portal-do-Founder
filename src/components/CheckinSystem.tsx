@@ -24,7 +24,8 @@ import {
   TrendingDown,
   User as UserIcon,
   LogOut,
-  LogIn
+  LogIn,
+  Trophy
 } from 'lucide-react';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { 
@@ -66,7 +67,7 @@ export function CheckinSystem({
   isAdmin: boolean;
   founders?: any[];
 }) {
-  const [activeTab, setActiveTab] = useState<'checkin' | 'checkout' | 'overview'>('checkin');
+  const [activeTab, setActiveTab] = useState<'checkin' | 'checkout' | 'overview' | 'score'>('checkin');
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedUserId, setSelectedUserId] = useState<string>(user.uid);
@@ -156,6 +157,7 @@ export function CheckinSystem({
           { id: 'checkin', label: 'Check-in', icon: LogIn },
           { id: 'checkout', label: 'Check-out', icon: LogOut },
           { id: 'overview', label: 'Visão Geral', icon: CalendarIcon },
+          { id: 'score', label: 'Score', icon: Trophy },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -200,6 +202,12 @@ export function CheckinSystem({
             <div>
               <h3 className="text-3xl font-serif italic mb-2">Bem-vindo!</h3>
               <p className="text-stone-500">Registre sua chegada no espaço QDDO hoje.</p>
+              <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 bg-stone-100 rounded-full">
+                <Trophy size={14} className="text-stone-900" />
+                <span className="text-xs font-bold text-stone-900 uppercase tracking-widest">
+                  Seu Score: {currentMonthCheckins * 10} pts
+                </span>
+              </div>
             </div>
             
             {todayCheckin ? (
@@ -229,6 +237,12 @@ export function CheckinSystem({
             <div>
               <h3 className="text-3xl font-serif italic mb-2">Até logo!</h3>
               <p className="text-stone-500">Não esqueça de registrar sua saída.</p>
+              <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 bg-stone-100 rounded-full">
+                <Trophy size={14} className="text-stone-900" />
+                <span className="text-xs font-bold text-stone-900 uppercase tracking-widest">
+                  Seu Score: {currentMonthCheckins * 10} pts
+                </span>
+              </div>
             </div>
 
             {!todayCheckin ? (
@@ -359,6 +373,88 @@ export function CheckinSystem({
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'score' && (
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <div className="w-20 h-20 bg-stone-900 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-stone-900/20">
+                <Trophy size={40} />
+              </div>
+              <h3 className="text-4xl font-serif italic mb-4">Sistema de Score QDDO</h3>
+              <p className="text-stone-500">Valorizamos sua presença e participação na nossa comunidade. Entenda como funciona nossa pontuação.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 text-stone-900">
+                  <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold">01</div>
+                  <h4 className="font-serif italic text-xl">Descrição</h4>
+                </div>
+                <div className="bg-stone-50 p-8 rounded-[32px] border border-stone-100 h-full">
+                  <p className="text-stone-600 leading-relaxed text-sm">
+                    O Score QDDO é uma métrica de engajamento que recompensa os Founders que utilizam o espaço físico e participam ativamente do ecossistema. 
+                    É a sua "moeda de presença" dentro da nossa comunidade.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 text-stone-900">
+                  <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold">02</div>
+                  <h4 className="font-serif italic text-xl">Regras</h4>
+                </div>
+                <div className="bg-stone-50 p-8 rounded-[32px] border border-stone-100 h-full">
+                  <ul className="space-y-4">
+                    {[
+                      'Cada check-in diário vale 10 pontos.',
+                      'O check-in deve ser realizado presencialmente.',
+                      'Pontuação é zerada no início de cada mês.',
+                      'Mínimo de 4 horas de permanência sugerida.'
+                    ].map((rule, i) => (
+                      <li key={i} className="flex gap-3 text-sm text-stone-600">
+                        <span className="text-stone-900 font-bold">•</span>
+                        {rule}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 text-stone-900">
+                  <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold">03</div>
+                  <h4 className="font-serif italic text-xl">Benefícios</h4>
+                </div>
+                <div className="bg-stone-50 p-8 rounded-[32px] border border-stone-100 h-full">
+                  <ul className="space-y-4">
+                    {[
+                      'Prioridade na reserva de salas de reunião.',
+                      'Acesso antecipado a eventos exclusivos.',
+                      'Badges de destaque no perfil Founder.',
+                      'Descontos em parceiros do ecossistema.'
+                    ].map((benefit, i) => (
+                      <li key={i} className="flex gap-3 text-sm text-stone-600">
+                        <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-stone-900 rounded-[32px] p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <h4 className="text-xl font-serif italic mb-1">Seu Score Atual</h4>
+                <p className="text-stone-400 text-sm">Continue frequentando para subir no ranking!</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-5xl font-serif italic">{currentMonthCheckins * 10}</span>
+                <span className="text-stone-400 uppercase tracking-widest text-xs font-bold">Pontos Acumulados</span>
               </div>
             </div>
           </div>

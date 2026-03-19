@@ -364,6 +364,10 @@ export function FounderPortal({
                             <p className="font-bold text-stone-900 text-xl">{selectedCompanyFounder.company?.name || 'N/A'}</p>
                           </div>
                           <div>
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
+                            <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
+                          </div>
+                          <div>
                             <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>
                             <p className="text-sm text-stone-500 leading-relaxed">{selectedCompanyFounder.company?.bio || 'Sem descrição informada'}</p>
                           </div>
