@@ -36,7 +36,12 @@ import {
   Bell,
   Newspaper,
   ArrowRight,
-  LayoutGrid
+  LayoutGrid,
+  Info,
+  ShieldCheck,
+  AlertTriangle,
+  Trophy,
+  CalendarDays
 } from 'lucide-react';
 import { db, auth, handleFirestoreError, OperationType } from './firebase';
 import { Room, Booking, BookingStatus } from './types';
@@ -491,28 +496,58 @@ export default function App() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm">
-                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6">
-                      <Calendar className="text-stone-600" size={24} />
+                  {/* Infos */}
+                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <Info size={24} />
                     </div>
-                    <h3 className="text-xl font-serif italic mb-2">Próximas Reservas</h3>
-                    <p className="text-stone-400 text-sm">Você não possui reservas para hoje.</p>
+                    <h3 className="text-xl font-serif italic mb-2">Infos</h3>
+                    <p className="text-stone-400 text-sm">Informações essenciais sobre a nossa comunidade e espaço.</p>
                   </div>
                   
-                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm">
-                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6">
-                      <Globe className="text-stone-600" size={24} />
+                  {/* Regras */}
+                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <ShieldCheck size={24} />
                     </div>
-                    <h3 className="text-xl font-serif italic mb-2">Desafios Ativos</h3>
-                    <p className="text-stone-400 text-sm">Existem 3 novos desafios na comunidade.</p>
+                    <h3 className="text-xl font-serif italic mb-2">Regras</h3>
+                    <p className="text-stone-400 text-sm">Diretrizes de convivência e uso das salas QDDO.</p>
                   </div>
 
-                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm">
-                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6">
-                      <Bell className="text-stone-600" size={24} />
+                  {/* Avisos */}
+                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <AlertTriangle size={24} />
                     </div>
-                    <h3 className="text-xl font-serif italic mb-2">Notificações</h3>
-                    <p className="text-stone-400 text-sm">Nenhuma notificação pendente.</p>
+                    <h3 className="text-xl font-serif italic mb-2">Avisos</h3>
+                    <p className="text-stone-400 text-sm">Comunicados importantes e atualizações de última hora.</p>
+                  </div>
+
+                  {/* Eventos */}
+                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <CalendarDays size={24} />
+                    </div>
+                    <h3 className="text-xl font-serif italic mb-2">Eventos</h3>
+                    <p className="text-stone-400 text-sm">Calendário de workshops, meetups e encontros.</p>
+                  </div>
+
+                  {/* Desafios */}
+                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <Trophy size={24} />
+                    </div>
+                    <h3 className="text-xl font-serif italic mb-2">Desafios</h3>
+                    <p className="text-stone-400 text-sm">Participe dos desafios e colabore com outros founders.</p>
+                  </div>
+
+                  {/* Comunicação */}
+                  <div className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <MessageSquare size={24} />
+                    </div>
+                    <h3 className="text-xl font-serif italic mb-2">Comunicação</h3>
+                    <p className="text-stone-400 text-sm">Canais oficiais de suporte e interação entre membros.</p>
                   </div>
                 </div>
 

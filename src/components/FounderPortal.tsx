@@ -30,6 +30,7 @@ import {
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { Founder, Challenge } from '../types';
 import { ChallengeComments } from './ChallengeComments';
+import { CheckinSystem } from './CheckinSystem';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -286,20 +287,7 @@ export function FounderPortal({
       )}
 
       {activeSubTab === 'checkin' && (
-        <div className="bg-white rounded-[40px] p-12 border border-stone-200 shadow-sm">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-8">
-              <CheckSquare size={40} className="text-stone-900" />
-            </div>
-            <h3 className="text-3xl font-serif italic mb-4">Check-in Diário</h3>
-            <p className="text-stone-500 mb-12 leading-relaxed">
-              Registre sua presença e compartilhe como está sendo seu dia na comunidade QDDO.
-            </p>
-            <button className="w-full bg-stone-900 text-white py-6 rounded-3xl font-bold hover:bg-stone-800 transition-all shadow-xl shadow-stone-900/20">
-              Realizar Check-in Agora
-            </button>
-          </div>
-        </div>
+        <CheckinSystem user={user} isAdmin={isAdmin} founders={founders} />
       )}
 
       {activeSubTab === 'empresa' && (
@@ -456,7 +444,7 @@ export function FounderPortal({
         </div>
       )}
 
-      {activeSubTab !== 'empresa' && (
+      {(activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') && (
         <>
           {/* New Challenge Modal */}
       {showNewChallenge && (

@@ -92,6 +92,19 @@
         "completedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["founderId", "title", "type", "status", "createdAt"]
+    },
+    "Checkin": {
+      "title": "Checkin",
+      "description": "A record of a user's presence in the space.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string", "format": "date", "description": "YYYY-MM-DD" },
+        "checkinTime": { "type": "string", "format": "date-time" },
+        "checkoutTime": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "completed"] }
+      },
+      "required": ["userId", "date", "checkinTime", "status"]
     }
   },
   "firestore": {
@@ -110,6 +123,10 @@
     "/challenges/{challengeId}": {
       "schema": "Challenge",
       "description": "Collection of founder challenges."
+    },
+    "/checkins/{checkinId}": {
+      "schema": "Checkin",
+      "description": "Collection of user check-ins."
     }
   }
 }
