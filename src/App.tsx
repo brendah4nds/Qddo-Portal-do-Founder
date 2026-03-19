@@ -66,8 +66,8 @@ export default function App() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [businessHours, setBusinessHours] = useState<string[]>(DEFAULT_BUSINESS_HOURS);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat'>('booking');
-  const [activeSubTab, setActiveSubTab] = useState<string>('escolha-sala');
+  const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news'>('general');
+  const [activeSubTab, setActiveSubTab] = useState<string>('general');
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
   const [bookingStatus, setBookingStatus] = useState<BookingStatus>('idle');
@@ -214,7 +214,10 @@ export default function App() {
   }
 
   if (!founderData && !isAdmin) {
-    return <RegistrationFlow user={user} onComplete={() => setView('portal')} />;
+    return <RegistrationFlow user={user} onComplete={() => {
+      setView('general');
+      setActiveSubTab('general');
+    }} />;
   }
 
   return (
@@ -226,8 +229,8 @@ export default function App() {
             className="flex items-center gap-3 cursor-pointer group" 
             onClick={() => {
               window.history.pushState({}, '', '/');
-              setView('booking');
-              setActiveSubTab('escolha-sala');
+              setView('general');
+              setActiveSubTab('general');
               setSelectedRoomId(null);
             }}
           >
