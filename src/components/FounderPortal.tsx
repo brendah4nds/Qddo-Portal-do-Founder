@@ -1,0 +1,753 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  collection, 
+  query, 
+  where, 
+  or,
+  onSnapshot, 
+  doc, 
+  setDoc, 
+  addDoc, 
+  updateDoc,
+  serverTimestamp,
+  orderBy
+} from 'firebase/firestore';
+import { User } from 'firebase/auth';
+import { 
+  User as UserIcon, 
+  Instagram, 
+  Building2, 
+  Plus, 
+  Lock, 
+  Globe, 
+  CheckCircle2, 
+  Clock,
+  ArrowRight,
+  HelpCircle,
+  CheckSquare,
+  MessageCircle,
+  AlertTriangle
+} from 'lucide-react';
+import { db, handleFirestoreError, OperationType } from '../firebase';
+import { Founder, Challenge } from '../types';
+import { ChallengeComments } from './ChallengeComments';
+import { CheckinSystem } from './CheckinSystem';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export function FounderPortal({ 
+  user, 
+  activeSubTab,
+  setActiveSubTab,
+  isAdmin,
+  founders = []
+}: { 
+  user: User | null; 
+  activeSubTab: string;
+  setActiveSubTab?: (tab: string) => void;
+  isAdmin: boolean;
+  founders?: any[];
+}) {
+  const [founder, setFounder] = useState<Founder | null>(null);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [registering, setRegistering] = useState(false);
+  const [showNewChallenge, setShowNewChallenge] = useState(false);
+  const [completingChallenge, setCompletingChallenge] = useState<Challenge | null>(null);
+  const [expandedChallengeId, setExpandedChallengeId] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    username: '',
+    instagram: '',
+    bio: '',
+    companyName: '',
+    companyBio: ''
+  });
+
+  const [challengeData, setChallengeData] = useState({
+    title: '',
+    description: '',
+    type: 'public' as 'public' | 'private'
+  });
+
+  const [completionData, setCompletionData] = useState({
+    helperName: '',
+    resolutionDescription: ''
+  });
+
+  const [cnpjInput, setCnpjInput] = useState('');
+  const [updatingCnpj, setUpdatingCnpj] = useState(false);
+
+  const [selectedCompanyFounder, setSelectedCompanyFounder] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (founder?.company?.cnpj) {
+      setCnpjInput(founder.company.cnpj);
+    }
+  }, [founder]);
+
+  const handleUpdateCnpj = async () => {
+    if (!user || !cnpjInput) return;
+    setUpdatingCnpj(true);
+    try {
+      await updateDoc(doc(db, 'founders', user.uid), {
+        'company.cnpj': cnpjInput
+      });
+    } catch (error) {
+      console.error('Error updating CNPJ:', error);
+    } finally {
+      setUpdatingCnpj(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const founderUnsubscribe = onSnapshot(doc(db, 'founders', user.uid), (snapshot) => {
+      if (snapshot.exists()) {
+        setFounder({ id: snapshot.id, ...snapshot.data() } as Founder);
+      } else {
+        setFounder(null);
+      }
+      setLoading(false);
+    }, (err) => handleFirestoreError(err, OperationType.GET, `founders/${user.uid}`));
+
+    let challengesUnsubscribe: () => void;
+    if (isAdmin) {
+      const q = query(
+        collection(db, 'challenges')
+      );
+      challengesUnsubscribe = onSnapshot(q, (snapshot) => {
+        const allChallenges = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+        const sortedChallenges = allChallenges.sort((a, b) => 
+          (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+        );
+        setChallenges(sortedChallenges);
+      }, (err) => handleFirestoreError(err, OperationType.LIST, 'challenges'));
+    } else {
+      // Fetch public and private separately to avoid complex index/rules issues
+      const qPublic = query(
+        collection(db, 'challenges'), 
+        where('type', '==', 'public')
+      );
+      const qPrivate = query(
+        collection(db, 'challenges'), 
+        where('founderId', '==', user.uid), 
+        where('type', '==', 'private')
+      );
+      
+      const unsubPublic = onSnapshot(qPublic, (snapshot) => {
+        const publicChallenges = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+        setChallenges(prev => {
+          const others = prev.filter(c => c.type !== 'public');
+          const merged = [...publicChallenges, ...others].sort((a, b) => 
+            (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+          );
+          // Remove duplicates if any
+          return Array.from(new Map(merged.map(item => [item.id, item])).values());
+        });
+      }, (err) => handleFirestoreError(err, OperationType.LIST, 'challenges/public'));
+
+      const unsubPrivate = onSnapshot(qPrivate, (snapshot) => {
+        const privateChallenges = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+        setChallenges(prev => {
+          const others = prev.filter(c => c.founderId !== user.uid || c.type !== 'private');
+          const merged = [...privateChallenges, ...others].sort((a, b) => 
+            (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+          );
+          // Remove duplicates if any
+          return Array.from(new Map(merged.map(item => [item.id, item])).values());
+        });
+      }, (err) => handleFirestoreError(err, OperationType.LIST, 'challenges/private'));
+
+      challengesUnsubscribe = () => {
+        unsubPublic();
+        unsubPrivate();
+      };
+    }
+
+    return () => {
+      founderUnsubscribe();
+      challengesUnsubscribe();
+    };
+  }, [user, isAdmin]);
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setRegistering(true);
+    try {
+      await setDoc(doc(db, 'founders', user.uid), {
+        name: formData.name,
+        username: formData.username,
+        instagram: formData.instagram,
+        bio: formData.bio,
+        company: {
+          name: formData.companyName,
+          bio: formData.companyBio
+        },
+        registeredAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleCreateChallenge = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !challengeData.title) return;
+
+    try {
+      await addDoc(collection(db, 'challenges'), {
+        founderId: user.uid,
+        title: challengeData.title,
+        description: challengeData.description,
+        type: challengeData.type,
+        status: 'open',
+        createdAt: serverTimestamp()
+      });
+      setShowNewChallenge(false);
+      setChallengeData({ title: '', description: '', type: 'public' });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleCompleteChallenge = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!completingChallenge) return;
+
+    try {
+      await updateDoc(doc(db, 'challenges', completingChallenge.id), {
+        status: 'completed',
+        helperName: completionData.helperName,
+        resolutionDescription: completionData.resolutionDescription,
+        completedAt: serverTimestamp()
+      });
+      setCompletingChallenge(null);
+      setCompletionData({ helperName: '', resolutionDescription: '' });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-20 italic text-stone-400">Carregando portal...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-3xl font-serif italic mb-4">Acesso Restrito</h2>
+        <p className="text-stone-500">Por favor, faça login para acessar o Portal Founders.</p>
+      </div>
+    );
+  }
+
+  if (!founder && !isAdmin) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-3xl font-serif italic mb-4">Perfil não encontrado</h2>
+        <p className="text-stone-500">Por favor, complete seu cadastro para acessar o portal.</p>
+      </div>
+    );
+  }
+
+  // Filter challenges based on active tab
+  const filteredChallenges = challenges.filter(c => {
+    if (activeSubTab === 'desafios-privados') return c.type === 'private';
+    if (activeSubTab === 'desafios-publicos') return c.type === 'public';
+    return true; 
+  });
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center justify-between mb-12">
+        <div>
+          <h2 className="text-4xl font-serif italic mb-2">Olá, {founder?.name || user.displayName || 'Admin'}</h2>
+          <p className="text-stone-500 font-serif italic">Portal Founders • {activeSubTab.replace('-', ' ')}</p>
+        </div>
+        {(activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') && (
+          <button 
+            onClick={() => setShowNewChallenge(true)}
+            className="flex items-center gap-2 bg-stone-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/10"
+          >
+            <Plus size={20} />
+            Novo Desafio
+          </button>
+        )}
+      </div>
+
+      {(activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') && (
+        <div className="flex gap-4 mb-8">
+          <button 
+            onClick={() => setActiveSubTab?.('desafios-publicos')}
+            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+              activeSubTab === 'desafios-publicos' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
+            }`}
+          >
+            Públicos
+          </button>
+          <button 
+            onClick={() => setActiveSubTab?.('desafios-privados')}
+            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+              activeSubTab === 'desafios-privados' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
+            }`}
+          >
+            Privados
+          </button>
+        </div>
+      )}
+
+      {activeSubTab === 'checkin' && (
+        <CheckinSystem user={user} isAdmin={isAdmin} founders={founders} />
+      )}
+
+      {activeSubTab === 'empresa' && (
+        <div className="space-y-8">
+          {isAdmin ? (
+            <div className="grid grid-cols-1 gap-6">
+              {selectedCompanyFounder ? (
+                <div className="bg-white rounded-[40px] p-12 border border-stone-200 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+                  <button 
+                    onClick={() => setSelectedCompanyFounder(null)}
+                    className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 mb-8 flex items-center gap-2"
+                  >
+                    <ArrowRight size={16} className="rotate-180" />
+                    Voltar para lista
+                  </button>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="space-y-8">
+                      <div>
+                        <h3 className="text-3xl font-serif italic mb-6">Dados do Founder</h3>
+                        <div className="space-y-4">
+                          <div>
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome Completo</span>
+                            <p className="font-bold text-stone-900">{selectedCompanyFounder.name}</p>
+                          </div>
+                          <div>
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Username</span>
+                            <p className="text-stone-600">@{selectedCompanyFounder.username}</p>
+                          </div>
+                          {selectedCompanyFounder.instagram && (
+                            <div>
+                              <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Instagram</span>
+                              <p className="text-stone-600">{selectedCompanyFounder.instagram}</p>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Bio</span>
+                            <p className="text-sm text-stone-500 leading-relaxed">{selectedCompanyFounder.bio || 'Sem bio informada'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-8">
+                      <div className="bg-stone-50 rounded-3xl p-8 border border-stone-100">
+                        <h3 className="text-3xl font-serif italic mb-6">Dados da Empresa</h3>
+                        <div className="space-y-4">
+                          <div>
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
+                            <p className="font-bold text-stone-900 text-xl">{selectedCompanyFounder.company?.name || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
+                            <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
+                          </div>
+                          <div>
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>
+                            <p className="text-sm text-stone-500 leading-relaxed">{selectedCompanyFounder.company?.bio || 'Sem descrição informada'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
+                  <div className="p-8 border-b border-stone-100">
+                    <h3 className="text-xl font-serif italic">Lista de Empresas</h3>
+                    <p className="text-stone-400 text-sm">Visualize todos os founders e suas respectivas empresas.</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-stone-50 border-b border-stone-100">
+                          <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Empresa</th>
+                          <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Founder</th>
+                          <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {founders.map(f => (
+                          <tr key={f.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                            <td className="px-8 py-6">
+                              <button 
+                                onClick={() => setSelectedCompanyFounder(f)}
+                                className="font-bold text-stone-900 hover:text-stone-600 transition-colors text-left"
+                              >
+                                {f.company?.name || 'Sem empresa'}
+                              </button>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="text-sm font-medium text-stone-700">{f.name}</div>
+                              <div className="text-[10px] text-stone-400">@{f.username}</div>
+                            </td>
+                            <td className="px-8 py-6 text-right">
+                              <button 
+                                onClick={() => setSelectedCompanyFounder(f)}
+                                className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors"
+                              >
+                                Ver Detalhes
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white rounded-[40px] p-12 border border-stone-200 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-3xl font-serif italic mb-6">Seu Perfil Founder</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome Completo</span>
+                        <p className="font-bold text-stone-900">{founder?.name}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Username</span>
+                        <p className="text-stone-600">@{founder?.username}</p>
+                      </div>
+                      {founder?.instagram && (
+                        <div>
+                          <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Instagram</span>
+                          <p className="text-stone-600">{founder.instagram}</p>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Sua Bio</span>
+                        <p className="text-sm text-stone-500 leading-relaxed">{founder?.bio || 'Você ainda não adicionou uma bio.'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-8">
+                  <div className="bg-stone-50 rounded-3xl p-8 border border-stone-100">
+                    <h3 className="text-3xl font-serif italic mb-6">Sua Empresa</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
+                        <p className="font-bold text-stone-900 text-xl">{founder?.company?.name || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
+                        {founder?.company?.cnpj ? (
+                          <p className="font-bold text-stone-900">{founder.company.cnpj}</p>
+                        ) : (
+                          <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl space-y-3">
+                            <p className="text-xs text-rose-600 font-bold flex items-center gap-2">
+                              <AlertTriangle size={14} />
+                              Pendência: CNPJ não informado
+                            </p>
+                            <div className="flex gap-2">
+                              <input 
+                                type="text" 
+                                placeholder="00.000.000/0000-00"
+                                value={cnpjInput}
+                                onChange={e => setCnpjInput(e.target.value)}
+                                className="flex-1 px-4 py-2 bg-white border border-rose-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                              />
+                              <button 
+                                onClick={handleUpdateCnpj}
+                                disabled={updatingCnpj || !cnpjInput}
+                                className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-all disabled:opacity-50"
+                              >
+                                {updatingCnpj ? '...' : 'Salvar'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>
+                        <p className="text-sm text-stone-500 leading-relaxed">{founder?.company?.bio || 'Você ainda não adicionou uma descrição para sua empresa.'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {(activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') && (
+        <>
+          {/* New Challenge Modal */}
+      {showNewChallenge && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+          <div className="bg-white rounded-[40px] p-12 max-w-xl w-full shadow-2xl animate-in zoom-in-95 duration-300">
+            <h3 className="text-3xl font-serif italic mb-8">Criar Novo Desafio</h3>
+            <form onSubmit={handleCreateChallenge} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Título do Desafio</label>
+                <input 
+                  required
+                  type="text" 
+                  placeholder="Ex: Otimizar funil de vendas"
+                  value={challengeData.title}
+                  onChange={e => setChallengeData({ ...challengeData, title: e.target.value })}
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Descrição</label>
+                <textarea 
+                  rows={4}
+                  placeholder="Descreva o que você precisa resolver..."
+                  value={challengeData.description}
+                  onChange={e => setChallengeData({ ...challengeData, description: e.target.value })}
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all resize-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Visibilidade</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setChallengeData({ ...challengeData, type: 'public' })}
+                    className={cn(
+                      "flex items-center justify-center gap-2 py-4 rounded-2xl border font-bold transition-all",
+                      challengeData.type === 'public' ? "bg-stone-900 border-stone-900 text-white" : "border-stone-200 text-stone-400 hover:border-stone-400"
+                    )}
+                  >
+                    <Globe size={18} />
+                    Público
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setChallengeData({ ...challengeData, type: 'private' })}
+                    className={cn(
+                      "flex items-center justify-center gap-2 py-4 rounded-2xl border font-bold transition-all",
+                      challengeData.type === 'private' ? "bg-stone-900 border-stone-900 text-white" : "border-stone-200 text-stone-400 hover:border-stone-400"
+                    )}
+                  >
+                    <Lock size={18} />
+                    Privado
+                  </button>
+                </div>
+                <p className="text-[10px] text-stone-400 mt-2 italic">
+                  * Desafios privados são visíveis apenas para você e administradores do QDDO.
+                </p>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowNewChallenge(false)}
+                  className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-2xl font-bold hover:bg-stone-50 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/20"
+                >
+                  Criar Desafio
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Completion Modal */}
+      {completingChallenge && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+          <div className="bg-white rounded-[40px] p-12 max-w-xl w-full shadow-2xl animate-in zoom-in-95 duration-300">
+            <h3 className="text-3xl font-serif italic mb-2">Concluir Desafio</h3>
+            <p className="text-stone-500 mb-8 font-serif italic">"{completingChallenge.title}"</p>
+            
+            <form onSubmit={handleCompleteChallenge} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Quem te ajudou?</label>
+                <div className="relative">
+                  <HelpCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={20} />
+                  <input 
+                    required
+                    type="text" 
+                    placeholder="Nome da pessoa ou parceiro"
+                    value={completionData.helperName}
+                    onChange={e => setCompletionData({ ...completionData, helperName: e.target.value })}
+                    className="w-full pl-12 pr-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Como foi resolvido?</label>
+                <textarea 
+                  rows={4}
+                  placeholder="Descreva a solução encontrada..."
+                  value={completionData.resolutionDescription}
+                  onChange={e => setCompletionData({ ...completionData, resolutionDescription: e.target.value })}
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all resize-none"
+                />
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setCompletingChallenge(null)}
+                  className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-2xl font-bold hover:bg-stone-50 transition-all"
+                >
+                  Voltar
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20"
+                >
+                  Finalizar Tarefa
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Challenges List */}
+      <div className="grid grid-cols-1 gap-6">
+        {filteredChallenges.length === 0 ? (
+          <div className="bg-white rounded-3xl p-20 border border-stone-200 shadow-sm text-center">
+            <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-300">
+              <CheckSquare size={32} />
+            </div>
+            <h3 className="text-xl font-serif italic text-stone-400">Nenhum desafio encontrado nesta categoria</h3>
+            <button 
+              onClick={() => setShowNewChallenge(true)}
+              className="mt-6 text-stone-900 font-bold underline underline-offset-4 hover:text-stone-600 transition-colors"
+            >
+              Criar meu primeiro desafio
+            </button>
+          </div>
+        ) : (
+          filteredChallenges.map(challenge => (
+            <div 
+              key={challenge.id}
+              className={cn(
+                "bg-white rounded-3xl p-8 border transition-all flex flex-col gap-8",
+                challenge.status === 'completed' ? "border-emerald-100 bg-emerald-50/10" : "border-stone-200 hover:border-stone-400 hover:shadow-xl",
+                expandedChallengeId === challenge.id && "border-stone-900 shadow-2xl"
+              )}
+            >
+              <div className="flex flex-col sm:flex-row gap-8">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={cn(
+                      "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5",
+                      challenge.type === 'private' ? "bg-stone-100 text-stone-500" : "bg-blue-50 text-blue-500"
+                    )}>
+                      {challenge.type === 'private' ? <Lock size={12} /> : <Globe size={12} />}
+                      {challenge.type === 'private' ? 'Privado' : 'Público'}
+                    </div>
+                    {challenge.status === 'completed' && (
+                      <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+                        <CheckCircle2 size={12} />
+                        Concluído
+                      </div>
+                    )}
+                  </div>
+                  
+                  <h3 className="text-2xl font-serif italic mb-2">{challenge.title}</h3>
+                  <p className="text-stone-500 text-sm mb-6 leading-relaxed">{challenge.description}</p>
+                  
+                  {challenge.status === 'completed' && (
+                    <div className="mt-6 p-6 bg-white rounded-2xl border border-emerald-100 space-y-4">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Ajudado por</span>
+                        <p className="font-bold text-stone-900">{challenge.helperName}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Solução</span>
+                        <p className="text-sm text-stone-600 italic">"{challenge.resolutionDescription}"</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-6 flex items-center gap-4">
+                    <button 
+                      onClick={() => setExpandedChallengeId(expandedChallengeId === challenge.id ? null : challenge.id)}
+                      className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors flex items-center gap-2"
+                    >
+                      <MessageCircle size={16} />
+                      {expandedChallengeId === challenge.id ? 'Fechar Comentários' : 'Ver Comentários'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="sm:w-48 flex flex-col justify-between border-t sm:border-t-0 sm:border-l border-stone-100 pt-6 sm:pt-0 sm:pl-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-stone-400">
+                      <Clock size={16} />
+                      <span className="text-[10px] font-bold uppercase">
+                        {challenge.createdAt?.seconds ? new Date(challenge.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '...'}
+                      </span>
+                    </div>
+                    {challenge.status === 'open' && challenge.founderId === user.uid && (
+                      <button 
+                        onClick={() => setCompletingChallenge(challenge)}
+                        className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/10"
+                      >
+                        Concluir
+                        <ArrowRight size={18} />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {challenge.founderId !== user.uid && (
+                    <div className="mt-4 pt-4 border-t border-stone-50">
+                      <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Founder</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center text-stone-400">
+                          <UserIcon size={12} />
+                        </div>
+                        <span className="text-xs font-bold text-stone-900">
+                          {founders.find(f => f.id === challenge.founderId)?.name || `@${challenge.founderId.slice(0, 6)}`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {expandedChallengeId === challenge.id && (
+                <ChallengeComments challengeId={challenge.id} user={user} />
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  )}
+</div>
+  );
+}

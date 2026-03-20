@@ -1,0 +1,243 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: rooms
+// Fields:
+//   - name: string (required)
+//   - description: string (optional)
+//
+// Collection: bookings
+// Fields:
+//   - roomId: string (required)
+//   - date: string (required, YYYY-MM-DD)
+//   - startTime: string (required, HH:mm)
+//   - endTime: string (required, HH:mm)
+//   - userName: string (required)
+//   - userEmail: string (required)
+//   - createdAt: timestamp (required)
+//
+// Collection: founders
+// Fields:
+//   - name: string (required)
+//   - username: string (required)
+//   - instagram: string (optional)
+//   - bio: string (optional)
+//   - company: map { name: string, bio: string } (optional)
+//   - registeredAt: timestamp (required)
+//
+// Collection: challenges
+// Fields:
+//   - founderId: string (required)
+//   - title: string (required)
+//   - description: string (optional)
+//   - type: string (enum: ['public', 'private']) (required)
+//   - status: string (enum: ['open', 'completed']) (required)
+//   - helperName: string (optional)
+//   - resolutionDescription: string (optional)
+//   - createdAt: timestamp (required)
+//   - completedAt: timestamp (optional)
+//
+// Collection: comments
+// Fields:
+//   - challengeId: string (required)
+//   - userId: string (required)
+//   - userName: string (required)
+//   - userPhoto: string (optional)
+//   - text: string (required)
+//   - createdAt: timestamp (required)
+//
+// Collection: messages
+// Fields:
+//   - chatId: string (required)
+//   - senderId: string (required)
+//   - senderName: string (required)
+//   - senderPhoto: string (optional)
+//   - receiverId: string (optional, null for public)
+//   - text: string (required)
+//   - createdAt: timestamp (required)
+//
+// Collection: checkins
+// Fields:
+//   - userId: string (required)
+//   - date: string (required, YYYY-MM-DD)
+//   - checkinTime: timestamp (required)
+//   - checkoutTime: timestamp (optional)
+//   - status: string (enum: ['active', 'completed']) (required)
+//
+// Collection: news
+// Fields:
+//   - title: string (required)
+//   - content: string (required)
+//   - category: string (enum: ['aviso', 'info', 'evento', 'noticia']) (required)
+//   - createdAt: timestamp (required)
+//   - eventDate: timestamp (optional)
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "bbrendaribeiroc@gmail.com" || 
+         get(/databases/$(database)/documents/founders/$(request.auth.uid)).data.role == 'admin');
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidBooking(data) {
+      return data.keys().hasAll(['roomId', 'date', 'startTime', 'endTime', 'userName', 'userEmail', 'createdAt']) &&
+             data.roomId is string && data.roomId.size() > 0 &&
+             data.date is string && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
+             data.startTime is string && data.startTime.matches('^\\d{2}:\\d{2}$') &&
+             data.endTime is string && data.endTime.matches('^\\d{2}:\\d{2}$') &&
+             data.userName is string && data.userName.size() > 0 && data.userName.size() < 100 &&
+             data.userEmail is string && data.userEmail.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$') &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidFounder(data) {
+      return data.keys().hasAll(['name', 'username', 'registeredAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.username is string && data.username.size() > 0 && data.username.size() < 50 &&
+             data.registeredAt is timestamp &&
+             (!('role' in data) || data.role in ['user', 'admin']);
+    }
+
+    function isValidChallenge(data) {
+      return data.keys().hasAll(['founderId', 'title', 'type', 'status', 'createdAt']) &&
+             data.founderId is string &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.type in ['public', 'private'] &&
+             data.status in ['open', 'completed'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidComment(data) {
+      return data.keys().hasAll(['challengeId', 'userId', 'userName', 'text', 'createdAt']) &&
+             data.challengeId is string &&
+             data.userId is string &&
+             data.userName is string && data.userName.size() > 0 &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 1000 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['chatId', 'senderId', 'senderName', 'text', 'createdAt']) &&
+             data.chatId is string &&
+             data.senderId is string &&
+             data.senderName is string && data.senderName.size() > 0 &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 2000 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidCheckin(data) {
+      return data.keys().hasAll(['userId', 'date', 'checkinTime', 'status']) &&
+             data.userId is string &&
+             data.date is string && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
+             data.checkinTime is timestamp &&
+             data.status in ['active', 'completed'] &&
+             (!('checkoutTime' in data) || data.checkoutTime is timestamp);
+    }
+
+    function isValidNewsItem(data) {
+      return data.keys().hasAll(['title', 'content', 'category', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 &&
+             data.content is string && data.content.size() > 0 &&
+             data.category in ['aviso', 'info', 'evento', 'noticia'] &&
+             data.createdAt is timestamp &&
+             (!('eventDate' in data) || data.eventDate is timestamp);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if true; 
+      allow create: if isValidBooking(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /founders/{founderId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (
+        isAdmin() || 
+        (isOwner(founderId) && isValidFounder(request.resource.data) && 
+         (!('role' in request.resource.data) || 
+          request.resource.data.role == (resource == null ? 'user' : resource.data.role)))
+      );
+    }
+
+    match /challenges/{challengeId} {
+      allow read: if resource.data.type == 'public' || 
+                    isOwner(resource.data.founderId) || 
+                    isAdmin();
+      allow create: if isAuthenticated() && 
+                      (isOwner(request.resource.data.founderId) || isAdmin()) && 
+                      isValidChallenge(request.resource.data);
+      allow update: if isAuthenticated() && 
+                      (isOwner(resource.data.founderId) || isAdmin()) && 
+                      isValidChallenge(request.resource.data);
+      allow delete: if isAuthenticated() && 
+                      (isOwner(resource.data.founderId) || isAdmin());
+    }
+
+    match /comments/{commentId} {
+      allow read: if isAuthenticated(); 
+      allow create: if isAuthenticated() && 
+                      (isOwner(request.resource.data.userId) || isAdmin()) && 
+                      isValidComment(request.resource.data);
+      allow update: if isAuthenticated() && 
+                      (isOwner(resource.data.userId) || isAdmin()) && 
+                      isValidComment(request.resource.data);
+      allow delete: if isAuthenticated() && 
+                      (isOwner(resource.data.userId) || isAdmin());
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && 
+                    (resource.data.chatId == 'public' || 
+                     resource.data.senderId == request.auth.uid || 
+                     resource.data.receiverId == request.auth.uid ||
+                     isAdmin());
+      allow create: if isAuthenticated() && 
+                      isOwner(request.resource.data.senderId) && 
+                      isValidMessage(request.resource.data);
+    }
+
+    match /checkins/{checkinId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId) && isValidCheckin(request.resource.data);
+      allow update: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin()) && isValidCheckin(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /news/{newsId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

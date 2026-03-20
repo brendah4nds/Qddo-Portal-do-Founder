@@ -1,0 +1,717 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  collection, 
+  deleteDoc, 
+  doc, 
+  setDoc,
+  onSnapshot,
+  query,
+  orderBy
+} from 'firebase/firestore';
+import { 
+  signOut,
+  User
+} from 'firebase/auth';
+import { 
+  Settings, 
+  AlertCircle, 
+  Trash2, 
+  Plus,
+  Globe,
+  Lock,
+  CheckSquare,
+  Bell,
+  Info,
+  AlertTriangle,
+  CalendarDays,
+  Newspaper,
+  ShieldCheck,
+  MessageSquare
+} from 'lucide-react';
+import { db, auth, handleFirestoreError, OperationType } from '../firebase';
+import { Room, Booking, Challenge } from '../types';
+import { ConfirmationModal } from './ConfirmationModal';
+import { addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+const DEFAULT_BUSINESS_HOURS = Array.from({ length: 21 }, (_, i) => {
+  const hour = Math.floor(i / 2) + 8;
+  const minute = (i % 2) * 30;
+  return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+});
+
+export function AdminPanel({ 
+  user, 
+  onLogin, 
+  rooms, 
+  bookings, 
+  businessHours,
+  isAdmin,
+  founders = [],
+  initialTab = 'bookings'
+}: { 
+  user: User | null; 
+  onLogin: () => void; 
+  rooms: Room[]; 
+  bookings: Booking[]; 
+  businessHours: string[];
+  isAdmin: boolean;
+  founders?: any[];
+  initialTab?: 'bookings' | 'settings' | 'founders' | 'challenges' | 'news';
+}) {
+  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news'>(initialTab);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [newHour, setNewHour] = useState('');
+  const [newNews, setNewNews] = useState({
+    title: '',
+    content: '',
+    category: 'aviso' as 'aviso' | 'info' | 'evento' | 'noticia',
+    eventDate: ''
+  });
+  const [isAddingNews, setIsAddingNews] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    variant?: "danger" | "primary";
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
+  if (!user) {
+    return (
+      <div className="max-w-md mx-auto py-20 text-center">
+        <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-8">
+          <Settings size={40} className="text-stone-400" />
+        </div>
+        <h2 className="text-3xl font-serif italic mb-4">Área Administrativa</h2>
+        <p className="text-stone-500 mb-10 leading-relaxed">Acesse para gerenciar agendamentos, salas e configurações do sistema.</p>
+        <button 
+          onClick={onLogin}
+          className="w-full bg-stone-900 text-white py-4 rounded-xl font-semibold hover:bg-stone-800 transition-all flex items-center justify-center gap-3"
+        >
+          <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="" />
+          Entrar com Google
+        </button>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="max-w-md mx-auto py-20 text-center">
+        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <AlertCircle size={32} />
+        </div>
+        <h2 className="text-2xl font-serif italic mb-2">Acesso Negado</h2>
+        <p className="text-stone-500 mb-8">Você não tem permissão para acessar esta área.</p>
+        <button onClick={() => signOut(auth)} className="text-stone-900 underline font-semibold">Sair</button>
+      </div>
+    );
+  }
+
+  const sortedBookings = [...bookings].sort((a, b) => {
+    const dateA = new Date(`${a.date}T${a.startTime}`);
+    const dateB = new Date(`${b.date}T${b.startTime}`);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const q = query(collection(db, 'challenges'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const allChallenges = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+      setChallenges(allChallenges);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'challenges'));
+
+    const newsQ = query(collection(db, 'news'), orderBy('createdAt', 'desc'));
+    const newsUnsubscribe = onSnapshot(newsQ, (snapshot) => {
+      const allNews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setNewsItems(allNews);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'news'));
+
+    return () => {
+      unsubscribe();
+      newsUnsubscribe();
+    };
+  }, [isAdmin]);
+
+  const handleDelete = async (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: "Cancelar Agendamento",
+      message: "Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.",
+      confirmText: "Cancelar Reserva",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'bookings', id));
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
+  };
+
+  const handleDeleteChallenge = (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Excluir Desafio',
+      message: 'Tem certeza que deseja excluir este desafio? Esta ação não pode ser desfeita.',
+      variant: 'danger',
+      confirmText: 'Excluir',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'challenges', id));
+          setModalConfig(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
+  };
+
+  const handleAddHour = async () => {
+    if (!newHour.match(/^\d{2}:\d{2}$/)) return;
+    const updated = [...businessHours, newHour].sort();
+    await setDoc(doc(db, 'settings', 'global'), { businessHours: updated });
+    setNewHour('');
+  };
+
+  const handleRemoveHour = async (hour: string) => {
+    const updated = businessHours.filter(h => h !== hour);
+    await setDoc(doc(db, 'settings', 'global'), { businessHours: updated });
+  };
+
+  const handleCreateNews = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNews.title || !newNews.content) return;
+
+    try {
+      await addDoc(collection(db, 'news'), {
+        ...newNews,
+        createdAt: serverTimestamp(),
+        eventDate: newNews.category === 'evento' ? Timestamp.fromDate(new Date(newNews.eventDate)) : null
+      });
+      setNewNews({ title: '', content: '', category: 'aviso', eventDate: '' });
+      setIsAddingNews(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDeleteNews = (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Excluir Notícia',
+      message: 'Tem certeza que deseja excluir esta notícia? Esta ação não pode ser desfeita.',
+      variant: 'danger',
+      confirmText: 'Excluir',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'news', id));
+          setModalConfig(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-12">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h2 className="text-4xl font-serif italic mb-2">Painel de Controle</h2>
+          <p className="text-stone-500">Gerencie todos os agendamentos e salas do sistema.</p>
+        </div>
+        <div className="flex gap-4">
+          <div className="bg-white px-6 py-3 rounded-2xl border border-stone-200 shadow-sm flex flex-col">
+            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Total Reservas</span>
+            <span className="text-2xl font-serif italic">{bookings.length}</span>
+          </div>
+          <div className="bg-white px-6 py-3 rounded-2xl border border-stone-200 shadow-sm flex flex-col">
+            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Salas Ativas</span>
+            <span className="text-2xl font-serif italic">{rooms.length}</span>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex gap-8 border-b border-stone-200">
+        <button 
+          onClick={() => setAdminTab('bookings')}
+          className={cn(
+            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
+            adminTab === 'bookings' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          Agendamentos
+        </button>
+        <button 
+          onClick={() => setAdminTab('settings')}
+          className={cn(
+            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
+            adminTab === 'settings' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          Configurações
+        </button>
+        <button 
+          onClick={() => setAdminTab('founders')}
+          className={cn(
+            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
+            adminTab === 'founders' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          Usuários
+        </button>
+        <button 
+          onClick={() => setAdminTab('challenges')}
+          className={cn(
+            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
+            adminTab === 'challenges' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          Desafios
+        </button>
+        <button 
+          onClick={() => setAdminTab('news')}
+          className={cn(
+            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
+            adminTab === 'news' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          News
+        </button>
+      </div>
+
+      {adminTab === 'bookings' && (
+        <section className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-stone-50 border-b border-stone-100">
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Data e Hora</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Sala</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Usuário</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedBookings.map(booking => {
+                  const room = rooms.find(r => r.id === booking.roomId);
+                  return (
+                    <tr key={booking.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                      <td className="px-8 py-6">
+                        <div className="font-bold text-stone-900">{booking.date}</div>
+                        <div className="text-xs text-stone-400">{booking.startTime} - {booking.endTime}</div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="font-serif italic text-stone-700">{room?.name || 'Sala excluída'}</div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="font-bold text-stone-900">{booking.userName}</div>
+                        <div className="text-xs text-stone-400">{booking.userEmail}</div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <button 
+                          onClick={() => handleDelete(booking.id)}
+                          className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
+                        >
+                          <Trash2 size={14} />
+                          <span>Cancelar</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {bookings.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-8 py-20 text-center text-stone-400 italic">Nenhum agendamento encontrado.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {adminTab === 'founders' && (
+        <section className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-stone-50 border-b border-stone-100">
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Nome</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Empresa</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Role</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {founders.map(founder => (
+                  <tr key={founder.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                    <td className="px-8 py-6">
+                      <div className="font-bold text-stone-900">{founder.name}</div>
+                      <div className="text-xs text-stone-400">@{founder.username}</div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="font-serif italic text-stone-700">{founder.company?.name || 'N/A'}</div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <span className={cn(
+                        "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                        founder.role === 'admin' ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-400"
+                      )}>
+                        {founder.role || 'user'}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      {founder.id !== user.uid && (
+                        <button 
+                          onClick={async () => {
+                            const newRole = founder.role === 'admin' ? 'user' : 'admin';
+                            setModalConfig({
+                              isOpen: true,
+                              title: "Alterar Permissão",
+                              message: `Deseja alterar o cargo de ${founder.name} para ${newRole}?`,
+                              confirmText: "Confirmar",
+                              variant: "primary",
+                              onConfirm: async () => {
+                                await setDoc(doc(db, 'founders', founder.id), { ...founder, role: newRole });
+                              }
+                            });
+                          }}
+                          className="text-xs font-bold text-stone-900 hover:underline"
+                        >
+                          Tornar {founder.role === 'admin' ? 'User' : 'Admin'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {adminTab === 'challenges' && (
+        <section className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-stone-50 border-b border-stone-100">
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Desafio</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Tipo</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Status</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Autor</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {challenges.map(challenge => {
+                  const founder = founders.find(f => f.id === challenge.founderId);
+                  return (
+                    <tr key={challenge.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                      <td className="px-8 py-6">
+                        <div className="font-bold text-stone-900">{challenge.title}</div>
+                        <div className="text-xs text-stone-400 line-clamp-1">{challenge.description}</div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-2 text-xs font-bold text-stone-600">
+                          {challenge.type === 'private' ? <Lock size={12} /> : <Globe size={12} />}
+                          {challenge.type === 'private' ? 'Privado' : 'Público'}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
+                          challenge.status === 'completed' ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                        )}>
+                          {challenge.status === 'completed' ? 'Concluído' : 'Aberto'}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="font-bold text-stone-900 text-xs">{founder?.name || 'Desconhecido'}</div>
+                        <div className="text-[10px] text-stone-400">@{challenge.founderId.slice(0, 8)}</div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <button 
+                          onClick={() => handleDeleteChallenge(challenge.id)}
+                          className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
+                        >
+                          <Trash2 size={14} />
+                          <span>Excluir</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {challenges.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-20 text-center text-stone-400 italic">Nenhum desafio encontrado.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {adminTab === 'news' && (
+        <section className="space-y-8 animate-in fade-in duration-500">
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-serif italic">Gerenciar News</h3>
+            <button 
+              onClick={() => setIsAddingNews(!isAddingNews)}
+              className="flex items-center gap-2 bg-stone-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/10"
+            >
+              <Plus size={20} />
+              Nova Notícia
+            </button>
+          </div>
+
+          {isAddingNews && (
+            <div className="bg-white rounded-[40px] p-12 border border-stone-200 shadow-sm animate-in zoom-in-95 duration-300">
+              <form onSubmit={handleCreateNews} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Título</label>
+                    <input 
+                      required
+                      type="text" 
+                      value={newNews.title}
+                      onChange={e => setNewNews({ ...newNews, title: e.target.value })}
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Categoria</label>
+                    <select 
+                      value={newNews.category}
+                      onChange={e => setNewNews({ ...newNews, category: e.target.value as any })}
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                    >
+                      <option value="aviso">Aviso</option>
+                      <option value="info">Info</option>
+                      <option value="evento">Evento</option>
+                      <option value="noticia">Notícia</option>
+                      <option value="regras">Regras</option>
+                      <option value="comunicacao">Comunicação</option>
+                    </select>
+                  </div>
+                </div>
+
+                {newNews.category === 'evento' && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Data do Evento</label>
+                    <input 
+                      required
+                      type="date" 
+                      value={newNews.eventDate}
+                      onChange={e => setNewNews({ ...newNews, eventDate: e.target.value })}
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Conteúdo</label>
+                  <textarea 
+                    required
+                    rows={4}
+                    value={newNews.content}
+                    onChange={e => setNewNews({ ...newNews, content: e.target.value })}
+                    className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <button 
+                    type="button"
+                    onClick={() => setIsAddingNews(false)}
+                    className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-2xl font-bold hover:bg-stone-50 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit"
+                    className="flex-1 bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/20"
+                  >
+                    Publicar
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-stone-50 border-b border-stone-100">
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Notícia</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Categoria</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Data</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {newsItems.map(item => (
+                    <tr key={item.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                      <td className="px-8 py-6">
+                        <div className="font-bold text-stone-900">{item.title}</div>
+                        <div className="text-xs text-stone-400 line-clamp-1">{item.content}</div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
+                          item.category === 'aviso' ? "bg-rose-50 text-rose-500" :
+                          item.category === 'info' ? "bg-blue-50 text-blue-500" :
+                          item.category === 'evento' ? "bg-emerald-50 text-emerald-500" :
+                          item.category === 'regras' ? "bg-amber-50 text-amber-500" :
+                          item.category === 'comunicacao' ? "bg-purple-50 text-purple-500" :
+                          "bg-stone-100 text-stone-500"
+                        )}>
+                          {item.category === 'aviso' ? <AlertTriangle size={12} /> :
+                           item.category === 'info' ? <Info size={12} /> :
+                           item.category === 'evento' ? <CalendarDays size={12} /> :
+                           item.category === 'regras' ? <ShieldCheck size={12} /> :
+                           item.category === 'comunicacao' ? <MessageSquare size={12} /> :
+                           <Newspaper size={12} />}
+                          {item.category}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="text-xs text-stone-600">
+                          {item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '...'}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <button 
+                          onClick={() => handleDeleteNews(item.id)}
+                          className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
+                        >
+                          <Trash2 size={14} />
+                          <span>Excluir</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {newsItems.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-8 py-20 text-center text-stone-400 italic">Nenhuma notícia publicada.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {adminTab === 'settings' && (
+        <section className="space-y-8 animate-in fade-in duration-500">
+          <div className="bg-white rounded-3xl p-8 border border-stone-200 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-serif italic text-lg">Horários Disponíveis</h4>
+              <button 
+                onClick={() => {
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Restaurar Horários",
+                    message: "Deseja restaurar os horários para o padrão de 30 minutos? Suas configurações personalizadas serão perdidas.",
+                    confirmText: "Restaurar",
+                    variant: "primary",
+                    onConfirm: async () => {
+                      await setDoc(doc(db, 'settings', 'global'), { businessHours: DEFAULT_BUSINESS_HOURS });
+                    }
+                  });
+                }}
+                className="text-[10px] bg-stone-900 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-stone-800 transition-colors"
+              >
+                Restaurar Padrão (30 min)
+              </button>
+            </div>
+            <p className="text-stone-500 text-sm mb-8">Edite os horários que estarão disponíveis para agendamento em todas as salas.</p>
+            
+            <div className="flex flex-wrap gap-3 mb-12">
+              {businessHours.map(hour => (
+                <div key={hour} className="flex items-center gap-2 px-4 py-2 bg-stone-100 rounded-full text-sm font-medium group">
+                  {hour}
+                  <button onClick={() => handleRemoveHour(hour)} className="text-stone-400 hover:text-red-500">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-4 max-w-xs mb-12">
+              <input 
+                type="text" 
+                placeholder="HH:mm"
+                value={newHour}
+                onChange={e => setNewHour(e.target.value)}
+                className="flex-1 px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-stone-900"
+              />
+              <button 
+                onClick={handleAddHour}
+                className="bg-stone-900 text-white px-6 py-3 rounded-xl hover:bg-stone-800 transition-all"
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+
+            <h4 className="font-serif italic text-lg mb-4">Links de Agendamento</h4>
+            <p className="text-stone-500 text-sm mb-6">Compartilhe estes links para que os usuários acessem diretamente o agendamento de cada sala.</p>
+            <div className="space-y-3">
+              {rooms.map(room => {
+                const link = `${window.location.origin}/sala/${room.id}`;
+                return (
+                  <div key={room.id} className="p-4 bg-stone-50 border border-stone-100 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">{room.name}</span>
+                      <div className="text-sm font-mono text-stone-600 break-all">{link}</div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(link);
+                        alert('Link copiado!');
+                      }}
+                      className="text-xs bg-white border border-stone-200 px-3 py-1.5 rounded-lg hover:bg-stone-100 transition-colors font-bold"
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <ConfirmationModal 
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        variant={modalConfig.variant}
+      />
+    </div>
+  );
+}

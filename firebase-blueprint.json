@@ -1,0 +1,149 @@
+{
+  "entities": {
+    "Room": {
+      "title": "Room",
+      "description": "A meeting room that can be booked.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the room."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the room."
+        }
+      },
+      "required": ["name"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "An appointment for a meeting room.",
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "string",
+          "description": "The ID of the room being booked."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "The date of the booking (YYYY-MM-DD)."
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The start time of the booking (HH:mm)."
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The end time of the booking (HH:mm)."
+        },
+        "userName": {
+          "type": "string",
+          "description": "The name of the person booking the room."
+        },
+        "userEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "The email of the person booking the room."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the booking was created."
+        }
+      },
+      "required": ["roomId", "date", "startTime", "endTime", "userName", "userEmail"]
+    },
+    "Founder": {
+      "title": "Founder",
+      "description": "A registered founder in the platform.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "username": { "type": "string" },
+        "instagram": { "type": "string" },
+        "bio": { "type": "string" },
+        "company": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "bio": { "type": "string" }
+          }
+        },
+        "registeredAt": { "type": "string", "format": "date-time" },
+        "role": { "type": "string", "enum": ["user", "admin"] }
+      },
+      "required": ["name", "username", "registeredAt"]
+    },
+    "Challenge": {
+      "title": "Challenge",
+      "description": "A task or challenge created by a founder.",
+      "type": "object",
+      "properties": {
+        "founderId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["public", "private"] },
+        "status": { "type": "string", "enum": ["open", "completed"] },
+        "helperName": { "type": "string" },
+        "resolutionDescription": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["founderId", "title", "type", "status", "createdAt"]
+    },
+    "Checkin": {
+      "title": "Checkin",
+      "description": "A record of a user's presence in the space.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string", "format": "date", "description": "YYYY-MM-DD" },
+        "checkinTime": { "type": "string", "format": "date-time" },
+        "checkoutTime": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "completed"] }
+      },
+      "required": ["userId", "date", "checkinTime", "status"]
+    },
+    "NewsItem": {
+      "title": "NewsItem",
+      "description": "An announcement, info, event or news post.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string", "enum": ["aviso", "info", "evento", "noticia"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "eventDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "category", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/rooms/{roomId}": {
+      "schema": "Room",
+      "description": "Collection of meeting rooms."
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Collection of all bookings."
+    },
+    "/founders/{founderId}": {
+      "schema": "Founder",
+      "description": "Collection of registered founders."
+    },
+    "/challenges/{challengeId}": {
+      "schema": "Challenge",
+      "description": "Collection of founder challenges."
+    },
+    "/checkins/{checkinId}": {
+      "schema": "Checkin",
+      "description": "Collection of user check-ins."
+    },
+    "/news/{newsId}": {
+      "schema": "NewsItem",
+      "description": "Collection of news, announcements, and events."
+    }
+  }
+}
