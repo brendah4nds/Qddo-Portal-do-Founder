@@ -287,7 +287,7 @@ export default function App() {
     <div className="h-screen overflow-hidden bg-[#F5F5F0] text-stone-900 font-sans selection:bg-stone-200 flex flex-col">
       {/* Navigation */}
       <nav className="border-b border-stone-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="w-full mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
