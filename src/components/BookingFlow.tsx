@@ -12,7 +12,14 @@ import {
   isSameDay, 
   parse, 
   isBefore,
-  startOfToday
+  startOfToday,
+  startOfWeek,
+  startOfMonth,
+  endOfMonth,
+  endOfWeek,
+  eachDayOfInterval,
+  addMonths,
+  isSameMonth
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
@@ -28,6 +35,7 @@ import { db } from '../firebase';
 import { Room, Booking, BookingStatus } from '../types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { isBlockedDay } from '../utils/holidays';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -253,10 +261,10 @@ export function BookingFlow({
               <div className="flex items-center justify-between mb-8">
                 <h3 className="font-serif italic text-xl">{format(selectedDate, "MMMM yyyy", { locale: ptBR })}</h3>
                 <div className="flex gap-2">
-                  <button onClick={() => setSelectedDate(addDays(selectedDate, -7))} className="p-2 hover:bg-stone-100 rounded-full transition-colors">
+                  <button onClick={() => setSelectedDate(addMonths(selectedDate, -1))} className="p-2 hover:bg-stone-100 rounded-full transition-colors">
                     <ChevronLeft size={20} />
                   </button>
-                  <button onClick={() => setSelectedDate(addDays(selectedDate, 7))} className="p-2 hover:bg-stone-100 rounded-full transition-colors">
+                  <button onClick={() => setSelectedDate(addMonths(selectedDate, 1))} className="p-2 hover:bg-stone-100 rounded-full transition-colors">
                     <ChevronRight size={20} />
                   </button>
                 </div>
@@ -266,29 +274,41 @@ export function BookingFlow({
                 {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => (
                   <div key={d} className="text-center text-[10px] font-bold text-stone-300 py-2">{d}</div>
                 ))}
-                {Array.from({ length: 21 }).map((_, i) => {
-                  const date = addDays(startOfDay(selectedDate), i - 7);
-                  const isSelected = isSameDay(date, selectedDate);
-                  const isPast = isBefore(date, startOfToday());
-                  
-                  return (
-                    <button
-                      key={i}
-                      disabled={isPast}
-                      onClick={() => {
-                        setSelectedDate(date);
-                        setStep(3);
-                      }}
-                      className={cn(
-                        "aspect-square flex flex-col items-center justify-center rounded-2xl transition-all",
-                        isSelected ? "bg-stone-900 text-white shadow-md" : "hover:bg-stone-50",
-                        isPast ? "opacity-20 cursor-not-allowed" : ""
-                      )}
-                    >
-                      <span className="text-sm font-bold">{format(date, 'd')}</span>
-                    </button>
-                  );
-                })}
+                {(() => {
+                  const mStart = startOfMonth(selectedDate);
+                  const mEnd = endOfMonth(selectedDate);
+                  const startDate = startOfWeek(mStart, { weekStartsOn: 0 });
+                  const endDate = endOfWeek(mEnd, { weekStartsOn: 0 });
+                  const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+                  return days.map((date) => {
+                    const isSelected = isSameDay(date, selectedDate);
+                    const isPast = isBefore(date, startOfToday());
+                    const isBlocked = isBlockedDay(date);
+                    const currentMonth = isSameMonth(date, selectedDate);
+                    const isDisabled = isPast || isBlocked || !currentMonth;
+                    
+                    return (
+                      <button
+                        key={date.toISOString()}
+                        disabled={isDisabled}
+                        onClick={() => {
+                          setSelectedDate(date);
+                          setStep(3);
+                        }}
+                        className={cn(
+                          "aspect-square flex flex-col items-center justify-center rounded-2xl transition-all",
+                          isSelected ? "bg-stone-900 text-white shadow-md" : "hover:bg-stone-50",
+                          isDisabled ? "opacity-20 cursor-not-allowed" : "",
+                          !currentMonth ? "invisible" : ""
+                        )}
+                      >
+                        <span className="text-sm font-bold">{format(date, 'd')}</span>
+                        {isBlocked && !isPast && currentMonth && <span className="text-[6px] uppercase font-bold text-stone-400">Bloqueado</span>}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>
