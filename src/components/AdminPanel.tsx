@@ -269,10 +269,10 @@ export function AdminPanel({
 
     // Check file type
     const isPDF = file.type === 'application/pdf';
-    const isPNG = file.type === 'image/png';
+    const isImage = file.type.startsWith('image/');
 
-    if (!isPDF && !isPNG) {
-      alert('Apenas arquivos PDF e PNG são permitidos.');
+    if (!isPDF && !isImage) {
+      alert('Apenas arquivos PDF e Imagens são permitidos.');
       return;
     }
 
@@ -286,7 +286,7 @@ export function AdminPanel({
         ...prev,
         attachmentUrl: url,
         attachmentName: file.name,
-        attachmentType: isPDF ? 'pdf' : 'png'
+        attachmentType: isPDF ? 'pdf' : 'png' // simplified type tracking
       }));
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -659,7 +659,7 @@ export function AdminPanel({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Anexo (PDF ou PNG)</label>
+                  <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Anexo (PDF ou Imagem)</label>
                   <div className="flex items-center gap-4">
                     <label className={cn(
                       "flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-stone-50 border border-dashed border-stone-200 rounded-2xl cursor-pointer hover:bg-stone-100 transition-all",
@@ -671,7 +671,7 @@ export function AdminPanel({
                       </span>
                       <input 
                         type="file" 
-                        accept=".pdf,.png"
+                        accept="image/*,.pdf"
                         onChange={handleFileUpload}
                         disabled={isUploading}
                         className="hidden"

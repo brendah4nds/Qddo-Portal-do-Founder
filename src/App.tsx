@@ -588,9 +588,10 @@ export default function App() {
                            item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : ''}
                         </span>
                         {(item.startTime || item.endTime) && (
-                          <span className="text-[10px] uppercase tracking-widest font-bold text-amber-500 flex items-center gap-1">
+                          <span className="text-[10px] uppercase tracking-widest font-bold text-amber-500 flex items-center gap-2">
                             <Clock size={12} />
-                            {item.startTime || '--:--'} {item.endTime ? ` - ${item.endTime}` : ''}
+                            <span>Início: {item.startTime || '--:--'}</span>
+                            {item.endTime && <span>Término: {item.endTime}</span>}
                           </span>
                         )}
                       </div>
@@ -761,9 +762,10 @@ export default function App() {
                                              {format(event.eventDate?.toDate ? event.eventDate.toDate() : new Date(event.eventDate + 'T00:00:00'), 'EEEE', { locale: ptBR })}
                                            </span>
                                            {(event.startTime || event.endTime) && (
-                                             <span className="text-stone-400 text-[10px] font-bold uppercase flex items-center gap-1">
+                                             <span className="text-stone-400 text-[10px] font-bold uppercase flex items-center gap-2">
                                                <Clock size={10} />
-                                               {event.startTime || '--:--'} {event.endTime ? ` - ${event.endTime}` : ''}
+                                               <span>Início: {event.startTime || '--:--'}</span>
+                                               {event.endTime && <span>Término: {event.endTime}</span>}
                                              </span>
                                            )}
                                         </div>
@@ -971,9 +973,17 @@ export default function App() {
                                        <span>Data: {new Date(item.eventDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
                                      </div>
                                      {(item.startTime || item.endTime) && (
-                                       <div className="flex items-center gap-2 text-amber-600 font-bold text-xs">
-                                         <Clock size={14} />
-                                         <span>Horário: {item.startTime || '--:--'} {item.endTime ? ` - ${item.endTime}` : ''}</span>
+                                       <div className="flex flex-wrap items-center gap-4 text-amber-600 font-bold text-xs uppercase tracking-widest">
+                                         <div className="flex items-center gap-2">
+                                           <Clock size={14} />
+                                           <span>Início: {item.startTime || '--:--'}</span>
+                                         </div>
+                                         {item.endTime && (
+                                           <div className="flex items-center gap-2">
+                                             <Clock size={14} />
+                                             <span>Término: {item.endTime}</span>
+                                           </div>
+                                         )}
                                        </div>
                                      )}
                                      {item.attachmentUrl && (
