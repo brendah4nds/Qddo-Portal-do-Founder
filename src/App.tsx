@@ -84,7 +84,7 @@ export default function App() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [businessHours, setBusinessHours] = useState<string[]>(DEFAULT_BUSINESS_HOURS);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news'>('general');
+  const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news' | 'quads'>('general');
   const [activeSubTab, setActiveSubTab] = useState<string>('general');
   const [adminInitialTab, setAdminInitialTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news'>('bookings');
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
@@ -481,6 +481,28 @@ export default function App() {
               </button>
             </div>
 
+            {/* Quads Section */}
+            <div>
+              <button 
+                onClick={() => {
+                  setView('quads');
+                  setActiveSubTab('quads');
+                }}
+                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
+                  view === 'quads' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                    view === 'quads' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                  }`}>
+                    <Trophy size={18} />
+                  </div>
+                  <span className={`font-serif italic text-lg ${view === 'quads' ? 'text-white' : 'text-stone-900'}`}>Quads</span>
+                </div>
+              </button>
+            </div>
+
             {/* Bate-papo Section */}
             <div>
               <button 
@@ -572,6 +594,58 @@ export default function App() {
                       </button>
                     </div>
                   ))}
+                </div>
+              </div>
+            ) : view === 'quads' ? (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="mb-12">
+                  <h2 className="text-4xl font-serif italic mb-2">Quads</h2>
+                  <p className="text-stone-500 font-serif italic">Consulte as ações e suas respectivas pontuações na comunidade QDDO.</p>
+                </div>
+                
+                <div className="bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-stone-900 border-b border-stone-800">
+                          <th className="px-8 py-6 text-[10px] uppercase tracking-widest font-bold text-stone-400">Ação</th>
+                          <th className="px-8 py-6 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Pontuação</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { action: "Check-in diário", points: "1" },
+                          { action: "Evento interno QDDO", points: "2" },
+                          { action: "Streak 5 dias consecutivos", points: "3 (bônus)" },
+                          { action: "Resolução de desafio aberto de outro founder", points: "5" },
+                          { action: "Indicação founder com fit para o hub", points: "5" },
+                          { action: "Aprovação de founder indicado por você", points: "10" },
+                          { action: "Mentoria espontânea (mín. 30 min)", points: "5" },
+                          { action: "Contribuição técnica ao app/site/infra QDDO", points: "8" },
+                          { action: "Realização do Desafio Mensal", points: "10" },
+                          { action: "Avançar estágio", points: "25" },
+                          { action: "Crescimento de faturamento MoM", points: "5" },
+                          { action: "Completar desafio de Mantenedor", points: "15" },
+                          { action: "Participar de hackathon corporativo", points: "10" },
+                          { action: "Vencer hackathon", points: "30 (bônus)" },
+                          { action: "Relatório mensal para mantenedor de sala", points: "8" },
+                          { action: "Convidado no podcast QDDO", points: "8" },
+                          { action: "Pitch no Demo Day", points: "10" }
+                        ].map((item, idx) => (
+                          <tr key={idx} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors group">
+                            <td className="px-8 py-6">
+                              <span className="font-bold text-stone-900 group-hover:text-stone-600 transition-colors">{item.action}</span>
+                            </td>
+                            <td className="px-8 py-6 text-right">
+                              <span className="inline-flex items-center justify-center min-w-[32px] h-8 px-3 bg-stone-100 rounded-full text-xs font-black text-stone-900 group-hover:bg-stone-900 group-hover:text-white transition-all">
+                                {item.points}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             ) : view === 'general' ? (
