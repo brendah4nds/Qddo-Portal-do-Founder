@@ -8,6 +8,14 @@
 @layer base {
   body {
     @apply bg-[#F5F5F0] text-stone-900 antialiased;
+    height: 100svh;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button, a, [role="button"], .cursor-pointer {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
