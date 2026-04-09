@@ -59,8 +59,8 @@ interface Checkin {
 }
 
 const ULYSSES_LOCATION = {
-  lat: -15.7941,
-  lng: -47.8922,
+  lat: -15.789209930873332,
+  lng: -47.90071054840695,
   radius: 300 // metros de tolerância
 };
 
