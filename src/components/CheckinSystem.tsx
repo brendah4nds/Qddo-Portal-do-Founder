@@ -93,6 +93,7 @@ export function CheckinSystem({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedUserId, setSelectedUserId] = useState<string>(user.uid);
   const [loading, setLoading] = useState(true);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   // Fetch checkins for the selected user
   useEffect(() => {
@@ -118,91 +119,92 @@ export function CheckinSystem({
   const [checkinError, setCheckinError] = useState<string | null>(null);
   const [checkinSuccess, setCheckinSuccess] = useState<string | null>(null);
 
-  const validateLocation = (): Promise<{ lat: number; lng: number }> => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject('Seu navegador não suporta geolocalização.');
-        return;
-      }
+  const performCheckAction = async (isCheckin: boolean) => {
+    setCheckinError(null);
+    setCheckinSuccess(null);
+    setLocationLoading(true);
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const distance = calculateDistance(
-            latitude,
-            longitude,
-            ULYSSES_LOCATION.lat,
-            ULYSSES_LOCATION.lng
-          );
+    if (!navigator.geolocation) {
+      setCheckinError('Seu navegador não suporta geolocalização.');
+      setLocationLoading(false);
+      return;
+    }
 
-          if (distance > ULYSSES_LOCATION.radius) {
-            reject(`Você está fora do perímetro permitido (${Math.round(distance)}m do local).`);
+    // Usar getCurrentPosition diretamente para melhor suporte a gestos no iOS
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        const distance = calculateDistance(
+          latitude,
+          longitude,
+          ULYSSES_LOCATION.lat,
+          ULYSSES_LOCATION.lng
+        );
+
+        if (distance > ULYSSES_LOCATION.radius) {
+          setCheckinError(`Você está fora do perímetro permitido (${Math.round(distance)}m do local).`);
+          setLocationLoading(false);
+          return;
+        }
+
+        try {
+          if (isCheckin) {
+            await addDoc(collection(db, 'checkins'), {
+              userId: user.uid,
+              date: todayStr,
+              checkinTime: serverTimestamp(),
+              status: 'active'
+            });
+            setCheckinSuccess('Check-in realizado com sucesso');
           } else {
-            resolve({ lat: latitude, lng: longitude });
+            if (todayCheckin) {
+              await updateDoc(doc(db, 'checkins', todayCheckin.id), {
+                checkoutTime: serverTimestamp(),
+                status: 'completed'
+              });
+              setCheckinSuccess('Check-out realizado com sucesso');
+            }
           }
-        },
-        (error) => {
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              reject('Permissão de localização negada pelo usuário.');
-              break;
-            case error.POSITION_UNAVAILABLE:
-              reject('Informações de localização indisponíveis.');
-              break;
-            case error.TIMEOUT:
-              reject('Tempo limite de localização esgotado.');
-              break;
-            default:
-              reject('Erro desconhecido ao obter localização.');
-          }
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    });
+          setTimeout(() => setActiveTab('overview'), 2000);
+        } catch (error) {
+          console.error(`Error during ${isCheckin ? 'check-in' : 'check-out'}:`, error);
+          setCheckinError(`Erro ao salvar no banco de dados.`);
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      (error) => {
+        let msg = 'Erro ao obter localização.';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            msg = 'Permissão de localização negada pelo usuário.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            msg = 'Informações de localização indisponíveis.';
+            break;
+          case error.TIMEOUT:
+            msg = 'Tempo limite de localização esgotado.';
+            break;
+        }
+        setCheckinError(msg);
+        setLocationLoading(false);
+      },
+      { 
+        enableHighAccuracy: true, 
+        timeout: 15000, // Aumentado para 15s para dar mais tempo ao GPS mobile
+        maximumAge: 0   // Forçar localização atual, crítico para iOS
+      }
+    );
   };
 
-  const handleCheckin = async () => {
-    if (todayCheckin) return;
-    setCheckinError(null);
-    setCheckinSuccess(null);
-
-    try {
-      await validateLocation();
-      
-      await addDoc(collection(db, 'checkins'), {
-        userId: user.uid,
-        date: todayStr,
-        checkinTime: serverTimestamp(),
-        status: 'active'
-      });
-      
-      setCheckinSuccess('Check-in realizado com sucesso');
-      setTimeout(() => setActiveTab('overview'), 2000);
-    } catch (error: any) {
-      console.error('Error during check-in:', error);
-      setCheckinError(typeof error === 'string' ? error : 'Erro ao realizar o check-in');
-    }
+  const handleCheckin = () => {
+    if (todayCheckin || locationLoading) return;
+    performCheckAction(true);
   };
 
-  const handleCheckout = async () => {
-    if (!todayCheckin || todayCheckin.status === 'completed') return;
-    setCheckinError(null);
-    setCheckinSuccess(null);
-
-    try {
-      await validateLocation();
-
-      await updateDoc(doc(db, 'checkins', todayCheckin.id), {
-        checkoutTime: serverTimestamp(),
-        status: 'completed'
-      });
-      
-      setCheckinSuccess('Check-out realizado com sucesso');
-      setTimeout(() => setActiveTab('overview'), 2000);
-    } catch (error: any) {
-      console.error('Error during check-out:', error);
-      setCheckinError(typeof error === 'string' ? error : 'Erro ao realizar o check-out');
-    }
+  const handleCheckout = () => {
+    if (!todayCheckin || todayCheckin.status === 'completed' || locationLoading) return;
+    performCheckAction(false);
   };
 
   // Calendar Logic
@@ -320,10 +322,26 @@ export function CheckinSystem({
               !checkinSuccess && (
                 <button 
                   onClick={handleCheckin}
-                  className="w-full bg-stone-900 text-white py-6 rounded-3xl font-bold hover:bg-stone-800 transition-all shadow-xl shadow-stone-900/20 flex items-center justify-center gap-3"
+                  disabled={locationLoading}
+                  className={cn(
+                    "w-full py-6 rounded-3xl font-bold transition-all shadow-xl flex items-center justify-center gap-3",
+                    locationLoading 
+                      ? "bg-stone-100 text-stone-400 cursor-not-allowed" 
+                      : "bg-stone-900 text-white hover:bg-stone-800 shadow-stone-900/20 active:scale-[0.98]"
+                  )}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <LogIn size={24} />
-                  Realizar Check-in
+                  {locationLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
+                      Validando Localização...
+                    </>
+                  ) : (
+                    <>
+                      <LogIn size={24} />
+                      Realizar Check-in
+                    </>
+                  )}
                 </button>
               )
             )}
@@ -379,10 +397,26 @@ export function CheckinSystem({
               !checkinSuccess && (
                 <button 
                   onClick={handleCheckout}
-                  className="w-full bg-stone-900 text-white py-6 rounded-3xl font-bold hover:bg-stone-800 transition-all shadow-xl shadow-stone-900/20 flex items-center justify-center gap-3"
+                  disabled={locationLoading}
+                  className={cn(
+                    "w-full py-6 rounded-3xl font-bold transition-all shadow-xl flex items-center justify-center gap-3",
+                    locationLoading 
+                      ? "bg-stone-100 text-stone-400 cursor-not-allowed" 
+                      : "bg-stone-900 text-white hover:bg-stone-800 shadow-stone-900/20 active:scale-[0.98]"
+                  )}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <LogOut size={24} />
-                  Realizar Check-out
+                  {locationLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
+                      Validando Localização...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut size={24} />
+                      Realizar Check-out
+                    </>
+                  )}
                 </button>
               )
             )}
