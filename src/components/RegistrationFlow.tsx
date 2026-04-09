@@ -16,9 +16,15 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
     cnpj: ''
   });
 
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!termsAccepted) {
+      alert('Você precisa aceitar os termos e autorizações para continuar.');
+      return;
+    }
 
     setRegistering(true);
     try {
@@ -33,6 +39,8 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
           cnpj: formData.cnpj
         },
         registeredAt: serverTimestamp(),
+        termsAccepted: true,
+        termsAcceptedAt: serverTimestamp(),
         role: 'user'
       });
       onComplete();
@@ -141,6 +149,17 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
             </div>
           </div>
 
+          <div className="pt-4 flex items-start gap-4 cursor-pointer group" onClick={() => setTermsAccepted(!termsAccepted)}>
+            <div className={`mt-1 w-6 h-6 rounded-md border-2 transition-all flex items-center justify-center shrink-0 ${
+              termsAccepted ? 'bg-stone-900 border-stone-900' : 'bg-stone-50 border-stone-200 group-hover:border-stone-400'
+            }`}>
+              {termsAccepted && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
+            </div>
+            <label className="text-sm text-stone-600 leading-tight cursor-pointer">
+              Aceito os <span className="font-bold underline text-stone-900">termos e autorizações</span> (LGPD, uso de imagem e localização).
+            </label>
+          </div>
+
           <button 
             type="submit"
             disabled={registering}
@@ -149,6 +168,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
             {registering ? 'Cadastrando...' : 'Finalizar Cadastro e Entrar'}
           </button>
         </form>
+
       </div>
     </div>
   );

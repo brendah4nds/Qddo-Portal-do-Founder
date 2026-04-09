@@ -9,6 +9,8 @@ import {
   onSnapshot, 
   doc, 
   setDoc,
+  updateDoc,
+  serverTimestamp,
   query,
   where
 } from 'firebase/firestore';
@@ -65,6 +67,7 @@ import { FounderPortal } from './components/FounderPortal';
 import { LandingPage } from './components/LandingPage';
 import { RegistrationFlow } from './components/RegistrationFlow';
 import { Chat } from './components/Chat';
+import { TermsModal } from './components/TermsModal';
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
@@ -118,6 +121,20 @@ export default function App() {
   const [allChallenges, setAllChallenges] = useState<Challenge[]>([]);
   const [newsItems, setNewsItems] = useState<any[]>([]);
   const [userCheckins, setUserCheckins] = useState<any[]>([]);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
+  const handleAcceptTerms = async () => {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, 'founders', user.uid), {
+        termsAccepted: true,
+        termsAcceptedAt: serverTimestamp()
+      });
+      setIsTermsModalOpen(false);
+    } catch (error) {
+      console.error("Error accepting terms:", error);
+    }
+  };
 
   const toggleTopic = (topic: string) => {
     setExpandedTopics(prev => 
@@ -655,6 +672,27 @@ export default function App() {
                   <p className="text-stone-500 font-serif italic">Bem-vindo ao painel geral da comunidade QDDO.</p>
                 </div>
 
+                {/* Pendência Banner */}
+                {founderData && !founderData.termsAccepted && (
+                  <div className="mb-8 bg-amber-50 border border-amber-200 rounded-[30px] p-6 flex items-center justify-between group animate-in slide-in-from-top-4 duration-500 cursor-pointer" onClick={() => setIsTermsModalOpen(true)}>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600">
+                        <AlertTriangle size={24} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-amber-900">Você está com uma pendência</h4>
+                        <p className="text-amber-700 text-sm">
+                          Para continuar utilizando o portal, você precisa aceitar os nossos termos de uso e autorizações.
+                          <span className="ml-1 font-bold underline hover:text-amber-900 transition-colors">
+                            Clique aqui para resolver
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="text-amber-400 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                )}
+
                 {/* News Box */}
                 <div className="mb-12 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
                   <div className="bg-stone-900 px-8 py-4 flex items-center gap-3">
@@ -999,6 +1037,11 @@ export default function App() {
           <p className="text-stone-400 text-[10px] uppercase tracking-widest font-bold">© 2026 qddo - Gestão Inteligente de Espaços - Brenda Ribeiro</p>
         </div>
       </footer>
+      <TermsModal 
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+        onAccept={handleAcceptTerms}
+      />
     </div>
   );
 }
