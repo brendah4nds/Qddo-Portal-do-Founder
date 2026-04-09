@@ -315,7 +315,7 @@ export function CheckinSystem({
               <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
                 <p className="text-emerald-700 font-bold flex items-center justify-center gap-2">
                   <CheckCircle2 size={20} />
-                  Check-in realizado às {format(todayCheckin.checkinTime.toDate(), 'HH:mm')}
+                  Check-in realizado às {todayCheckin.checkinTime?.toDate ? format(todayCheckin.checkinTime.toDate(), 'HH:mm') : '...'}
                 </p>
               </div>
             ) : (
@@ -390,7 +390,7 @@ export function CheckinSystem({
               <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
                 <p className="text-emerald-700 font-bold flex items-center justify-center gap-2">
                   <CheckCircle2 size={20} />
-                  Check-out realizado às {format(todayCheckin.checkoutTime?.toDate() || new Date(), 'HH:mm')}
+                  Check-out realizado às {todayCheckin.checkoutTime?.toDate ? format(todayCheckin.checkoutTime.toDate(), 'HH:mm') : '...'}
                 </p>
               </div>
             ) : (
@@ -505,24 +505,24 @@ export function CheckinSystem({
                 ))}
 
                 {daysInMonth.map(day => {
-                  const hasCheckin = checkins.some(c => c.date === format(day, 'yyyy-MM-dd'));
+                  const checkinDay = checkins.find(c => c.date === format(day, 'yyyy-MM-dd'));
                   return (
                     <div 
                       key={day.toString()}
                       className={cn(
                         "aspect-square rounded-2xl border flex flex-col items-center justify-center relative transition-all",
                         isToday(day) ? "border-stone-900 bg-stone-50" : "border-stone-100",
-                        hasCheckin ? "bg-emerald-50 border-emerald-100" : "hover:bg-stone-50"
+                        checkinDay ? "bg-emerald-50 border-emerald-100" : "hover:bg-stone-50"
                       )}
                     >
                       <span className={cn(
                         "text-sm font-medium",
                         isToday(day) ? "text-stone-900 font-bold" : "text-stone-500",
-                        hasCheckin && "text-emerald-700"
+                        checkinDay && "text-emerald-700"
                       )}>
                         {format(day, 'd')}
                       </span>
-                      {hasCheckin && (
+                      {checkinDay && (
                         <CheckCircle2 size={14} className="text-emerald-500 mt-1" />
                       )}
                     </div>
