@@ -732,11 +732,6 @@ export default function App() {
               </div>
             ) : view === 'general' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="mb-12">
-                  <h2 className="text-4xl font-serif italic mb-2">Visão Geral</h2>
-                  <p className="text-stone-500 font-serif italic">Bem-vindo ao painel geral da comunidade QDDO.</p>
-                </div>
-
                 {/* Pendência Banner */}
                 {founderData && !founderData.termsAccepted && (
                   <div className="mb-8 bg-amber-50 border border-amber-200 rounded-[30px] p-6 flex items-center justify-between group animate-in slide-in-from-top-4 duration-500 cursor-pointer" onClick={() => setIsTermsModalOpen(true)}>
@@ -780,7 +775,7 @@ export default function App() {
                       }).sort((a, b) => {
                         const dateA = a.eventDate?.toDate ? a.eventDate.toDate() : new Date(a.eventDate);
                         const dateB = b.eventDate?.toDate ? b.eventDate.toDate() : new Date(b.eventDate);
-                        return dateA.getTime() - dateB.getTime();
+                        return dateB.getTime() - dateA.getTime();
                       });
 
                       const publicChallenges = allChallenges
@@ -957,25 +952,25 @@ export default function App() {
                             </div>
 
                             {/* User Score */}
-                            <div className="flex-1 bg-emerald-500 rounded-[40px] p-8 text-white shadow-xl shadow-emerald-500/20 flex flex-col justify-center items-center text-center relative overflow-hidden">
+                            <div className="flex-1 bg-amber-500 rounded-[40px] p-8 text-white shadow-xl shadow-amber-500/20 flex flex-col justify-center items-center text-center relative overflow-hidden">
                               <div className="absolute -right-4 -top-4 opacity-10 rotate-12">
                                 <Trophy size={120} />
                               </div>
-                              <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-100 mb-2 relative z-10">Seu Score QDDO</span>
+                              <span className="text-[10px] uppercase tracking-widest font-bold text-amber-100 mb-2 relative z-10">Seu Score QDDO</span>
                               <div className="text-6xl font-serif italic mb-1 relative z-10">{userScore}</div>
-                              <span className="text-xs font-bold text-emerald-100 relative z-10">pontos este mês</span>
+                              <span className="text-xs font-bold text-amber-100 relative z-10">pontos este mês</span>
                               {userRankPosition > 0 && (
-                                <span className="text-[11px] text-emerald-200 relative z-10 mt-1">#{userRankPosition}º no ranking</span>
+                                <span className="text-[11px] text-amber-200 relative z-10 mt-1">#{userRankPosition}º no ranking</span>
                               )}
-                              
-                              <div className="mt-6 pt-6 border-t border-emerald-400/30 w-full relative z-10">
-                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-emerald-100">
+
+                              <div className="mt-6 pt-6 border-t border-amber-400/30 w-full relative z-10">
+                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-amber-100">
                                   <span>Check-ins</span>
                                   <span>{currentMonthCheckins}</span>
                                 </div>
-                                <div className="w-full h-1.5 bg-emerald-600/30 rounded-full mt-2 overflow-hidden">
-                                  <div 
-                                    className="h-full bg-white rounded-full transition-all duration-1000" 
+                                <div className="w-full h-1.5 bg-amber-600/30 rounded-full mt-2 overflow-hidden">
+                                  <div
+                                    className="h-full bg-white rounded-full transition-all duration-1000"
                                     style={{ width: `${Math.min((currentMonthCheckins / 20) * 100, 100)}%` }}
                                   />
                                 </div>
@@ -1172,19 +1167,19 @@ export default function App() {
                     setIndicarEmpresa('');
                     setIndicarArea('');
                   }}
-                  className="w-full text-left bg-stone-900 text-white p-12 rounded-[48px] relative overflow-hidden hover:bg-stone-800 transition-all group"
+                  className="w-full bg-stone-900 text-white px-8 py-6 rounded-[40px] relative overflow-hidden hover:bg-stone-800 transition-all group"
                 >
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="bg-white/10 p-3 rounded-2xl group-hover:bg-white/20 transition-all">
-                        <UserPlus size={28} className="text-white" />
-                      </div>
+                  <div className="relative z-10 flex items-center justify-center gap-4">
+                    <div className="bg-white/10 p-2.5 rounded-2xl group-hover:bg-white/20 transition-all shrink-0">
+                      <UserPlus size={22} className="text-white" />
                     </div>
-                    <h2 className="text-3xl font-serif italic mb-4">Indicar um Founder</h2>
-                    <p className="text-stone-400 max-w-md">Conhece alguém que deveria fazer parte da nossa comunidade? Indique um founder e ajude a fortalecer a rede.</p>
+                    <div className="text-center">
+                      <h2 className="text-xl font-serif italic">Indicar um Founder</h2>
+                      <p className="text-stone-400 text-sm">Conhece alguém que deveria fazer parte da nossa comunidade?</p>
+                    </div>
+                    <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
                   </div>
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                  <ArrowRight size={24} className="absolute bottom-10 right-12 text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all" />
                 </button>
               </div>
             ) : (
