@@ -61,7 +61,9 @@ import {
   Paperclip,
   ExternalLink,
   FileText,
-  Menu
+  Menu,
+  UserPlus,
+  Send
 } from 'lucide-react';
 import { db, auth, handleFirestoreError, OperationType } from './firebase';
 import { Room, Booking, BookingStatus, Challenge } from './types';
@@ -93,7 +95,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news' | 'quads'>('general');
   const [activeSubTab, setActiveSubTab] = useState<string>('general');
-  const [adminInitialTab, setAdminInitialTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news'>('bookings');
+  const [adminInitialTab, setAdminInitialTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes'>('bookings');
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
   const [bookingStatus, setBookingStatus] = useState<BookingStatus>('idle');
@@ -127,6 +129,12 @@ export default function App() {
   const [userCheckins, setUserCheckins] = useState<any[]>([]);
   const [allCheckins, setAllCheckins] = useState<any[]>([]);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [showIndicarFounderModal, setShowIndicarFounderModal] = useState(false);
+  const [indicarNome, setIndicarNome] = useState('');
+  const [indicarEmpresa, setIndicarEmpresa] = useState('');
+  const [indicarArea, setIndicarArea] = useState('');
+  const [indicarSubmitting, setIndicarSubmitting] = useState(false);
+  const [indicarSuccess, setIndicarSuccess] = useState(false);
 
   const handleAcceptTerms = async () => {
     if (!user) return;
@@ -138,6 +146,30 @@ export default function App() {
       setIsTermsModalOpen(false);
     } catch (error) {
       console.error("Error accepting terms:", error);
+    }
+  };
+
+  const handleIndicarFounderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!indicarNome.trim() || !indicarEmpresa.trim() || !indicarArea.trim()) return;
+    setIndicarSubmitting(true);
+    try {
+      await setDoc(doc(collection(db, 'indicacoes')), {
+        nomeIndicado: indicarNome.trim(),
+        empresa: indicarEmpresa.trim(),
+        area: indicarArea.trim(),
+        indicadoPor: user?.uid || null,
+        indicadoPorEmail: user?.email || null,
+        criadoEm: serverTimestamp(),
+      });
+      setIndicarSuccess(true);
+      setIndicarNome('');
+      setIndicarEmpresa('');
+      setIndicarArea('');
+    } catch (error) {
+      console.error('Erro ao enviar indicação:', error);
+    } finally {
+      setIndicarSubmitting(false);
     }
   };
 
@@ -1132,22 +1164,28 @@ export default function App() {
                   </div>
                 )}
 
-                <div className="bg-stone-900 text-white p-12 rounded-[48px] relative overflow-hidden">
+                <button
+                  onClick={() => {
+                    setShowIndicarFounderModal(true);
+                    setIndicarSuccess(false);
+                    setIndicarNome('');
+                    setIndicarEmpresa('');
+                    setIndicarArea('');
+                  }}
+                  className="w-full text-left bg-stone-900 text-white p-12 rounded-[48px] relative overflow-hidden hover:bg-stone-800 transition-all group"
+                >
                   <div className="relative z-10">
-                    <h2 className="text-3xl font-serif italic mb-4">Pronto para o próximo passo?</h2>
-                    <p className="text-stone-400 mb-8 max-w-md">Explore as ferramentas exclusivas para founders e acelere seu crescimento.</p>
-                    <button 
-                      onClick={() => {
-                        setView('portal');
-                        setActiveSubTab('checkin');
-                      }}
-                      className="bg-white text-stone-900 px-8 py-4 rounded-2xl font-bold hover:bg-stone-100 transition-all"
-                    >
-                      Acessar Portal
-                    </button>
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="bg-white/10 p-3 rounded-2xl group-hover:bg-white/20 transition-all">
+                        <UserPlus size={28} className="text-white" />
+                      </div>
+                    </div>
+                    <h2 className="text-3xl font-serif italic mb-4">Indicar um Founder</h2>
+                    <p className="text-stone-400 max-w-md">Conhece alguém que deveria fazer parte da nossa comunidade? Indique um founder e ajude a fortalecer a rede.</p>
                   </div>
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                </div>
+                  <ArrowRight size={24} className="absolute bottom-10 right-12 text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all" />
+                </button>
               </div>
             ) : (
               <BookingFlow 
@@ -1176,7 +1214,92 @@ export default function App() {
           <p className="text-stone-400 text-[10px] uppercase tracking-widest font-bold">© 2026 qddo - Gestão Inteligente de Espaços - Brenda Ribeiro</p>
         </div>
       </footer>
-      <TermsModal 
+      {showIndicarFounderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowIndicarFounderModal(false)}>
+          <div className="bg-white rounded-[32px] w-full max-w-md p-8 relative shadow-2xl" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+            <button
+              onClick={() => setShowIndicarFounderModal(false)}
+              className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-stone-900 p-3 rounded-2xl">
+                <UserPlus size={22} className="text-white" />
+              </div>
+              <h2 className="text-2xl font-serif italic text-stone-900">Indicar um Founder</h2>
+            </div>
+
+            {indicarSuccess ? (
+              <div className="text-center py-8">
+                <div className="bg-green-50 text-green-700 rounded-2xl p-6 mb-4">
+                  <p className="font-bold text-lg mb-1">Indicação enviada!</p>
+                  <p className="text-sm text-green-600">Obrigado por fortalecer a nossa rede.</p>
+                </div>
+                <button
+                  onClick={() => setShowIndicarFounderModal(false)}
+                  className="bg-stone-900 text-white px-8 py-3 rounded-2xl font-bold hover:bg-stone-700 transition-all"
+                >
+                  Fechar
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleIndicarFounderSubmit} className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                    Nome do Founder indicado
+                  </label>
+                  <input
+                    type="text"
+                    value={indicarNome}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarNome(e.target.value)}
+                    placeholder="Ex: João Silva"
+                    required
+                    className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                    Empresa / Projeto
+                  </label>
+                  <input
+                    type="text"
+                    value={indicarEmpresa}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarEmpresa(e.target.value)}
+                    placeholder="Ex: Startup XYZ"
+                    required
+                    className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                    Área de atuação do mercado
+                  </label>
+                  <input
+                    type="text"
+                    value={indicarArea}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarArea(e.target.value)}
+                    placeholder="Ex: Fintech, Saúde, Educação..."
+                    required
+                    className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={indicarSubmitting}
+                  className="mt-2 bg-stone-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-stone-700 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  <Send size={18} />
+                  {indicarSubmitting ? 'Enviando...' : 'Enviar indicação'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      <TermsModal
         isOpen={isTermsModalOpen}
         onClose={() => setIsTermsModalOpen(false)}
         onAccept={handleAcceptTerms}

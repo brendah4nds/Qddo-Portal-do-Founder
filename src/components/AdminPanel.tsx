@@ -13,10 +13,10 @@ import {
   signOut,
   User
 } from 'firebase/auth';
-import { 
-  Settings, 
-  AlertCircle, 
-  Trash2, 
+import {
+  Settings,
+  AlertCircle,
+  Trash2,
   Plus,
   Globe,
   Lock,
@@ -32,7 +32,10 @@ import {
   Paperclip,
   ExternalLink,
   XCircle,
-  FileText
+  FileText,
+  UserPlus,
+  CheckCircle2,
+  X
 } from 'lucide-react';
 import { db, auth, storage, handleFirestoreError, OperationType } from '../firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -52,26 +55,27 @@ const DEFAULT_BUSINESS_HOURS = Array.from({ length: 21 }, (_, i) => {
   return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 });
 
-export function AdminPanel({ 
-  user, 
-  onLogin, 
-  rooms, 
-  bookings, 
+export function AdminPanel({
+  user,
+  onLogin,
+  rooms,
+  bookings,
   businessHours,
   isAdmin,
   founders = [],
   initialTab = 'bookings'
-}: { 
-  user: User | null; 
-  onLogin: () => void; 
-  rooms: Room[]; 
-  bookings: Booking[]; 
+}: {
+  user: User | null;
+  onLogin: () => void;
+  rooms: Room[];
+  bookings: Booking[];
   businessHours: string[];
   isAdmin: boolean;
   founders?: any[];
-  initialTab?: 'bookings' | 'settings' | 'founders' | 'challenges' | 'news';
+  initialTab?: 'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes';
 }) {
-  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news'>(initialTab);
+  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes'>(initialTab);
+  const [indicacoes, setIndicacoes] = useState<any[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [newsItems, setNewsItems] = useState<any[]>([]);
   const [newHour, setNewHour] = useState('');
@@ -156,11 +160,43 @@ export function AdminPanel({
       setNewsItems(allNews);
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'news'));
 
+    const indicacoesQ = query(collection(db, 'indicacoes'), orderBy('criadoEm', 'desc'));
+    const indicacoesUnsubscribe = onSnapshot(indicacoesQ, (snapshot) => {
+      setIndicacoes(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'indicacoes'));
+
     return () => {
       unsubscribe();
       newsUnsubscribe();
+      indicacoesUnsubscribe();
     };
   }, [isAdmin]);
+
+  const handleAprovarIndicacao = async (id: string) => {
+    try {
+      await updateDoc(doc(db, 'indicacoes', id), { status: 'aprovada' });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleRejeitarIndicacao = (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Rejeitar Indicação',
+      message: 'Tem certeza que deseja rejeitar esta indicação?',
+      variant: 'danger',
+      confirmText: 'Rejeitar',
+      onConfirm: async () => {
+        try {
+          await updateDoc(doc(db, 'indicacoes', id), { status: 'rejeitada' });
+          setModalConfig(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
+  };
 
   const handleDelete = async (id: string) => {
     setModalConfig({
@@ -370,7 +406,7 @@ export function AdminPanel({
         >
           Desafios
         </button>
-        <button 
+        <button
           onClick={() => setAdminTab('news')}
           className={cn(
             "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
@@ -378,6 +414,20 @@ export function AdminPanel({
           )}
         >
           News
+        </button>
+        <button
+          onClick={() => setAdminTab('indicacoes')}
+          className={cn(
+            "pb-4 text-sm font-bold uppercase tracking-widest transition-all flex items-center gap-2",
+            adminTab === 'indicacoes' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          Indicações
+          {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length > 0 && (
+            <span className="bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -870,7 +920,113 @@ export function AdminPanel({
         </section>
       )}
 
-      <ConfirmationModal 
+      {adminTab === 'indicacoes' && (
+        <section className="space-y-6 animate-in fade-in duration-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-serif italic">Indicações de Founders</h3>
+              <p className="text-stone-500 text-sm mt-1">Revise e aprove ou rejeite as indicações enviadas pela comunidade.</p>
+            </div>
+            <div className="flex gap-3">
+              <div className="bg-amber-50 border border-amber-200 px-5 py-3 rounded-2xl flex flex-col items-center">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-amber-500">Pendentes</span>
+                <span className="text-2xl font-serif italic text-amber-600">
+                  {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length}
+                </span>
+              </div>
+              <div className="bg-emerald-50 border border-emerald-200 px-5 py-3 rounded-2xl flex flex-col items-center">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-500">Aprovadas</span>
+                <span className="text-2xl font-serif italic text-emerald-600">
+                  {indicacoes.filter((i: any) => i.status === 'aprovada').length}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {indicacoes.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-20 text-center">
+              <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <UserPlus size={28} className="text-stone-400" />
+              </div>
+              <p className="text-stone-400 italic">Nenhuma indicação recebida ainda.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-stone-50 border-b border-stone-100">
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Founder Indicado</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Empresa / Projeto</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Área de Atuação</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Indicado por</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Status</th>
+                    <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {indicacoes.map((ind: any) => {
+                    const isPendente = !ind.status || ind.status === 'pendente';
+                    const isAprovada = ind.status === 'aprovada';
+                    return (
+                      <tr key={ind.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                        <td className="px-8 py-6">
+                          <div className="font-bold text-stone-900">{ind.nomeIndicado}</div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className="font-serif italic text-stone-700">{ind.empresa}</div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className="text-sm text-stone-600">{ind.area}</div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className="text-xs text-stone-500">{ind.indicadoPorEmail || '—'}</div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <span className={cn(
+                            "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
+                            isAprovada
+                              ? "bg-emerald-100 text-emerald-600"
+                              : ind.status === 'rejeitada'
+                              ? "bg-red-100 text-red-500"
+                              : "bg-amber-100 text-amber-600"
+                          )}>
+                            {isAprovada ? 'Aprovada' : ind.status === 'rejeitada' ? 'Rejeitada' : 'Pendente'}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          {isPendente && (
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleAprovarIndicacao(ind.id)}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all font-bold text-xs"
+                              >
+                                <CheckCircle2 size={14} />
+                                Aprovar
+                              </button>
+                              <button
+                                onClick={() => handleRejeitarIndicacao(ind.id)}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all font-bold text-xs"
+                              >
+                                <X size={14} />
+                                Rejeitar
+                              </button>
+                            </div>
+                          )}
+                          {!isPendente && (
+                            <span className="text-xs text-stone-300 italic">Revisado</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      <ConfirmationModal
         isOpen={modalConfig.isOpen}
         onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
         onConfirm={modalConfig.onConfirm}
