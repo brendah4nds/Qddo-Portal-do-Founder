@@ -140,6 +140,7 @@ export default function App() {
   const [indicarNome, setIndicarNome] = useState('');
   const [indicarEmpresa, setIndicarEmpresa] = useState('');
   const [indicarArea, setIndicarArea] = useState('');
+  const [indicarContato, setIndicarContato] = useState('');
   const [indicarSubmitting, setIndicarSubmitting] = useState(false);
   const [indicarSuccess, setIndicarSuccess] = useState(false);
 
@@ -156,15 +157,26 @@ export default function App() {
     }
   };
 
+  const getEventDayLabel = (eventDate: any): string => {
+    const d = eventDate?.toDate ? eventDate.toDate() : new Date(eventDate + 'T00:00:00');
+    const today = new Date();
+    const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    if (d.getFullYear() === tomorrow.getFullYear() && d.getMonth() === tomorrow.getMonth() && d.getDate() === tomorrow.getDate()) {
+      return 'AMANHÃ';
+    }
+    return format(d, 'EEEE', { locale: ptBR });
+  };
+
   const handleIndicarFounderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!indicarNome.trim() || !indicarEmpresa.trim() || !indicarArea.trim()) return;
+    if (!indicarNome.trim() || !indicarEmpresa.trim() || !indicarArea.trim() || !indicarContato.trim()) return;
     setIndicarSubmitting(true);
     try {
       await setDoc(doc(collection(db, 'indicacoes')), {
         nomeIndicado: indicarNome.trim(),
         empresa: indicarEmpresa.trim(),
         area: indicarArea.trim(),
+        contato: indicarContato.trim(),
         indicadoPor: user?.uid || null,
         indicadoPorEmail: user?.email || null,
         criadoEm: serverTimestamp(),
@@ -173,6 +185,7 @@ export default function App() {
       setIndicarNome('');
       setIndicarEmpresa('');
       setIndicarArea('');
+      setIndicarContato('');
     } catch (error) {
       console.error('Erro ao enviar indicação:', error);
     } finally {
@@ -883,7 +896,7 @@ export default function App() {
                                               event.category === 'info' ? "bg-blue-100 text-blue-700" :
                                               "bg-stone-100 text-stone-700"
                                             )}>
-                                              {format(event.eventDate?.toDate ? event.eventDate.toDate() : new Date(event.eventDate + 'T00:00:00'), 'EEEE', { locale: ptBR })}
+                                              {getEventDayLabel(event.eventDate)}
                                             </span>
                                             {(event.startTime || event.endTime) && (
                                               <span className="text-stone-400 text-[10px] font-bold uppercase flex items-center gap-2">
@@ -1357,6 +1370,19 @@ export default function App() {
                     value={indicarArea}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarArea(e.target.value)}
                     placeholder="Ex: Fintech, Saúde, Educação..."
+                    required
+                    className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                    Contato
+                  </label>
+                  <input
+                    type="tel"
+                    value={indicarContato}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarContato(e.target.value)}
+                    placeholder="( ) "
                     required
                     className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                   />
