@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   collection,
   onSnapshot,
@@ -15,13 +15,15 @@ import {
   query,
   where
 } from 'firebase/firestore';
-import { 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  onAuthStateChanged, 
+import {
+  signInWithPopup,
+  GoogleAuthProvider,
+  onAuthStateChanged,
   signOut,
+  updateProfile,
   User
 } from 'firebase/auth';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { 
   startOfToday,
   startOfDay,
@@ -69,7 +71,7 @@ import {
   Trash2,
   Check
 } from 'lucide-react';
-import { db, auth, handleFirestoreError, OperationType } from './firebase';
+import { db, auth, storage, handleFirestoreError, OperationType } from './firebase';
 import { Room, Booking, BookingStatus, Challenge } from './types';
 import { BookingFlow } from './components/BookingFlow';
 import { AdminPanel } from './components/AdminPanel';
@@ -137,12 +139,31 @@ export default function App() {
   const [allCheckins, setAllCheckins] = useState<any[]>([]);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [showIndicarFounderModal, setShowIndicarFounderModal] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileBirthDay, setProfileBirthDay] = useState('');
+  const [profileBirthMonth, setProfileBirthMonth] = useState('');
+  const [profileBirthYear, setProfileBirthYear] = useState('');
+  const [profilePhotoUploading, setProfilePhotoUploading] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [indicarNome, setIndicarNome] = useState('');
   const [indicarEmpresa, setIndicarEmpresa] = useState('');
   const [indicarArea, setIndicarArea] = useState('');
   const [indicarContato, setIndicarContato] = useState('');
   const [indicarSubmitting, setIndicarSubmitting] = useState(false);
   const [indicarSuccess, setIndicarSuccess] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleAcceptTerms = async () => {
     if (!user) return;
@@ -165,6 +186,49 @@ export default function App() {
       return 'AMANHÃ';
     }
     return format(d, 'EEEE', { locale: ptBR });
+  };
+
+  const openProfileModal = () => {
+    setProfileBirthDay(founderData?.birthDay || '');
+    setProfileBirthMonth(founderData?.birthMonth || '');
+    setProfileBirthYear(founderData?.birthYear || '');
+    setProfileMenuOpen(false);
+    setShowProfileModal(true);
+  };
+
+  const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setProfilePhotoUploading(true);
+    try {
+      const fileRef = storageRef(storage, `profile-photos/${user.uid}`);
+      await uploadBytes(fileRef, file);
+      const downloadURL = await getDownloadURL(fileRef);
+      await updateProfile(user, { photoURL: downloadURL });
+      await updateDoc(doc(db, 'founders', user.uid), { photoURL: downloadURL });
+    } catch (err) {
+      console.error('Erro ao atualizar foto:', err);
+    } finally {
+      setProfilePhotoUploading(false);
+      if (photoInputRef.current) photoInputRef.current.value = '';
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setProfileSaving(true);
+    try {
+      await updateDoc(doc(db, 'founders', user.uid), {
+        birthDay: profileBirthDay,
+        birthMonth: profileBirthMonth,
+        birthYear: profileBirthYear,
+      });
+      setShowProfileModal(false);
+    } catch (err) {
+      console.error('Erro ao salvar perfil:', err);
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const handleIndicarFounderSubmit = async (e: React.FormEvent) => {
@@ -409,11 +473,41 @@ export default function App() {
             )}
             
             {user && (
-              <div className="flex items-center gap-3 pl-4 border-l border-stone-200">
-                <img src={user.photoURL || ''} alt="" className="w-8 h-8 rounded-full border border-stone-200" referrerPolicy="no-referrer" />
-                <button onClick={handleLogout} className="text-stone-400 hover:text-red-500 transition-colors">
-                  <LogOut size={18} />
+              <div ref={profileMenuRef} className="relative pl-4 border-l border-stone-200">
+                <button
+                  onClick={() => setProfileMenuOpen((prev: boolean) => !prev)}
+                  className="flex items-center gap-2 rounded-full focus:outline-none"
+                >
+                  <img
+                    src={user.photoURL || ''}
+                    alt=""
+                    className="w-8 h-8 rounded-full border border-stone-200 hover:ring-2 hover:ring-stone-400 transition-all cursor-pointer"
+                    referrerPolicy="no-referrer"
+                  />
                 </button>
+
+                {profileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="px-4 py-3 border-b border-stone-100">
+                      <p className="text-sm font-semibold text-stone-900 truncate">{user.displayName || 'Founder'}</p>
+                      <p className="text-xs text-stone-400 truncate">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={openProfileModal}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      <Users size={15} />
+                      Meu Perfil
+                    </button>
+                    <button
+                      onClick={() => { setProfileMenuOpen(false); handleLogout(); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut size={15} />
+                      Sair
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1397,6 +1491,122 @@ export default function App() {
                 </button>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfileModal && user && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowProfileModal(false)}
+        >
+          <div
+            className="bg-white rounded-[32px] w-full max-w-sm p-8 relative shadow-2xl"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowProfileModal(false)}
+              className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <h2 className="text-xl font-black tracking-tight text-stone-900 mb-6">Meu Perfil</h2>
+
+            {/* Foto de Perfil */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="relative group">
+                <img
+                  src={user.photoURL || ''}
+                  alt="Foto de perfil"
+                  className="w-24 h-24 rounded-full border-2 border-stone-200 object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                <button
+                  onClick={() => photoInputRef.current?.click()}
+                  disabled={profilePhotoUploading}
+                  className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                >
+                  {profilePhotoUploading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Pencil size={18} className="text-white" />
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-stone-400 mt-2">Clique na foto para alterar</p>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleProfilePhotoChange}
+              />
+            </div>
+
+            {/* Nome e Email (somente leitura) */}
+            <div className="space-y-3 mb-6">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1">Nome</label>
+                <p className="text-sm text-stone-900 px-4 py-3 bg-stone-50 rounded-2xl">{user.displayName || '—'}</p>
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1">E-mail</label>
+                <p className="text-sm text-stone-900 px-4 py-3 bg-stone-50 rounded-2xl truncate">{user.email}</p>
+              </div>
+            </div>
+
+            {/* Data de Aniversário */}
+            <div className="mb-8">
+              <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Data de Aniversário</label>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <select
+                    value={profileBirthDay}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProfileBirthDay(e.target.value)}
+                    className="w-full border border-stone-200 rounded-xl px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
+                  >
+                    <option value="">Dia</option>
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                      <option key={d} value={String(d).padStart(2, '0')}>{String(d).padStart(2, '0')}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <select
+                    value={profileBirthMonth}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProfileBirthMonth(e.target.value)}
+                    className="w-full border border-stone-200 rounded-xl px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
+                  >
+                    <option value="">Mês</option>
+                    {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m, i) => (
+                      <option key={m} value={String(i + 1).padStart(2, '0')}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <select
+                    value={profileBirthYear}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProfileBirthYear(e.target.value)}
+                    className="w-full border border-stone-200 rounded-xl px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
+                  >
+                    <option value="">Ano</option>
+                    {Array.from({ length: 60 }, (_, i) => new Date().getFullYear() - 18 - i).map(y => (
+                      <option key={y} value={String(y)}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveProfile}
+              disabled={profileSaving}
+              className="w-full bg-stone-900 text-white rounded-2xl py-3 text-sm font-bold uppercase tracking-widest hover:bg-stone-700 transition-colors disabled:opacity-50"
+            >
+              {profileSaving ? 'Salvando...' : 'Salvar'}
+            </button>
           </div>
         </div>
       )}
