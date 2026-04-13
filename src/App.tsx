@@ -1015,53 +1015,53 @@ export default function App() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-8 mt-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8 mt-4">
                   {/* Infos */}
                   <div
                     onClick={() => setActiveGeneralCategory('info')}
-                    className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 lg:p-5 rounded-[20px] lg:rounded-[24px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-9 h-9 md:w-12 md:h-12 bg-stone-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
-                      <Info size={18} className="md:hidden" /><Info size={24} className="hidden md:block" />
+                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <Info size={18} />
                     </div>
-                    <h3 className="text-base md:text-xl font-serif italic mb-1 md:mb-2">Infos</h3>
-                    <p className="text-stone-400 text-xs md:text-sm hidden sm:block">Informações essenciais sobre a nossa comunidade e espaço.</p>
+                    <h3 className="text-base font-serif italic mb-1">Infos</h3>
+                    <p className="text-stone-400 text-xs hidden sm:block">Informações essenciais sobre a nossa comunidade e espaço.</p>
                   </div>
 
                   {/* Avisos */}
                   <div
                     onClick={() => setActiveGeneralCategory('aviso')}
-                    className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 lg:p-5 rounded-[20px] lg:rounded-[24px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-9 h-9 md:w-12 md:h-12 bg-stone-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
-                      <AlertTriangle size={18} className="md:hidden" /><AlertTriangle size={24} className="hidden md:block" />
+                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <AlertTriangle size={18} />
                     </div>
-                    <h3 className="text-base md:text-xl font-serif italic mb-1 md:mb-2">Avisos</h3>
-                    <p className="text-stone-400 text-xs md:text-sm hidden sm:block">Comunicados importantes e atualizações de última hora.</p>
+                    <h3 className="text-base font-serif italic mb-1">Avisos</h3>
+                    <p className="text-stone-400 text-xs hidden sm:block">Comunicados importantes e atualizações de última hora.</p>
                   </div>
 
                   {/* Eventos */}
                   <div
                     onClick={() => setActiveGeneralCategory('evento')}
-                    className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 lg:p-5 rounded-[20px] lg:rounded-[24px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-9 h-9 md:w-12 md:h-12 bg-stone-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
-                      <CalendarDays size={18} className="md:hidden" /><CalendarDays size={24} className="hidden md:block" />
+                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <CalendarDays size={18} />
                     </div>
-                    <h3 className="text-base md:text-xl font-serif italic mb-1 md:mb-2">Eventos</h3>
-                    <p className="text-stone-400 text-xs md:text-sm hidden sm:block">Calendário de workshops, meetups e encontros.</p>
+                    <h3 className="text-base font-serif italic mb-1">Eventos</h3>
+                    <p className="text-stone-400 text-xs hidden sm:block">Calendário de workshops, meetups e encontros.</p>
                   </div>
 
                   {/* Comunicação */}
                   <div
                     onClick={() => setActiveGeneralCategory('comunicacao')}
-                    className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 lg:p-5 rounded-[20px] lg:rounded-[24px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-9 h-9 md:w-12 md:h-12 bg-stone-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
-                      <MessageSquare size={18} className="md:hidden" /><MessageSquare size={24} className="hidden md:block" />
+                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <MessageSquare size={18} />
                     </div>
-                    <h3 className="text-base md:text-xl font-serif italic mb-1 md:mb-2">Comunicação</h3>
-                    <p className="text-stone-400 text-xs md:text-sm hidden sm:block">Canais oficiais de suporte e interação entre membros.</p>
+                    <h3 className="text-base font-serif italic mb-1">Comunicação</h3>
+                    <p className="text-stone-400 text-xs hidden sm:block">Canais oficiais de suporte e interação entre membros.</p>
                   </div>
                 </div>
 
