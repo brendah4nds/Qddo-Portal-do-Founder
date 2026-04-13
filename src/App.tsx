@@ -557,7 +557,7 @@ export default function App() {
 
             {/* Bate-papo Section */}
             <div>
-              <button 
+              <button
                 onClick={() => {
                   setView('chat');
                   setActiveSubTab('bate-papo');
@@ -576,6 +576,21 @@ export default function App() {
                 </div>
               </button>
             </div>
+
+            {/* Regras Section */}
+            <div>
+              <button
+                onClick={() => setActiveGeneralCategory('regras')}
+                className="flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl hover:bg-stone-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white">
+                    <ShieldCheck size={18} />
+                  </div>
+                  <span className="font-serif italic text-lg text-stone-900">Regras</span>
+                </div>
+              </button>
+            </div>
           </div>
 
           <div className="mt-auto p-6 border-t border-stone-100">
@@ -590,8 +605,8 @@ export default function App() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-12 w-full">
-          <div className="max-w-5xl mx-auto">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 w-full">
+          <div className="max-w-7xl mx-auto">
             {view === 'admin' ? (
               <AdminPanel 
                 user={user} 
@@ -615,10 +630,6 @@ export default function App() {
               <Chat user={user} />
             ) : view === 'news' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="mb-12">
-                  <h2 className="text-4xl font-serif italic mb-2">Notícias</h2>
-                  <p className="text-stone-500 font-serif italic">Fique por dentro das novidades da comunidade QDDO.</p>
-                </div>
                 <div className="grid grid-cols-1 gap-8">
                   {newsItems
                     .filter(item => item.category === 'evento')
@@ -680,10 +691,6 @@ export default function App() {
               </div>
             ) : view === 'quads' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="mb-12">
-                  <h2 className="text-4xl font-serif italic mb-2">Quads</h2>
-                  <p className="text-stone-500 font-serif italic">Consulte as ações e suas respectivas pontuações na comunidade QDDO.</p>
-                </div>
                 
                 <div className="bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
@@ -754,7 +761,7 @@ export default function App() {
                 )}
 
                 {/* News Box */}
-                <div className="mb-12 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                <div className="mb-6 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
                   <div className="bg-stone-900 px-8 py-4 flex items-center gap-3">
                     <Bell size={20} className="text-white" />
                     <h3 className="text-white font-serif italic text-xl">News</h3>
@@ -818,14 +825,14 @@ export default function App() {
                       const userRankPosition = fullRanking.findIndex(r => r.userId === user?.uid) + 1;
 
                       return (
-                        <div className="flex flex-col lg:flex-row gap-6 h-full min-h-[400px]">
+                        <div className="flex flex-col lg:flex-row gap-4">
                           {/* Part 1: Eventos & Desafios (66%) */}
-                          <div className="lg:w-[66%] flex flex-col gap-6">
+                          <div className="lg:w-[66%] flex flex-col gap-4">
                             {/* Eventos da Semana */}
-                            <div className="bg-white rounded-[40px] p-8 border border-stone-200 shadow-sm flex flex-col">
-                              <div className="flex items-center justify-between mb-6">
-                                <h4 className="text-2xl font-serif italic text-stone-900 flex items-center gap-2">
-                                  <CalendarDays className="text-amber-500" size={24} />
+                            <div className="bg-white rounded-[32px] p-5 border border-stone-200 shadow-sm flex flex-col">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-base font-serif italic text-stone-900 flex items-center gap-2">
+                                  <CalendarDays className="text-amber-500" size={18} />
                                   Eventos da Semana
                                 </h4>
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
@@ -833,14 +840,14 @@ export default function App() {
                                 </span>
                               </div>
                               
-                              <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                              <div className="flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar">
                                 {relevantEvents.length === 0 ? (
-                                  <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-stone-50 rounded-3xl border border-dashed border-stone-200">
-                                    <p className="text-stone-400 italic">Nenhum evento programado para esta semana.</p>
+                                  <div className="h-full flex flex-col items-center justify-center text-center p-5 bg-stone-50 rounded-2xl border border-dashed border-stone-200">
+                                    <p className="text-stone-400 italic text-xs">Nenhum evento programado para esta semana.</p>
                                   </div>
                                 ) : (
                                   relevantEvents.map((event, idx) => (
-                                    <div key={event.id || idx} className="p-6 bg-stone-50 rounded-3xl border border-stone-100 hover:border-stone-300 transition-all group">
+                                    <div key={event.id || idx} className="p-3 bg-stone-50 rounded-2xl border border-stone-100 hover:border-stone-300 transition-all group">
                                       <div className="flex items-start justify-between gap-4">
                                         <div>
                                           <div className="flex items-center gap-2 mb-2">
@@ -880,8 +887,8 @@ export default function App() {
                             </div>
 
                             {/* Desafios Públicos (Moved here) */}
-                            <div className="bg-stone-900 rounded-[40px] p-8 text-white shadow-xl shadow-stone-900/20 flex flex-col">
-                              <div className="flex items-center gap-2 mb-6">
+                            <div className="bg-stone-900 rounded-[28px] p-4 text-white shadow-xl shadow-stone-900/20 flex flex-col">
+                              <div className="flex items-center gap-2 mb-3">
                                 <Trophy className="text-amber-400" size={20} />
                                 <h4 className="text-lg font-serif italic">Desafios Públicos</h4>
                               </div>
@@ -890,22 +897,22 @@ export default function App() {
                                 {publicChallenges.length === 0 ? (
                                   <p className="text-stone-500 italic text-sm text-center">Nenhum desafio público aberto no momento.</p>
                                 ) : (
-                                  <div className="space-y-4">
+                                  <div className="space-y-3">
                                     <div>
                                       <p className="text-[10px] uppercase tracking-widest font-bold text-stone-500 mb-1">
                                         Lançado por {allFounders.find(f => f.id === publicChallenges[0].founderId)?.name || 'Founder'}
                                       </p>
-                                      <h5 className="text-xl font-bold leading-tight mb-2">{publicChallenges[0].title}</h5>
-                                      <p className="text-stone-400 text-xs line-clamp-3 italic">"{publicChallenges[0].description}"</p>
+                                      <h5 className="text-sm font-bold leading-tight mb-1">{publicChallenges[0].title}</h5>
+                                      <p className="text-stone-400 text-xs line-clamp-2 italic">"{publicChallenges[0].description}"</p>
                                     </div>
-                                    <button 
+                                    <button
                                       onClick={() => {
                                         setView('portal');
                                         setActiveSubTab('desafios-publicos');
                                       }}
-                                      className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                      className="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                                     >
-                                      clique aqui para ajuda-lo a resolver <ArrowRight size={14} />
+                                      clique aqui para ajuda-lo a resolver <ArrowRight size={12} />
                                     </button>
                                   </div>
                                 )}
@@ -914,17 +921,17 @@ export default function App() {
                           </div>
 
                           {/* Part 2: Ranking & Score (33%) */}
-                          <div className="lg:w-[33%] flex flex-col gap-6">
+                          <div className="lg:w-[33%] flex flex-col gap-4">
                             {/* Ranking Top 5 */}
-                            <div className="bg-white rounded-[40px] p-8 border border-stone-200 shadow-sm flex flex-col">
-                              <div className="flex items-center gap-2 mb-6">
-                                <Trophy className="text-stone-900" size={20} />
-                                <h4 className="text-lg font-serif italic text-stone-900">Ranking Top 5</h4>
+                            <div className="bg-white rounded-[32px] p-5 border border-stone-200 shadow-sm flex flex-col">
+                              <div className="flex items-center gap-2 mb-4">
+                                <Trophy className="text-stone-900" size={16} />
+                                <h4 className="text-sm font-serif italic text-stone-900">Ranking Top 5</h4>
                               </div>
-                              <div className="space-y-4">
+                              <div className="space-y-2">
                                 {ranking.map((item, idx) => (
                                   <div key={item.userId} className="flex items-center justify-between group">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2">
                                       <div className={cn(
                                         "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold",
                                         idx === 0 ? "bg-amber-100 text-amber-600" : 
@@ -952,23 +959,23 @@ export default function App() {
                             </div>
 
                             {/* User Score */}
-                            <div className="flex-1 bg-amber-500 rounded-[40px] p-8 text-white shadow-xl shadow-amber-500/20 flex flex-col justify-center items-center text-center relative overflow-hidden">
+                            <div className="bg-amber-500 rounded-[28px] p-4 text-white shadow-xl shadow-amber-500/20 flex flex-col justify-center items-center text-center relative overflow-hidden">
                               <div className="absolute -right-4 -top-4 opacity-10 rotate-12">
-                                <Trophy size={120} />
+                                <Trophy size={80} />
                               </div>
-                              <span className="text-[10px] uppercase tracking-widest font-bold text-amber-100 mb-2 relative z-10">Seu Score QDDO</span>
-                              <div className="text-6xl font-serif italic mb-1 relative z-10">{userScore}</div>
+                              <span className="text-[10px] uppercase tracking-widest font-bold text-amber-100 mb-1 relative z-10">Seu Score QDDO</span>
+                              <div className="text-4xl font-serif italic mb-0.5 relative z-10">{userScore}</div>
                               <span className="text-xs font-bold text-amber-100 relative z-10">pontos este mês</span>
                               {userRankPosition > 0 && (
-                                <span className="text-[11px] text-amber-200 relative z-10 mt-1">#{userRankPosition}º no ranking</span>
+                                <span className="text-[11px] text-amber-200 relative z-10 mt-0.5">#{userRankPosition}º no ranking</span>
                               )}
 
-                              <div className="mt-6 pt-6 border-t border-amber-400/30 w-full relative z-10">
+                              <div className="mt-3 pt-3 border-t border-amber-400/30 w-full relative z-10">
                                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-amber-100">
                                   <span>Check-ins</span>
                                   <span>{currentMonthCheckins}</span>
                                 </div>
-                                <div className="w-full h-1.5 bg-amber-600/30 rounded-full mt-2 overflow-hidden">
+                                <div className="w-full h-1.5 bg-amber-600/30 rounded-full mt-1.5 overflow-hidden">
                                   <div
                                     className="h-full bg-white rounded-full transition-all duration-1000"
                                     style={{ width: `${Math.min((currentMonthCheckins / 20) * 100, 100)}%` }}
@@ -983,80 +990,53 @@ export default function App() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-8 mt-4">
                   {/* Infos */}
-                  <div 
+                  <div
                     onClick={() => setActiveGeneralCategory('info')}
-                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
-                      <Info size={24} />
+                    <div className="w-9 h-9 md:w-12 md:h-12 bg-stone-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <Info size={18} className="md:hidden" /><Info size={24} className="hidden md:block" />
                     </div>
-                    <h3 className="text-xl font-serif italic mb-2">Infos</h3>
-                    <p className="text-stone-400 text-sm">Informações essenciais sobre a nossa comunidade e espaço.</p>
-                  </div>
-                  
-                  {/* Regras */}
-                  <div 
-                    onClick={() => setActiveGeneralCategory('regras')}
-                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
-                  >
-                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
-                      <ShieldCheck size={24} />
-                    </div>
-                    <h3 className="text-xl font-serif italic mb-2">Regras</h3>
-                    <p className="text-stone-400 text-sm">Diretrizes de convivência e uso das salas QDDO.</p>
+                    <h3 className="text-base md:text-xl font-serif italic mb-1 md:mb-2">Infos</h3>
+                    <p className="text-stone-400 text-xs md:text-sm hidden sm:block">Informações essenciais sobre a nossa comunidade e espaço.</p>
                   </div>
 
                   {/* Avisos */}
-                  <div 
+                  <div
                     onClick={() => setActiveGeneralCategory('aviso')}
-                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
-                      <AlertTriangle size={24} />
+                    <div className="w-9 h-9 md:w-12 md:h-12 bg-stone-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <AlertTriangle size={18} className="md:hidden" /><AlertTriangle size={24} className="hidden md:block" />
                     </div>
-                    <h3 className="text-xl font-serif italic mb-2">Avisos</h3>
-                    <p className="text-stone-400 text-sm">Comunicados importantes e atualizações de última hora.</p>
+                    <h3 className="text-base md:text-xl font-serif italic mb-1 md:mb-2">Avisos</h3>
+                    <p className="text-stone-400 text-xs md:text-sm hidden sm:block">Comunicados importantes e atualizações de última hora.</p>
                   </div>
 
                   {/* Eventos */}
-                  <div 
+                  <div
                     onClick={() => setActiveGeneralCategory('evento')}
-                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
-                      <CalendarDays size={24} />
+                    <div className="w-9 h-9 md:w-12 md:h-12 bg-stone-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <CalendarDays size={18} className="md:hidden" /><CalendarDays size={24} className="hidden md:block" />
                     </div>
-                    <h3 className="text-xl font-serif italic mb-2">Eventos</h3>
-                    <p className="text-stone-400 text-sm">Calendário de workshops, meetups e encontros.</p>
-                  </div>
-
-                  {/* Desafios */}
-                  <div 
-                    onClick={() => {
-                      setView('portal');
-                      setActiveSubTab('desafios-publicos');
-                    }}
-                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
-                  >
-                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
-                      <Trophy size={24} />
-                    </div>
-                    <h3 className="text-xl font-serif italic mb-2">Desafios</h3>
-                    <p className="text-stone-400 text-sm">Participe dos desafios e colabore com outros founders.</p>
+                    <h3 className="text-base md:text-xl font-serif italic mb-1 md:mb-2">Eventos</h3>
+                    <p className="text-stone-400 text-xs md:text-sm hidden sm:block">Calendário de workshops, meetups e encontros.</p>
                   </div>
 
                   {/* Comunicação */}
-                  <div 
+                  <div
                     onClick={() => setActiveGeneralCategory('comunicacao')}
-                    className="bg-white p-8 rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[32px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
-                      <MessageSquare size={24} />
+                    <div className="w-9 h-9 md:w-12 md:h-12 bg-stone-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                      <MessageSquare size={18} className="md:hidden" /><MessageSquare size={24} className="hidden md:block" />
                     </div>
-                    <h3 className="text-xl font-serif italic mb-2">Comunicação</h3>
-                    <p className="text-stone-400 text-sm">Canais oficiais de suporte e interação entre membros.</p>
+                    <h3 className="text-base md:text-xl font-serif italic mb-1 md:mb-2">Comunicação</h3>
+                    <p className="text-stone-400 text-xs md:text-sm hidden sm:block">Canais oficiais de suporte e interação entre membros.</p>
                   </div>
                 </div>
 
@@ -1204,9 +1184,12 @@ export default function App() {
         </main>
       </div>
 
-      <footer className="border-t border-stone-200 py-6 bg-white z-50">
-        <div className="max-w-[1600px] mx-auto px-6 text-center">
-          <p className="text-stone-400 text-[10px] uppercase tracking-widest font-bold">© 2026 qddo - Gestão Inteligente de Espaços - Brenda Ribeiro</p>
+      <footer className="border-t border-stone-200 py-2 md:py-6 bg-white z-50">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-6 text-center">
+          <p className="text-stone-300 md:text-stone-400 text-[9px] md:text-[10px] uppercase tracking-widest font-medium md:font-bold">
+            <span className="hidden md:inline">© 2026 qddo - Gestão Inteligente de Espaços - Brenda Ribeiro</span>
+            <span className="md:hidden">© 2026 qddo</span>
+          </p>
         </div>
       </footer>
       {showIndicarFounderModal && (

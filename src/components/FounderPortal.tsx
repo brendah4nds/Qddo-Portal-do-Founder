@@ -273,39 +273,32 @@ export function FounderPortal({
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between mb-12">
-        <div>
-          <h2 className="text-4xl font-serif italic mb-2">Olá, {founder?.name || user.displayName || 'Admin'}</h2>
-          <p className="text-stone-500 font-serif italic">Portal Founders • {activeSubTab.replace('-', ' ')}</p>
-        </div>
-        {(activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') && (
-          <button 
+      {(activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') && (
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveSubTab?.('desafios-publicos')}
+              className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+                activeSubTab === 'desafios-publicos' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
+              }`}
+            >
+              Públicos
+            </button>
+            <button
+              onClick={() => setActiveSubTab?.('desafios-privados')}
+              className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+                activeSubTab === 'desafios-privados' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
+              }`}
+            >
+              Privados
+            </button>
+          </div>
+          <button
             onClick={() => setShowNewChallenge(true)}
             className="flex items-center gap-2 bg-stone-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/10"
           >
             <Plus size={20} />
             Novo Desafio
-          </button>
-        )}
-      </div>
-
-      {(activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') && (
-        <div className="flex gap-4 mb-8">
-          <button 
-            onClick={() => setActiveSubTab?.('desafios-publicos')}
-            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
-              activeSubTab === 'desafios-publicos' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
-            }`}
-          >
-            Públicos
-          </button>
-          <button 
-            onClick={() => setActiveSubTab?.('desafios-privados')}
-            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
-              activeSubTab === 'desafios-privados' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
-            }`}
-          >
-            Privados
           </button>
         </div>
       )}

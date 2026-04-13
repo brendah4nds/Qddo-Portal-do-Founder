@@ -233,9 +233,9 @@ export function CheckinSystem({
   const percentChange = prevMonthCheckins === 0 ? 100 : Math.round((diff / prevMonthCheckins) * 100);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Sub-tabs */}
-      <div className="flex gap-4 mb-8">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {[
           { id: 'checkin', label: 'Check-in', icon: LogIn },
           { id: 'checkout', label: 'Check-out', icon: LogOut },
@@ -246,13 +246,13 @@ export function CheckinSystem({
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={cn(
-              "flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all",
-              activeTab === tab.id 
-                ? "bg-stone-900 text-white shadow-lg shadow-stone-900/20" 
+              "flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold transition-all whitespace-nowrap text-sm shrink-0",
+              activeTab === tab.id
+                ? "bg-stone-900 text-white shadow-lg shadow-stone-900/20"
                 : "bg-white text-stone-400 border border-stone-200 hover:border-stone-400"
             )}
           >
-            <tab.icon size={18} />
+            <tab.icon size={16} />
             {tab.label}
           </button>
         ))}
@@ -276,7 +276,7 @@ export function CheckinSystem({
       )}
 
       {/* Tab Content */}
-      <div className="bg-white rounded-[40px] p-12 border border-stone-200 shadow-sm">
+      <div className="bg-white rounded-[24px] md:rounded-[40px] p-6 md:p-10 border border-stone-200 shadow-sm">
         {activeTab === 'checkin' && (
           <div className="max-w-md mx-auto text-center space-y-8">
             <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mx-auto">
@@ -424,46 +424,46 @@ export function CheckinSystem({
         )}
 
         {activeTab === 'overview' && (
-          <div className="space-y-12">
+          <div className="space-y-8 md:space-y-12">
             {/* Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-stone-50 p-8 rounded-3xl border border-stone-100">
-                <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Visitas este mês</span>
-                <div className="flex items-end gap-3">
-                  <span className="text-4xl font-serif italic text-stone-900">{currentMonthCheckins}</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+              <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100">
+                <span className="text-[9px] md:text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Visitas este mês</span>
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl md:text-4xl font-serif italic text-stone-900">{currentMonthCheckins}</span>
                   <div className={cn(
                     "flex items-center gap-1 text-xs font-bold mb-1",
                     diff >= 0 ? "text-emerald-600" : "text-rose-600"
                   )}>
-                    {diff >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                    {diff >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                     {Math.abs(percentChange)}%
                   </div>
                 </div>
               </div>
-              
-              <div className="bg-stone-50 p-8 rounded-3xl border border-stone-100">
-                <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Média Semanal</span>
-                <span className="text-4xl font-serif italic text-stone-900">
+
+              <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100">
+                <span className="text-[9px] md:text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Média Semanal</span>
+                <span className="text-3xl md:text-4xl font-serif italic text-stone-900">
                   {(currentMonthCheckins / 4).toFixed(1)}
                 </span>
               </div>
 
-              <div className="bg-stone-50 p-8 rounded-3xl border border-stone-100">
-                <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Score QDDO</span>
-                <div className="flex items-end gap-3">
-                  <span className="text-4xl font-serif italic text-stone-900">{currentMonthCheckins * 10}</span>
+              <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100">
+                <span className="text-[9px] md:text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Score QDDO</span>
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl md:text-4xl font-serif italic text-stone-900">{currentMonthCheckins * 10}</span>
                   <span className="text-xs font-bold text-stone-400 mb-1">pts</span>
                 </div>
               </div>
 
-              <div className="bg-stone-50 p-8 rounded-3xl border border-stone-100">
-                <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Status Atual</span>
+              <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100 col-span-2 md:col-span-1">
+                <span className="text-[9px] md:text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Status Atual</span>
                 <div className="flex items-center gap-2">
                   <div className={cn(
-                    "w-3 h-3 rounded-full animate-pulse",
+                    "w-3 h-3 rounded-full animate-pulse shrink-0",
                     todayCheckin?.status === 'active' ? "bg-emerald-500" : "bg-stone-300"
                   )} />
-                  <span className="font-bold text-stone-900">
+                  <span className="font-bold text-stone-900 text-sm md:text-base">
                     {todayCheckin?.status === 'active' ? 'Presente no Espaço' : 'Ausente'}
                   </span>
                 </div>
@@ -471,28 +471,28 @@ export function CheckinSystem({
             </div>
 
             {/* Calendar */}
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-2xl font-serif italic capitalize">
+                <h4 className="text-xl md:text-2xl font-serif italic capitalize">
                   {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
                 </h4>
-                <div className="flex gap-2">
-                  <button 
+                <div className="flex gap-1">
+                  <button
                     onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
                     className="p-2 hover:bg-stone-100 rounded-full transition-colors"
                   >
-                    <ChevronLeft size={20} />
+                    <ChevronLeft size={18} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
                     className="p-2 hover:bg-stone-100 rounded-full transition-colors"
                   >
-                    <ChevronRight size={20} />
+                    <ChevronRight size={18} />
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-1 md:gap-2">
                 {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
                   <div key={day} className="text-center text-[10px] font-bold uppercase tracking-widest text-stone-400 py-2">
                     {day}
@@ -534,36 +534,36 @@ export function CheckinSystem({
         )}
 
         {activeTab === 'score' && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="text-center max-w-2xl mx-auto mb-12">
-              <div className="w-20 h-20 bg-stone-900 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-stone-900/20">
-                <Trophy size={40} />
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="text-center max-w-2xl mx-auto">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-stone-900 text-white rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-stone-900/20">
+                <Trophy size={32} />
               </div>
-              <h3 className="text-4xl font-serif italic mb-4">Sistema de Score QDDO</h3>
-              <p className="text-stone-500">Valorizamos sua presença e participação na nossa comunidade. Entenda como funciona nossa pontuação.</p>
+              <h3 className="text-2xl md:text-4xl font-serif italic mb-3">Sistema de Score QDDO</h3>
+              <p className="text-stone-500 text-sm md:text-base">Valorizamos sua presença e participação na nossa comunidade. Entenda como funciona nossa pontuação.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <div className="space-y-3 md:space-y-4">
                 <div className="flex items-center gap-3 text-stone-900">
-                  <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold">01</div>
-                  <h4 className="font-serif italic text-xl">Descrição</h4>
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold shrink-0">01</div>
+                  <h4 className="font-serif italic text-lg md:text-xl">Descrição</h4>
                 </div>
-                <div className="bg-stone-50 p-8 rounded-[32px] border border-stone-100 h-full">
+                <div className="bg-stone-50 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-stone-100">
                   <p className="text-stone-600 leading-relaxed text-sm">
-                    O Score QDDO é uma métrica de engajamento que recompensa os Founders que utilizam o espaço físico e participam ativamente do ecossistema. 
+                    O Score QDDO é uma métrica de engajamento que recompensa os Founders que utilizam o espaço físico e participam ativamente do ecossistema.
                     É a sua "moeda de presença" dentro da nossa comunidade.
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-3 md:space-y-4">
                 <div className="flex items-center gap-3 text-stone-900">
-                  <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold">02</div>
-                  <h4 className="font-serif italic text-xl">Regras</h4>
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold shrink-0">02</div>
+                  <h4 className="font-serif italic text-lg md:text-xl">Regras</h4>
                 </div>
-                <div className="bg-stone-50 p-8 rounded-[32px] border border-stone-100 h-full">
-                  <ul className="space-y-4">
+                <div className="bg-stone-50 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-stone-100">
+                  <ul className="space-y-3">
                     {[
                       'Cada check-in diário vale 10 pontos.',
                       'O check-in deve ser realizado presencialmente.',
@@ -579,13 +579,13 @@ export function CheckinSystem({
                 </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-3 md:space-y-4">
                 <div className="flex items-center gap-3 text-stone-900">
-                  <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold">03</div>
-                  <h4 className="font-serif italic text-xl">Benefícios</h4>
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold shrink-0">03</div>
+                  <h4 className="font-serif italic text-lg md:text-xl">Benefícios</h4>
                 </div>
-                <div className="bg-stone-50 p-8 rounded-[32px] border border-stone-100 h-full">
-                  <ul className="space-y-4">
+                <div className="bg-stone-50 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-stone-100">
+                  <ul className="space-y-3">
                     {[
                       'Prioridade na reserva de salas de reunião.',
                       'Acesso antecipado a eventos exclusivos.',
@@ -602,13 +602,13 @@ export function CheckinSystem({
               </div>
             </div>
 
-            <div className="bg-stone-900 rounded-[32px] p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="bg-stone-900 rounded-[24px] md:rounded-[32px] p-6 md:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
-                <h4 className="text-xl font-serif italic mb-1">Seu Score Atual</h4>
+                <h4 className="text-lg md:text-xl font-serif italic mb-1">Seu Score Atual</h4>
                 <p className="text-stone-400 text-sm">Continue frequentando para subir no ranking!</p>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-5xl font-serif italic">{currentMonthCheckins * 10}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-4xl md:text-5xl font-serif italic">{currentMonthCheckins * 10}</span>
                 <span className="text-stone-400 uppercase tracking-widest text-xs font-bold">Pontos Acumulados</span>
               </div>
             </div>

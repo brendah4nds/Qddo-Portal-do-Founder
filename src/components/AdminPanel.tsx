@@ -351,74 +351,47 @@ export function AdminPanel({
   };
 
   return (
-    <div className="space-y-12">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="space-y-8">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-4xl font-serif italic mb-2">Painel de Controle</h2>
-          <p className="text-stone-500">Gerencie todos os agendamentos e salas do sistema.</p>
+          <h2 className="text-3xl md:text-4xl font-serif italic mb-1">Painel de Controle</h2>
+          <p className="text-stone-500 text-sm md:text-base">Gerencie todos os agendamentos e salas do sistema.</p>
         </div>
-        <div className="flex gap-4">
-          <div className="bg-white px-6 py-3 rounded-2xl border border-stone-200 shadow-sm flex flex-col">
+        <div className="flex gap-3 shrink-0">
+          <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-2xl border border-stone-200 shadow-sm flex flex-col">
             <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Total Reservas</span>
-            <span className="text-2xl font-serif italic">{bookings.length}</span>
+            <span className="text-xl md:text-2xl font-serif italic">{bookings.length}</span>
           </div>
-          <div className="bg-white px-6 py-3 rounded-2xl border border-stone-200 shadow-sm flex flex-col">
+          <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-2xl border border-stone-200 shadow-sm flex flex-col">
             <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Salas Ativas</span>
-            <span className="text-2xl font-serif italic">{rooms.length}</span>
+            <span className="text-xl md:text-2xl font-serif italic">{rooms.length}</span>
           </div>
         </div>
       </header>
 
-      <div className="flex gap-8 border-b border-stone-200">
-        <button 
-          onClick={() => setAdminTab('bookings')}
-          className={cn(
-            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
-            adminTab === 'bookings' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
-          )}
-        >
-          Agendamentos
-        </button>
-        <button 
-          onClick={() => setAdminTab('settings')}
-          className={cn(
-            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
-            adminTab === 'settings' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
-          )}
-        >
-          Configurações
-        </button>
-        <button 
-          onClick={() => setAdminTab('founders')}
-          className={cn(
-            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
-            adminTab === 'founders' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
-          )}
-        >
-          Usuários
-        </button>
-        <button 
-          onClick={() => setAdminTab('challenges')}
-          className={cn(
-            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
-            adminTab === 'challenges' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
-          )}
-        >
-          Desafios
-        </button>
-        <button
-          onClick={() => setAdminTab('news')}
-          className={cn(
-            "pb-4 text-sm font-bold uppercase tracking-widest transition-all",
-            adminTab === 'news' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
-          )}
-        >
-          News
-        </button>
+      <div className="flex gap-4 md:gap-6 border-b border-stone-200 overflow-x-auto scrollbar-hide pb-px">
+        {[
+          { id: 'bookings', label: 'Agendamentos' },
+          { id: 'settings', label: 'Configurações' },
+          { id: 'founders', label: 'Usuários' },
+          { id: 'challenges', label: 'Desafios' },
+          { id: 'news', label: 'News' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setAdminTab(tab.id as any)}
+            className={cn(
+              "pb-4 text-xs md:text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap shrink-0",
+              adminTab === tab.id ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
         <button
           onClick={() => setAdminTab('indicacoes')}
           className={cn(
-            "pb-4 text-sm font-bold uppercase tracking-widest transition-all flex items-center gap-2",
+            "pb-4 text-xs md:text-sm font-bold uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap shrink-0",
             adminTab === 'indicacoes' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
           )}
         >
@@ -619,7 +592,7 @@ export function AdminPanel({
           </div>
 
           {isAddingNews && (
-            <div className="bg-white rounded-[40px] p-12 border border-stone-200 shadow-sm animate-in zoom-in-95 duration-300">
+            <div className="bg-white rounded-[24px] md:rounded-[40px] p-6 md:p-10 border border-stone-200 shadow-sm animate-in zoom-in-95 duration-300">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-2xl font-serif italic">{editingNewsId ? 'Editar Notícia' : 'Nova Notícia'}</h3>
                 {editingNewsId && (
@@ -922,21 +895,21 @@ export function AdminPanel({
 
       {adminTab === 'indicacoes' && (
         <section className="space-y-6 animate-in fade-in duration-500">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-2xl font-serif italic">Indicações de Founders</h3>
+              <h3 className="text-xl md:text-2xl font-serif italic">Indicações de Founders</h3>
               <p className="text-stone-500 text-sm mt-1">Revise e aprove ou rejeite as indicações enviadas pela comunidade.</p>
             </div>
-            <div className="flex gap-3">
-              <div className="bg-amber-50 border border-amber-200 px-5 py-3 rounded-2xl flex flex-col items-center">
+            <div className="flex gap-3 shrink-0">
+              <div className="bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-2xl flex flex-col items-center">
                 <span className="text-[10px] uppercase tracking-widest font-bold text-amber-500">Pendentes</span>
-                <span className="text-2xl font-serif italic text-amber-600">
+                <span className="text-xl md:text-2xl font-serif italic text-amber-600">
                   {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length}
                 </span>
               </div>
-              <div className="bg-emerald-50 border border-emerald-200 px-5 py-3 rounded-2xl flex flex-col items-center">
+              <div className="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-2xl flex flex-col items-center">
                 <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-500">Aprovadas</span>
-                <span className="text-2xl font-serif italic text-emerald-600">
+                <span className="text-xl md:text-2xl font-serif italic text-emerald-600">
                   {indicacoes.filter((i: any) => i.status === 'aprovada').length}
                 </span>
               </div>
@@ -944,7 +917,7 @@ export function AdminPanel({
           </div>
 
           {indicacoes.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-20 text-center">
+            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-12 md:p-20 text-center">
               <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserPlus size={28} className="text-stone-400" />
               </div>
@@ -952,6 +925,7 @@ export function AdminPanel({
             </div>
           ) : (
             <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-stone-50 border-b border-stone-100">
@@ -1021,6 +995,7 @@ export function AdminPanel({
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </section>
