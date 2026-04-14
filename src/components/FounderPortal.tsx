@@ -394,7 +394,7 @@ export function FounderPortal({
                             <p className="font-bold text-stone-900 text-xl">{selectedCompanyFounder.company?.name || 'N/A'}</p>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Tipo</span>
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Categoria</span>
                             <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.tipo || 'Não informado'}</p>
                           </div>
                           <div>
@@ -528,17 +528,17 @@ export function FounderPortal({
                         )}
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Tipo de Empresa</span>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Categoria de Empresa</span>
                         {editingCompany ? (
                           <select
                             value={companyEditData.tipo}
                             onChange={e => setCompanyEditData({ ...companyEditData, tipo: e.target.value })}
                             className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all appearance-none"
                           >
-                            <option value="">Selecione o tipo...</option>
+                            <option value="">Selecione a categoria...</option>
                             <option value="HealthTech">HealthTech</option>
                             <option value="EdTech">EdTech</option>
-                            <option value="SaaS/Software">SaaS/Software</option>
+                            <option value="SaaS/ Software">SaaS/ Software</option>
                             <option value="Marketing">Marketing</option>
                             <option value="Eventos">Eventos</option>
                             <option value="Variados">Variados</option>
