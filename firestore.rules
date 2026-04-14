@@ -187,16 +187,17 @@ service cloud.firestore {
     }
 
     match /challenges/{challengeId} {
-      allow read: if resource.data.type == 'public' || 
-                    isOwner(resource.data.founderId) || 
+      allow list: if isAuthenticated();
+      allow get: if resource.data.type == 'public' ||
+                    isOwner(resource.data.founderId) ||
                     isAdmin();
-      allow create: if isAuthenticated() && 
-                      (isOwner(request.resource.data.founderId) || isAdmin()) && 
+      allow create: if isAuthenticated() &&
+                      (isOwner(request.resource.data.founderId) || isAdmin()) &&
                       isValidChallenge(request.resource.data);
-      allow update: if isAuthenticated() && 
-                      (isOwner(resource.data.founderId) || isAdmin()) && 
+      allow update: if isAuthenticated() &&
+                      (isOwner(resource.data.founderId) || isAdmin()) &&
                       isValidChallenge(request.resource.data);
-      allow delete: if isAuthenticated() && 
+      allow delete: if isAuthenticated() &&
                       (isOwner(resource.data.founderId) || isAdmin());
     }
 
