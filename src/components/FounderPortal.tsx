@@ -87,7 +87,7 @@ export function FounderPortal({
   const [updatingCnpj, setUpdatingCnpj] = useState(false);
 
   const [editingCompany, setEditingCompany] = useState(false);
-  const [companyEditData, setCompanyEditData] = useState({ name: '', cnpj: '', bio: '' });
+  const [companyEditData, setCompanyEditData] = useState({ name: '', cnpj: '', bio: '', tipo: '' });
   const [savingCompany, setSavingCompany] = useState(false);
 
   const [selectedCompanyFounder, setSelectedCompanyFounder] = useState<any | null>(null);
@@ -98,11 +98,14 @@ export function FounderPortal({
     }
   }, [founder]);
 
+  const COMPANY_CATEGORIES = ['HealthTech', 'EdTech', 'SaaS/Software', 'Marketing', 'Eventos', 'Variados'];
+
   const handleStartEditCompany = () => {
     setCompanyEditData({
       name: founder?.company?.name || '',
       cnpj: founder?.company?.cnpj || '',
-      bio: founder?.company?.bio || ''
+      bio: founder?.company?.bio || '',
+      tipo: founder?.company?.tipo || ''
     });
     setEditingCompany(true);
   };
@@ -114,7 +117,8 @@ export function FounderPortal({
       await updateDoc(doc(db, 'founders', user.uid), {
         'company.name': companyEditData.name,
         'company.cnpj': companyEditData.cnpj,
-        'company.bio': companyEditData.bio
+        'company.bio': companyEditData.bio,
+        'company.tipo': companyEditData.tipo
       });
       setEditingCompany(false);
     } catch (error) {
@@ -390,6 +394,10 @@ export function FounderPortal({
                             <p className="font-bold text-stone-900 text-xl">{selectedCompanyFounder.company?.name || 'N/A'}</p>
                           </div>
                           <div>
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Tipo</span>
+                            <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.tipo || 'Não informado'}</p>
+                          </div>
+                          <div>
                             <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
                             <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
                           </div>
@@ -403,47 +411,42 @@ export function FounderPortal({
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
-                  <div className="p-8 border-b border-stone-100">
-                    <h3 className="text-xl font-serif italic">Lista de Empresas</h3>
-                    <p className="text-stone-400 text-sm">Visualize todos os founders e suas respectivas empresas.</p>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-xl font-serif italic">Empresas que estão no QDDO</h3>
+                    <p className="text-stone-400 text-sm mt-1">Classificadas por segmento de atuação.</p>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-stone-50 border-b border-stone-100">
-                          <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Empresa</th>
-                          <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Founder</th>
-                          <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {founders.map(f => (
-                          <tr key={f.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
-                            <td className="px-8 py-6">
-                              <button 
-                                onClick={() => setSelectedCompanyFounder(f)}
-                                className="font-bold text-stone-900 hover:text-stone-600 transition-colors text-left"
-                              >
-                                {f.company?.name || 'Sem empresa'}
-                              </button>
-                            </td>
-                            <td className="px-8 py-6">
-                              <div className="text-sm font-medium text-stone-700">{f.name}</div>
-                              <div className="text-[10px] text-stone-400">@{f.username}</div>
-                            </td>
-                            <td className="px-8 py-6 text-right">
-                              <button 
-                                onClick={() => setSelectedCompanyFounder(f)}
-                                className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors"
-                              >
-                                Ver Detalhes
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {COMPANY_CATEGORIES.map(cat => {
+                      const catFounders = founders.filter(f =>
+                        f.company?.name && (
+                          cat === 'Variados'
+                            ? !f.company?.tipo || !COMPANY_CATEGORIES.slice(0, -1).includes(f.company.tipo)
+                            : f.company?.tipo === cat
+                        )
+                      );
+                      if (catFounders.length === 0) return null;
+                      return (
+                        <div key={cat} className="space-y-3">
+                          <h4 className="text-sm font-bold uppercase tracking-widest text-stone-900 flex items-center gap-2">
+                            <span className="text-amber-500 text-base leading-none">&#9670;</span>
+                            {cat} ({catFounders.length})
+                          </h4>
+                          <ul className="space-y-1 pl-1">
+                            {catFounders.map(f => (
+                              <li key={f.id}>
+                                <button
+                                  onClick={() => setSelectedCompanyFounder(f)}
+                                  className="text-sm text-stone-600 hover:text-stone-900 hover:font-semibold transition-all text-left leading-relaxed"
+                                >
+                                  • {f.company?.name}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -522,6 +525,26 @@ export function FounderPortal({
                           />
                         ) : (
                           <p className="font-bold text-stone-900 text-xl">{founder?.company?.name || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Tipo de Empresa</span>
+                        {editingCompany ? (
+                          <select
+                            value={companyEditData.tipo}
+                            onChange={e => setCompanyEditData({ ...companyEditData, tipo: e.target.value })}
+                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all appearance-none"
+                          >
+                            <option value="">Selecione o tipo...</option>
+                            <option value="HealthTech">HealthTech</option>
+                            <option value="EdTech">EdTech</option>
+                            <option value="SaaS/Software">SaaS/Software</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Eventos">Eventos</option>
+                            <option value="Variados">Variados</option>
+                          </select>
+                        ) : (
+                          <p className="font-bold text-stone-900">{founder?.company?.tipo || 'Não informado'}</p>
                         )}
                       </div>
                       <div>

@@ -29,6 +29,7 @@ export interface Founder {
     name: string;
     bio: string;
     cnpj?: string;
+    tipo?: string;
   };
   registeredAt: any;
   role?: 'user' | 'admin';
