@@ -28,6 +28,7 @@ export interface Founder {
   company?: {
     name: string;
     bio: string;
+    cnpj?: string;
   };
   registeredAt: any;
   role?: 'user' | 'admin';

@@ -13,20 +13,23 @@ import {
   orderBy
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
-import { 
-  User as UserIcon, 
-  Instagram, 
-  Building2, 
-  Plus, 
-  Lock, 
-  Globe, 
-  CheckCircle2, 
+import {
+  User as UserIcon,
+  Instagram,
+  Building2,
+  Plus,
+  Lock,
+  Globe,
+  CheckCircle2,
   Clock,
   ArrowRight,
   HelpCircle,
   CheckSquare,
   MessageCircle,
-  AlertTriangle
+  AlertTriangle,
+  Pencil,
+  X,
+  Check
 } from 'lucide-react';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { Founder, Challenge } from '../types';
@@ -83,6 +86,10 @@ export function FounderPortal({
   const [cnpjInput, setCnpjInput] = useState('');
   const [updatingCnpj, setUpdatingCnpj] = useState(false);
 
+  const [editingCompany, setEditingCompany] = useState(false);
+  const [companyEditData, setCompanyEditData] = useState({ name: '', cnpj: '', bio: '' });
+  const [savingCompany, setSavingCompany] = useState(false);
+
   const [selectedCompanyFounder, setSelectedCompanyFounder] = useState<any | null>(null);
 
   useEffect(() => {
@@ -90,6 +97,32 @@ export function FounderPortal({
       setCnpjInput(founder.company.cnpj);
     }
   }, [founder]);
+
+  const handleStartEditCompany = () => {
+    setCompanyEditData({
+      name: founder?.company?.name || '',
+      cnpj: founder?.company?.cnpj || '',
+      bio: founder?.company?.bio || ''
+    });
+    setEditingCompany(true);
+  };
+
+  const handleUpdateCompany = async () => {
+    if (!user) return;
+    setSavingCompany(true);
+    try {
+      await updateDoc(doc(db, 'founders', user.uid), {
+        'company.name': companyEditData.name,
+        'company.cnpj': companyEditData.cnpj,
+        'company.bio': companyEditData.bio
+      });
+      setEditingCompany(false);
+    } catch (error) {
+      console.error('Error updating company:', error);
+    } finally {
+      setSavingCompany(false);
+    }
+  };
 
   const handleUpdateCnpj = async () => {
     if (!user || !cnpjInput) return;
@@ -446,44 +479,85 @@ export function FounderPortal({
 
                 <div className="space-y-8">
                   <div className="bg-stone-50 rounded-3xl p-8 border border-stone-100">
-                    <h3 className="text-3xl font-serif italic mb-6">Sua Empresa</h3>
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-3xl font-serif italic">Sua Empresa</h3>
+                      {!editingCompany ? (
+                        <button
+                          onClick={handleStartEditCompany}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-200 transition-all"
+                        >
+                          <Pencil size={14} />
+                          Editar
+                        </button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditingCompany(false)}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-200 transition-all"
+                          >
+                            <X size={14} />
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={handleUpdateCompany}
+                            disabled={savingCompany}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest bg-stone-900 text-white hover:bg-stone-700 transition-all disabled:opacity-50"
+                          >
+                            <Check size={14} />
+                            {savingCompany ? 'Salvando...' : 'Salvar'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
-                        <p className="font-bold text-stone-900 text-xl">{founder?.company?.name || 'N/A'}</p>
+                        {editingCompany ? (
+                          <input
+                            type="text"
+                            value={companyEditData.name}
+                            onChange={e => setCompanyEditData({ ...companyEditData, name: e.target.value })}
+                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all font-bold text-stone-900"
+                            placeholder="Nome da sua empresa"
+                          />
+                        ) : (
+                          <p className="font-bold text-stone-900 text-xl">{founder?.company?.name || 'N/A'}</p>
+                        )}
                       </div>
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
-                        {founder?.company?.cnpj ? (
+                        {editingCompany ? (
+                          <input
+                            type="text"
+                            value={companyEditData.cnpj}
+                            onChange={e => setCompanyEditData({ ...companyEditData, cnpj: e.target.value })}
+                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all"
+                            placeholder="00.000.000/0000-00"
+                          />
+                        ) : founder?.company?.cnpj ? (
                           <p className="font-bold text-stone-900">{founder.company.cnpj}</p>
                         ) : (
-                          <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl space-y-3">
+                          <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl">
                             <p className="text-xs text-rose-600 font-bold flex items-center gap-2">
                               <AlertTriangle size={14} />
-                              Pendência: CNPJ não informado
+                              Pendência: CNPJ não informado. Clique em "Editar" para adicionar.
                             </p>
-                            <div className="flex gap-2">
-                              <input 
-                                type="text" 
-                                placeholder="00.000.000/0000-00"
-                                value={cnpjInput}
-                                onChange={e => setCnpjInput(e.target.value)}
-                                className="flex-1 px-4 py-2 bg-white border border-rose-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-                              />
-                              <button 
-                                onClick={handleUpdateCnpj}
-                                disabled={updatingCnpj || !cnpjInput}
-                                className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-all disabled:opacity-50"
-                              >
-                                {updatingCnpj ? '...' : 'Salvar'}
-                              </button>
-                            </div>
                           </div>
                         )}
                       </div>
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>
-                        <p className="text-sm text-stone-500 leading-relaxed">{founder?.company?.bio || 'Você ainda não adicionou uma descrição para sua empresa.'}</p>
+                        {editingCompany ? (
+                          <textarea
+                            rows={4}
+                            value={companyEditData.bio}
+                            onChange={e => setCompanyEditData({ ...companyEditData, bio: e.target.value })}
+                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all resize-none"
+                            placeholder="Descreva sua empresa..."
+                          />
+                        ) : (
+                          <p className="text-sm text-stone-500 leading-relaxed">{founder?.company?.bio || 'Você ainda não adicionou uma descrição para sua empresa.'}</p>
+                        )}
                       </div>
                     </div>
                   </div>
