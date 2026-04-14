@@ -463,6 +463,7 @@ export function AdminPanel({
                 <tr className="bg-stone-50 border-b border-stone-100">
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Nome</th>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Empresa</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Categoria</th>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Role</th>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
                 </tr>
@@ -476,6 +477,27 @@ export function AdminPanel({
                     </td>
                     <td className="px-8 py-6">
                       <div className="font-serif italic text-stone-700">{founder.company?.name || 'N/A'}</div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <select
+                        value={founder.company?.tipo || ''}
+                        onChange={async (e) => {
+                          const novoTipo = e.target.value;
+                          await setDoc(doc(db, 'founders', founder.id), {
+                            ...founder,
+                            company: { ...founder.company, tipo: novoTipo }
+                          });
+                        }}
+                        className="px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all appearance-none cursor-pointer"
+                      >
+                        <option value="">Sem categoria</option>
+                        <option value="HealthTech">HealthTech</option>
+                        <option value="EdTech">EdTech</option>
+                        <option value="SaaS/ Software">SaaS/ Software</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Eventos">Eventos</option>
+                        <option value="Variados">Variados</option>
+                      </select>
                     </td>
                     <td className="px-8 py-6">
                       <span className={cn(

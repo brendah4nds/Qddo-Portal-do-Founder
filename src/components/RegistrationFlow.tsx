@@ -13,7 +13,8 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
     bio: '',
     companyName: '',
     companyBio: '',
-    cnpj: ''
+    cnpj: '',
+    companyTipo: ''
   });
 
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -36,7 +37,8 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
         company: {
           name: formData.companyName,
           bio: formData.companyBio,
-          cnpj: formData.cnpj
+          cnpj: formData.cnpj,
+          tipo: formData.companyTipo
         },
         registeredAt: serverTimestamp(),
         termsAccepted: true,
@@ -137,8 +139,24 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                 />
               </div>
               <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Categoria de Empresa</label>
+                <select
+                  value={formData.companyTipo}
+                  onChange={e => setFormData({ ...formData, companyTipo: e.target.value })}
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all appearance-none"
+                >
+                  <option value="">Selecione a categoria...</option>
+                  <option value="HealthTech">HealthTech</option>
+                  <option value="EdTech">EdTech</option>
+                  <option value="SaaS/ Software">SaaS/ Software</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Eventos">Eventos</option>
+                  <option value="Variados">Variados</option>
+                </select>
+              </div>
+              <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Bio da Empresa</label>
-                <textarea 
+                <textarea
                   rows={2}
                   placeholder="O que sua empresa faz?"
                   value={formData.companyBio}

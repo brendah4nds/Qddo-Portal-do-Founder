@@ -13,20 +13,23 @@ import {
   orderBy
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
-import { 
-  User as UserIcon, 
-  Instagram, 
-  Building2, 
-  Plus, 
-  Lock, 
-  Globe, 
-  CheckCircle2, 
+import {
+  User as UserIcon,
+  Instagram,
+  Building2,
+  Plus,
+  Lock,
+  Globe,
+  CheckCircle2,
   Clock,
   ArrowRight,
   HelpCircle,
   CheckSquare,
   MessageCircle,
-  AlertTriangle
+  AlertTriangle,
+  Pencil,
+  X,
+  Check
 } from 'lucide-react';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { Founder, Challenge } from '../types';
@@ -83,6 +86,10 @@ export function FounderPortal({
   const [cnpjInput, setCnpjInput] = useState('');
   const [updatingCnpj, setUpdatingCnpj] = useState(false);
 
+  const [editingCompany, setEditingCompany] = useState(false);
+  const [companyEditData, setCompanyEditData] = useState({ name: '', cnpj: '', bio: '', tipo: '' });
+  const [savingCompany, setSavingCompany] = useState(false);
+
   const [selectedCompanyFounder, setSelectedCompanyFounder] = useState<any | null>(null);
 
   useEffect(() => {
@@ -90,6 +97,36 @@ export function FounderPortal({
       setCnpjInput(founder.company.cnpj);
     }
   }, [founder]);
+
+  const COMPANY_CATEGORIES = ['HealthTech', 'EdTech', 'SaaS/Software', 'Marketing', 'Eventos', 'Variados'];
+
+  const handleStartEditCompany = () => {
+    setCompanyEditData({
+      name: founder?.company?.name || '',
+      cnpj: founder?.company?.cnpj || '',
+      bio: founder?.company?.bio || '',
+      tipo: founder?.company?.tipo || ''
+    });
+    setEditingCompany(true);
+  };
+
+  const handleUpdateCompany = async () => {
+    if (!user) return;
+    setSavingCompany(true);
+    try {
+      await updateDoc(doc(db, 'founders', user.uid), {
+        'company.name': companyEditData.name,
+        'company.cnpj': companyEditData.cnpj,
+        'company.bio': companyEditData.bio,
+        'company.tipo': companyEditData.tipo
+      });
+      setEditingCompany(false);
+    } catch (error) {
+      console.error('Error updating company:', error);
+    } finally {
+      setSavingCompany(false);
+    }
+  };
 
   const handleUpdateCnpj = async () => {
     if (!user || !cnpjInput) return;
@@ -357,6 +394,10 @@ export function FounderPortal({
                             <p className="font-bold text-stone-900 text-xl">{selectedCompanyFounder.company?.name || 'N/A'}</p>
                           </div>
                           <div>
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Categoria</span>
+                            <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.tipo || 'Não informado'}</p>
+                          </div>
+                          <div>
                             <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
                             <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
                           </div>
@@ -370,47 +411,42 @@ export function FounderPortal({
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
-                  <div className="p-8 border-b border-stone-100">
-                    <h3 className="text-xl font-serif italic">Lista de Empresas</h3>
-                    <p className="text-stone-400 text-sm">Visualize todos os founders e suas respectivas empresas.</p>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-xl font-serif italic">Empresas que estão no QDDO</h3>
+                    <p className="text-stone-400 text-sm mt-1">Classificadas por segmento de atuação.</p>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-stone-50 border-b border-stone-100">
-                          <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Empresa</th>
-                          <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400">Founder</th>
-                          <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {founders.map(f => (
-                          <tr key={f.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
-                            <td className="px-8 py-6">
-                              <button 
-                                onClick={() => setSelectedCompanyFounder(f)}
-                                className="font-bold text-stone-900 hover:text-stone-600 transition-colors text-left"
-                              >
-                                {f.company?.name || 'Sem empresa'}
-                              </button>
-                            </td>
-                            <td className="px-8 py-6">
-                              <div className="text-sm font-medium text-stone-700">{f.name}</div>
-                              <div className="text-[10px] text-stone-400">@{f.username}</div>
-                            </td>
-                            <td className="px-8 py-6 text-right">
-                              <button 
-                                onClick={() => setSelectedCompanyFounder(f)}
-                                className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors"
-                              >
-                                Ver Detalhes
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {COMPANY_CATEGORIES.map(cat => {
+                      const catFounders = founders.filter(f =>
+                        f.company?.name && (
+                          cat === 'Variados'
+                            ? !f.company?.tipo || !COMPANY_CATEGORIES.slice(0, -1).includes(f.company.tipo)
+                            : f.company?.tipo === cat
+                        )
+                      );
+                      if (catFounders.length === 0) return null;
+                      return (
+                        <div key={cat} className="space-y-3">
+                          <h4 className="text-sm font-bold uppercase tracking-widest text-stone-900 flex items-center gap-2">
+                            <span className="text-amber-500 text-base leading-none">&#9670;</span>
+                            {cat} ({catFounders.length})
+                          </h4>
+                          <ul className="space-y-1 pl-1">
+                            {catFounders.map(f => (
+                              <li key={f.id}>
+                                <button
+                                  onClick={() => setSelectedCompanyFounder(f)}
+                                  className="text-sm text-stone-600 hover:text-stone-900 hover:font-semibold transition-all text-left leading-relaxed"
+                                >
+                                  • {f.company?.name}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -446,44 +482,105 @@ export function FounderPortal({
 
                 <div className="space-y-8">
                   <div className="bg-stone-50 rounded-3xl p-8 border border-stone-100">
-                    <h3 className="text-3xl font-serif italic mb-6">Sua Empresa</h3>
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-3xl font-serif italic">Sua Empresa</h3>
+                      {!editingCompany ? (
+                        <button
+                          onClick={handleStartEditCompany}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-200 transition-all"
+                        >
+                          <Pencil size={14} />
+                          Editar
+                        </button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditingCompany(false)}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-200 transition-all"
+                          >
+                            <X size={14} />
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={handleUpdateCompany}
+                            disabled={savingCompany}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest bg-stone-900 text-white hover:bg-stone-700 transition-all disabled:opacity-50"
+                          >
+                            <Check size={14} />
+                            {savingCompany ? 'Salvando...' : 'Salvar'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
-                        <p className="font-bold text-stone-900 text-xl">{founder?.company?.name || 'N/A'}</p>
+                        {editingCompany ? (
+                          <input
+                            type="text"
+                            value={companyEditData.name}
+                            onChange={e => setCompanyEditData({ ...companyEditData, name: e.target.value })}
+                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all font-bold text-stone-900"
+                            placeholder="Nome da sua empresa"
+                          />
+                        ) : (
+                          <p className="font-bold text-stone-900 text-xl">{founder?.company?.name || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Categoria de Empresa</span>
+                        {editingCompany ? (
+                          <select
+                            value={companyEditData.tipo}
+                            onChange={e => setCompanyEditData({ ...companyEditData, tipo: e.target.value })}
+                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all appearance-none"
+                          >
+                            <option value="">Selecione a categoria...</option>
+                            <option value="HealthTech">HealthTech</option>
+                            <option value="EdTech">EdTech</option>
+                            <option value="SaaS/ Software">SaaS/ Software</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Eventos">Eventos</option>
+                            <option value="Variados">Variados</option>
+                          </select>
+                        ) : (
+                          <p className="font-bold text-stone-900">{founder?.company?.tipo || 'Não informado'}</p>
+                        )}
                       </div>
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
-                        {founder?.company?.cnpj ? (
+                        {editingCompany ? (
+                          <input
+                            type="text"
+                            value={companyEditData.cnpj}
+                            onChange={e => setCompanyEditData({ ...companyEditData, cnpj: e.target.value })}
+                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all"
+                            placeholder="00.000.000/0000-00"
+                          />
+                        ) : founder?.company?.cnpj ? (
                           <p className="font-bold text-stone-900">{founder.company.cnpj}</p>
                         ) : (
-                          <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl space-y-3">
+                          <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl">
                             <p className="text-xs text-rose-600 font-bold flex items-center gap-2">
                               <AlertTriangle size={14} />
-                              Pendência: CNPJ não informado
+                              Pendência: CNPJ não informado. Clique em "Editar" para adicionar.
                             </p>
-                            <div className="flex gap-2">
-                              <input 
-                                type="text" 
-                                placeholder="00.000.000/0000-00"
-                                value={cnpjInput}
-                                onChange={e => setCnpjInput(e.target.value)}
-                                className="flex-1 px-4 py-2 bg-white border border-rose-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-                              />
-                              <button 
-                                onClick={handleUpdateCnpj}
-                                disabled={updatingCnpj || !cnpjInput}
-                                className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-all disabled:opacity-50"
-                              >
-                                {updatingCnpj ? '...' : 'Salvar'}
-                              </button>
-                            </div>
                           </div>
                         )}
                       </div>
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>
-                        <p className="text-sm text-stone-500 leading-relaxed">{founder?.company?.bio || 'Você ainda não adicionou uma descrição para sua empresa.'}</p>
+                        {editingCompany ? (
+                          <textarea
+                            rows={4}
+                            value={companyEditData.bio}
+                            onChange={e => setCompanyEditData({ ...companyEditData, bio: e.target.value })}
+                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all resize-none"
+                            placeholder="Descreva sua empresa..."
+                          />
+                        ) : (
+                          <p className="text-sm text-stone-500 leading-relaxed">{founder?.company?.bio || 'Você ainda não adicionou uma descrição para sua empresa.'}</p>
+                        )}
                       </div>
                     </div>
                   </div>
