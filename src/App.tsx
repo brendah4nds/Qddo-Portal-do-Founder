@@ -147,6 +147,7 @@ export default function App() {
   const [profileBirthYear, setProfileBirthYear] = useState('');
   const [profilePhotoUploading, setProfilePhotoUploading] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaveError, setProfileSaveError] = useState('');
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [indicarNome, setIndicarNome] = useState('');
   const [indicarEmpresa, setIndicarEmpresa] = useState('');
@@ -192,6 +193,7 @@ export default function App() {
     setProfileBirthDay(founderData?.birthDay || '');
     setProfileBirthMonth(founderData?.birthMonth || '');
     setProfileBirthYear(founderData?.birthYear || '');
+    setProfileSaveError('');
     setProfileMenuOpen(false);
     setShowProfileModal(true);
   };
@@ -217,15 +219,17 @@ export default function App() {
   const handleSaveProfile = async () => {
     if (!user) return;
     setProfileSaving(true);
+    setProfileSaveError('');
     try {
-      await updateDoc(doc(db, 'founders', user.uid), {
+      await setDoc(doc(db, 'founders', user.uid), {
         birthDay: profileBirthDay,
         birthMonth: profileBirthMonth,
         birthYear: profileBirthYear,
-      });
+      }, { merge: true });
       setShowProfileModal(false);
     } catch (err) {
       console.error('Erro ao salvar perfil:', err);
+      setProfileSaveError('Não foi possível salvar. Tente novamente.');
     } finally {
       setProfileSaving(false);
     }
@@ -1600,6 +1604,9 @@ export default function App() {
               </div>
             </div>
 
+            {profileSaveError && (
+              <p className="text-red-500 text-xs text-center mb-3">{profileSaveError}</p>
+            )}
             <button
               onClick={handleSaveProfile}
               disabled={profileSaving}
