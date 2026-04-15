@@ -333,11 +333,18 @@ export default function App() {
 
   // Auth listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (!u) {
         setFounderData(null);
         setCheckingFounder(false);
+      } else if (u.photoURL) {
+        // Sync Google/auth photoURL to Firestore so it's visible to all users
+        try {
+          await updateDoc(doc(db, 'founders', u.uid), { photoURL: u.photoURL });
+        } catch {
+          // Document may not exist yet (e.g. pending approval) — ignore silently
+        }
       }
       setLoading(false);
     });
