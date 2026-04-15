@@ -93,6 +93,13 @@ export function AdminPanel({
   const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isAddingNews, setIsAddingNews] = useState(false);
+  const [editingFounder, setEditingFounder] = useState<any | null>(null);
+  const [editFounderForm, setEditFounderForm] = useState({
+    name: '',
+    username: '',
+    companyName: '',
+    companyBio: '',
+  });
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -213,6 +220,54 @@ export function AdminPanel({
         }
       }
     });
+  };
+
+  const handleDeleteFounder = (founder: any) => {
+    if (founder.id === user.uid) return;
+    setModalConfig({
+      isOpen: true,
+      title: 'Excluir Conta',
+      message: `Tem certeza que deseja excluir a conta de ${founder.name}? Esta ação não pode ser desfeita.`,
+      variant: 'danger',
+      confirmText: 'Excluir Conta',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'founders', founder.id));
+          setModalConfig(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
+  };
+
+  const handleOpenEditFounder = (founder: any) => {
+    setEditFounderForm({
+      name: founder.name || '',
+      username: founder.username || '',
+      companyName: founder.company?.name || '',
+      companyBio: founder.company?.bio || '',
+    });
+    setEditingFounder(founder);
+  };
+
+  const handleSaveFounderEdit = async () => {
+    if (!editingFounder) return;
+    try {
+      await setDoc(doc(db, 'founders', editingFounder.id), {
+        ...editingFounder,
+        name: editFounderForm.name,
+        username: editFounderForm.username,
+        company: {
+          ...editingFounder.company,
+          name: editFounderForm.companyName,
+          bio: editFounderForm.companyBio,
+        }
+      });
+      setEditingFounder(null);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleDeleteChallenge = (id: string) => {
@@ -508,26 +563,44 @@ export function AdminPanel({
                       </span>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      {founder.id !== user.uid && (
-                        <button 
-                          onClick={async () => {
-                            const newRole = founder.role === 'admin' ? 'user' : 'admin';
-                            setModalConfig({
-                              isOpen: true,
-                              title: "Alterar Permissão",
-                              message: `Deseja alterar o cargo de ${founder.name} para ${newRole}?`,
-                              confirmText: "Confirmar",
-                              variant: "primary",
-                              onConfirm: async () => {
-                                await setDoc(doc(db, 'founders', founder.id), { ...founder, role: newRole });
-                              }
-                            });
-                          }}
-                          className="text-xs font-bold text-stone-900 hover:underline"
+                      <div className="flex items-center justify-end gap-1">
+                        {founder.id !== user.uid && (
+                          <button
+                            onClick={async () => {
+                              const newRole = founder.role === 'admin' ? 'user' : 'admin';
+                              setModalConfig({
+                                isOpen: true,
+                                title: "Alterar Permissão",
+                                message: `Deseja alterar o cargo de ${founder.name} para ${newRole}?`,
+                                confirmText: "Confirmar",
+                                variant: "primary",
+                                onConfirm: async () => {
+                                  await setDoc(doc(db, 'founders', founder.id), { ...founder, role: newRole });
+                                }
+                              });
+                            }}
+                            className="text-xs font-bold text-stone-900 hover:underline px-2 py-1"
+                          >
+                            Tornar {founder.role === 'admin' ? 'User' : 'Admin'}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleOpenEditFounder(founder)}
+                          title="Editar perfil"
+                          className="p-2 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition-all"
                         >
-                          Tornar {founder.role === 'admin' ? 'User' : 'Admin'}
+                          <Pencil size={15} />
                         </button>
-                      )}
+                        {founder.id !== user.uid && (
+                          <button
+                            onClick={() => handleDeleteFounder(founder)}
+                            title="Excluir conta"
+                            className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1032,6 +1105,77 @@ export function AdminPanel({
         confirmText={modalConfig.confirmText}
         variant={modalConfig.variant}
       />
+
+      {/* Modal de Edição de Founder */}
+      {editingFounder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-serif italic text-stone-900">Editar Perfil</h3>
+              <button
+                onClick={() => setEditingFounder(null)}
+                className="p-2 hover:bg-stone-100 rounded-xl transition-all text-stone-400 hover:text-stone-700"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1.5">Nome</label>
+                <input
+                  type="text"
+                  value={editFounderForm.name}
+                  onChange={e => setEditFounderForm({ ...editFounderForm, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1.5">Username</label>
+                <input
+                  type="text"
+                  value={editFounderForm.username}
+                  onChange={e => setEditFounderForm({ ...editFounderForm, username: e.target.value })}
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1.5">Empresa</label>
+                <input
+                  type="text"
+                  value={editFounderForm.companyName}
+                  onChange={e => setEditFounderForm({ ...editFounderForm, companyName: e.target.value })}
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1.5">Bio da Empresa</label>
+                <textarea
+                  value={editFounderForm.companyBio}
+                  onChange={e => setEditFounderForm({ ...editFounderForm, companyBio: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditingFounder(null)}
+                className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-600 font-semibold text-sm hover:bg-stone-50 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveFounderEdit}
+                className="flex-1 py-3 rounded-xl bg-stone-900 text-white font-semibold text-sm hover:bg-stone-800 transition-all"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
