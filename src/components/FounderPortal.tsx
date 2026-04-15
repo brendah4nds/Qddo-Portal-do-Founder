@@ -17,6 +17,12 @@ import {
   User as UserIcon,
   Instagram,
   Building2,
+  Heart,
+  BookOpen,
+  Code2,
+  Megaphone,
+  CalendarDays,
+  Layers,
   Plus,
   Lock,
   Globe,
@@ -99,6 +105,15 @@ export function FounderPortal({
   }, [founder]);
 
   const COMPANY_CATEGORIES = ['HealthTech', 'EdTech', 'SaaS/Software', 'Marketing', 'Eventos', 'Variados'];
+
+  const CATEGORY_ICONS: Record<string, React.ElementType> = {
+    'HealthTech': Heart,
+    'EdTech': BookOpen,
+    'SaaS/Software': Code2,
+    'Marketing': Megaphone,
+    'Eventos': CalendarDays,
+    'Variados': Layers,
+  };
 
   const handleStartEditCompany = () => {
     setCompanyEditData({
@@ -416,7 +431,7 @@ export function FounderPortal({
                     <h3 className="text-xl font-serif italic">Empresas que estão no QDDO</h3>
                     <p className="text-stone-400 text-sm mt-1">Classificadas por segmento de atuação.</p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {COMPANY_CATEGORIES.map(cat => {
                       const catFounders = founders.filter(f =>
                         f.company?.name && (
@@ -426,24 +441,31 @@ export function FounderPortal({
                         )
                       );
                       if (catFounders.length === 0) return null;
+                      const CategoryIcon = CATEGORY_ICONS[cat] || Building2;
                       return (
-                        <div key={cat} className="space-y-3">
-                          <h4 className="text-sm font-bold uppercase tracking-widest text-stone-900 flex items-center gap-2">
-                            <span className="text-amber-500 text-base leading-none">&#9670;</span>
-                            {cat} ({catFounders.length})
-                          </h4>
-                          <ul className="space-y-1 pl-1">
+                        <div key={cat} className="bg-white rounded-3xl p-6 border border-stone-200 shadow-sm">
+                          <div className="flex items-center gap-3 mb-5">
+                            <div className="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center flex-shrink-0">
+                              <CategoryIcon size={16} className="text-stone-600" />
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-bold uppercase tracking-widest text-stone-900">{cat}</h4>
+                              <p className="text-xs text-stone-400">{catFounders.length} empresa{catFounders.length !== 1 ? 's' : ''}</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
                             {catFounders.map(f => (
-                              <li key={f.id}>
-                                <button
-                                  onClick={() => setSelectedCompanyFounder(f)}
-                                  className="text-sm text-stone-600 hover:text-stone-900 hover:font-semibold transition-all text-left leading-relaxed"
-                                >
-                                  • {f.company?.name}
-                                </button>
-                              </li>
+                              <button
+                                key={f.id}
+                                onClick={() => setSelectedCompanyFounder(f)}
+                                className="bg-stone-50 hover:bg-stone-900 border border-stone-200 hover:border-stone-900 rounded-xl px-3 py-2.5 text-left transition-all group"
+                              >
+                                <span className="text-xs font-semibold text-stone-700 group-hover:text-white leading-snug block truncate">
+                                  {f.company?.name}
+                                </span>
+                              </button>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       );
                     })}
