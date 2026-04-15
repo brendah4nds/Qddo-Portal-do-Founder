@@ -29,8 +29,6 @@ import {
   startOfDay,
   subHours,
   subDays,
-  startOfWeek,
-  endOfWeek,
   isWithinInterval,
   format,
   startOfMonth,
@@ -154,6 +152,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSocialModal, setShowSocialModal] = useState(false);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [settingsSocialLinkedin, setSettingsSocialLinkedin] = useState('');
   const [settingsSocialInstagram, setSettingsSocialInstagram] = useState('');
   const [settingsSocialSite, setSettingsSocialSite] = useState('');
@@ -205,6 +204,17 @@ export default function App() {
     document.documentElement.classList.toggle('dark', darkMode);
     localStorage.setItem('darkMode', String(darkMode));
   }, [darkMode]);
+
+  // Auto-refresh currentDate every minute so events past today are filtered out automatically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDate(prev => {
+        const now = new Date();
+        return now.toDateString() !== prev.toDateString() ? now : prev;
+      });
+    }, 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Load social links from founderData
   useEffect(() => {
@@ -1015,18 +1025,20 @@ export default function App() {
                       const now = new Date();
                       const last24h = subHours(now, 24);
                       const last72h = subDays(now, 3);
-                      const weekStart = startOfWeek(now, { weekStartsOn: 0 }); // Sunday
-                      const weekEnd = endOfWeek(now, { weekStartsOn: 0 });
 
-                      const relevantEvents = newsItems.filter(item => {
-                        if (!item.eventDate) return false;
-                        const eventDate = item.eventDate?.toDate ? item.eventDate.toDate() : new Date(item.eventDate + 'T00:00:00');
-                        return isWithinInterval(eventDate, { start: weekStart, end: weekEnd });
-                      }).sort((a, b) => {
-                        const dateA = a.eventDate?.toDate ? a.eventDate.toDate() : new Date(a.eventDate);
-                        const dateB = b.eventDate?.toDate ? b.eventDate.toDate() : new Date(b.eventDate);
-                        return dateB.getTime() - dateA.getTime();
-                      });
+                      const todayStart = startOfDay(currentDate);
+                      const relevantEvents = newsItems
+                        .filter(item => item.category === 'evento')
+                        .filter(item => {
+                          if (!item.eventDate) return false;
+                          const eventDate = item.eventDate?.toDate ? item.eventDate.toDate() : new Date(item.eventDate + 'T00:00:00');
+                          return eventDate >= todayStart;
+                        })
+                        .sort((a, b) => {
+                          const dateA = a.eventDate?.toDate ? a.eventDate.toDate() : new Date(a.eventDate + 'T00:00:00');
+                          const dateB = b.eventDate?.toDate ? b.eventDate.toDate() : new Date(b.eventDate + 'T00:00:00');
+                          return dateA.getTime() - dateB.getTime();
+                        });
 
                       const publicChallenges = allChallenges
                         .filter(c => c.type === 'public' && c.status === 'open')
@@ -1077,10 +1089,10 @@ export default function App() {
                               <div className="flex items-center justify-between mb-3">
                                 <h4 className="text-base font-serif italic text-stone-900 flex items-center gap-2">
                                   <CalendarDays className="text-amber-500" size={18} />
-                                  Eventos da Semana
+                                  Próximos Eventos
                                 </h4>
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
-                                  {format(weekStart, 'dd/MM')} - {format(weekEnd, 'dd/MM')}
+                                  {relevantEvents.length > 0 ? `${relevantEvents.length} evento${relevantEvents.length > 1 ? 's' : ''}` : ''}
                                 </span>
                               </div>
                               
