@@ -100,7 +100,7 @@ export default function App() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [businessHours, setBusinessHours] = useState<string[]>(DEFAULT_BUSINESS_HOURS);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news' | 'quads'>('general');
+  const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news' | 'qcoin'>('general');
   const [activeSubTab, setActiveSubTab] = useState<string>('general');
   const [adminInitialTab, setAdminInitialTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes'>('bookings');
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
@@ -759,24 +759,24 @@ export default function App() {
               </button>
             </div>
 
-            {/* Quads Section */}
+            {/* QCoin Section */}
             <div>
-              <button 
+              <button
                 onClick={() => {
-                  setView('quads');
-                  setActiveSubTab('quads');
+                  setView('qcoin');
+                  setActiveSubTab('qcoin');
                 }}
                 className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  view === 'quads' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                  view === 'qcoin' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'quads' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'qcoin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
                   }`}>
                     <Trophy size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${view === 'quads' ? 'text-white' : 'text-stone-900'}`}>Quads</span>
+                  <span className={`font-serif italic text-lg ${view === 'qcoin' ? 'text-white' : 'text-stone-900'}`}>QCoin</span>
                 </div>
               </button>
             </div>
@@ -942,7 +942,7 @@ export default function App() {
                   )}
                 </div>
               </div>
-            ) : view === 'quads' ? (
+            ) : view === 'qcoin' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 
                 <div className="bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">

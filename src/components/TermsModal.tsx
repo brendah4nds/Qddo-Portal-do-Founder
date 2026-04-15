@@ -61,7 +61,7 @@ export function TermsModal({ isOpen, onClose, onAccept }: TermsModalProps) {
               <h3 className="font-bold text-lg">3. Localização e Check-in</h3>
             </div>
             <p className="text-stone-600 text-sm leading-relaxed">
-              Para fins de registro de presença e pontuação no sistema Quads, o portal poderá solicitar acesso à sua localização em tempo real no momento do check-in. Estes dados não serão compartilhados com terceiros e servirão apenas para validar sua presença física no hub.
+              Para fins de registro de presença e pontuação no sistema QCoin, o portal poderá solicitar acesso à sua localização em tempo real no momento do check-in. Estes dados não serão compartilhados com terceiros e servirão apenas para validar sua presença física no hub.
             </p>
           </section>
 
