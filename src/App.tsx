@@ -130,6 +130,22 @@ export default function App() {
   }, [view, activeSubTab]);
 
   useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!estagiosResizingRef.current) return;
+      const { colIdx, startX, startWidth } = estagiosResizingRef.current;
+      const newWidth = Math.max(50, startWidth + (e.clientX - startX));
+      setEstagiosColWidths((prev: number[]) => prev.map((w: number, i: number) => i === colIdx ? newWidth : w));
+    };
+    const onMouseUp = () => { estagiosResizingRef.current = null; };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
         setSidebarOpen(true);
@@ -178,6 +194,15 @@ export default function App() {
   const [editingQcoinSection, setEditingQcoinSection] = useState<string | null>(null);
   const [qcoinEditContent, setQcoinEditContent] = useState('');
   const [savingQcoinSection, setSavingQcoinSection] = useState(false);
+  const [estagiosCols, setEstagiosCols] = useState(['Estágio', 'Threshold', 'Benefícios', 'Requisitos', 'Status']);
+  const [estagiosColWidths, setEstagiosColWidths] = useState([130, 80, 200, 200, 200]);
+  const estagiosResizingRef = useRef<{ colIdx: number; startX: number; startWidth: number } | null>(null);
+  const [estagiosRows, setEstagiosRows] = useState([
+    { col0: '', col1: '', col2: '', col3: '', col4: '' },
+    { col0: '', col1: '', col2: '', col3: '', col4: '' },
+    { col0: '', col1: '', col2: '', col3: '', col4: '' },
+    { col0: '', col1: '', col2: '', col3: '', col4: '' },
+  ]);
 
   const [indicarNome, setIndicarNome] = useState('');
   const [indicarEmpresa, setIndicarEmpresa] = useState('');
@@ -1110,6 +1135,96 @@ export default function App() {
                                     ))}
                                   </tbody>
                                 </table>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Tabela de estágios — sempre visível dentro da caixa "Estágios e Thresholds de Progressão" */}
+                          {expandedQcoinCard === 'estagios' && (
+                            <div className="mb-8 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
+                                  <thead>
+                                    <tr className="bg-stone-900 border-b border-stone-800">
+                                      {estagiosCols.map((col: string, colIdx: number) => (
+                                        <th
+                                          key={colIdx}
+                                          className="relative px-3 py-4 select-none"
+                                          style={{ width: estagiosColWidths[colIdx] }}
+                                        >
+                                          <input
+                                            type="text"
+                                            value={col}
+                                            onChange={e => {
+                                              const updated = estagiosCols.map((c: string, i: number) => i === colIdx ? e.target.value : c);
+                                              setEstagiosCols(updated);
+                                            }}
+                                            className="w-full px-2 py-1 bg-transparent border border-transparent rounded-lg text-[10px] uppercase tracking-widest font-bold text-stone-400 placeholder-stone-600 hover:border-stone-700 focus:border-stone-500 focus:outline-none focus:bg-stone-800 transition-all"
+                                            placeholder="Título"
+                                          />
+                                          {isAdmin && (
+                                            <div
+                                              title="Arraste para redimensionar"
+                                              onMouseDown={(e: React.MouseEvent) => {
+                                                e.preventDefault();
+                                                estagiosResizingRef.current = {
+                                                  colIdx,
+                                                  startX: e.clientX,
+                                                  startWidth: estagiosColWidths[colIdx],
+                                                };
+                                              }}
+                                              className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
+                                            >
+                                              <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
+                                            </div>
+                                          )}
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {estagiosRows.map((row, idx) => (
+                                      <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
+                                        {(Object.keys(row) as (keyof typeof row)[]).map(key => (
+                                          <td key={key} className="px-3 py-2 align-top">
+                                            <textarea
+                                              value={row[key]}
+                                              rows={1}
+                                              ref={(el: HTMLTextAreaElement | null) => {
+                                                if (el) {
+                                                  el.style.height = 'auto';
+                                                  el.style.height = el.scrollHeight + 'px';
+                                                }
+                                              }}
+                                              onChange={e => {
+                                                const updated = estagiosRows.map((r, i) =>
+                                                  i === idx ? { ...r, [key]: e.target.value } : r
+                                                );
+                                                setEstagiosRows(updated);
+                                              }}
+                                              onInput={e => {
+                                                const t = e.target as HTMLTextAreaElement;
+                                                t.style.height = 'auto';
+                                                t.style.height = t.scrollHeight + 'px';
+                                              }}
+                                              className="w-full px-3 py-2 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white transition-all resize-none overflow-hidden"
+                                              placeholder="—"
+                                            />
+                                          </td>
+                                        ))}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                              <div className="px-5 py-3 border-t border-stone-100">
+                                <button
+                                  onClick={() => setEstagiosRows(prev => [...prev, { estagio: '', threshold: '', beneficios: '', requisitos: '', status: '' }])}
+                                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                >
+                                  <Plus size={14} />
+                                  Nova linha
+                                </button>
                               </div>
                             </div>
                           )}
