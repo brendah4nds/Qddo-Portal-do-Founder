@@ -151,12 +151,18 @@ export default function App() {
         const newWidth = Math.max(50, startWidth + (e.clientX - startX));
         setConsequenciasColWidths((prev: number[]) => prev.map((w: number, i: number) => i === colIdx ? newWidth : w));
       }
+      if (pontuacaoResizingRef.current) {
+        const { colIdx, startX, startWidth } = pontuacaoResizingRef.current;
+        const newWidth = Math.max(50, startWidth + (e.clientX - startX));
+        setPontuacaoColWidths((prev: number[]) => prev.map((w: number, i: number) => i === colIdx ? newWidth : w));
+      }
     };
     const onMouseUp = () => {
       estagiosResizingRef.current = null;
       rankingResizingRef.current = null;
       premiacoesResizingRef.current = null;
       consequenciasResizingRef.current = null;
+      pontuacaoResizingRef.current = null;
     };
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
@@ -250,6 +256,28 @@ export default function App() {
     { col0: '', col1: '', col2: '', col3: '', col4: '' },
     { col0: '', col1: '', col2: '', col3: '', col4: '' },
     { col0: '', col1: '', col2: '', col3: '', col4: '' },
+  ]);
+  const [pontuacaoCols, setPontuacaoCols] = useState(['Ação', 'Pontuação']);
+  const [pontuacaoColWidths, setPontuacaoColWidths] = useState([400, 150]);
+  const pontuacaoResizingRef = useRef<{ colIdx: number; startX: number; startWidth: number } | null>(null);
+  const [pontuacaoRows, setPontuacaoRows] = useState([
+    { col0: 'Check-in diário', col1: '1' },
+    { col0: 'Evento interno QDDO', col1: '2' },
+    { col0: 'Streak 5 dias consecutivos', col1: '3 (bônus)' },
+    { col0: 'Resolução de desafio aberto de outro founder', col1: '5' },
+    { col0: 'Indicação founder com fit para o hub', col1: '5' },
+    { col0: 'Aprovação de founder indicado por você', col1: '10' },
+    { col0: 'Mentoria espontânea (mín. 30 min)', col1: '5' },
+    { col0: 'Contribuição técnica ao app/site/infra QDDO', col1: '8' },
+    { col0: 'Realização do Desafio Mensal', col1: '10' },
+    { col0: 'Avançar estágio', col1: '25' },
+    { col0: 'Crescimento de faturamento MoM', col1: '5' },
+    { col0: 'Completar desafio de Mantenedor', col1: '15' },
+    { col0: 'Participar de hackathon corporativo', col1: '10' },
+    { col0: 'Vencer hackathon', col1: '30 (bônus)' },
+    { col0: 'Relatório mensal para mantenedor de sala', col1: '8' },
+    { col0: 'Convidado no podcast QDDO', col1: '8' },
+    { col0: 'Pitch no Demo Day', col1: '10' },
   ]);
 
   const [indicarNome, setIndicarNome] = useState('');
@@ -1139,50 +1167,92 @@ export default function App() {
                             )}
                           </div>
 
-                          {/* Tabela de pontuação — sempre visível dentro da caixa "Sistema de pontuação" */}
+                          {/* Tabela de pontuação — editável, padronizada com os demais cards */}
                           {expandedQcoinCard === 'pontuacao' && (
                             <div className="mb-8 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
                               <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
+                                <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
                                   <thead>
                                     <tr className="bg-stone-900 border-b border-stone-800">
-                                      <th className="px-8 py-6 text-[10px] uppercase tracking-widest font-bold text-stone-400">Ação</th>
-                                      <th className="px-8 py-6 text-[10px] uppercase tracking-widest font-bold text-stone-400 text-right">Pontuação</th>
+                                      {pontuacaoCols.map((col: string, colIdx: number) => (
+                                        <th
+                                          key={colIdx}
+                                          className="relative px-3 py-4 select-none"
+                                          style={{ width: pontuacaoColWidths[colIdx] }}
+                                        >
+                                          <input
+                                            type="text"
+                                            value={col}
+                                            onChange={e => {
+                                              const updated = pontuacaoCols.map((c: string, i: number) => i === colIdx ? e.target.value : c);
+                                              setPontuacaoCols(updated);
+                                            }}
+                                            className="w-full px-2 py-1 bg-transparent border border-transparent rounded-lg text-[10px] uppercase tracking-widest font-bold text-stone-400 placeholder-stone-600 hover:border-stone-700 focus:border-stone-500 focus:outline-none focus:bg-stone-800 transition-all"
+                                            placeholder="Título"
+                                          />
+                                          {isAdmin && (
+                                            <div
+                                              title="Arraste para redimensionar"
+                                              onMouseDown={(e: React.MouseEvent) => {
+                                                e.preventDefault();
+                                                pontuacaoResizingRef.current = {
+                                                  colIdx,
+                                                  startX: e.clientX,
+                                                  startWidth: pontuacaoColWidths[colIdx],
+                                                };
+                                              }}
+                                              className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
+                                            >
+                                              <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
+                                            </div>
+                                          )}
+                                        </th>
+                                      ))}
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {[
-                                      { action: "Check-in diário", points: "1" },
-                                      { action: "Evento interno QDDO", points: "2" },
-                                      { action: "Streak 5 dias consecutivos", points: "3 (bônus)" },
-                                      { action: "Resolução de desafio aberto de outro founder", points: "5" },
-                                      { action: "Indicação founder com fit para o hub", points: "5" },
-                                      { action: "Aprovação de founder indicado por você", points: "10" },
-                                      { action: "Mentoria espontânea (mín. 30 min)", points: "5" },
-                                      { action: "Contribuição técnica ao app/site/infra QDDO", points: "8" },
-                                      { action: "Realização do Desafio Mensal", points: "10" },
-                                      { action: "Avançar estágio", points: "25" },
-                                      { action: "Crescimento de faturamento MoM", points: "5" },
-                                      { action: "Completar desafio de Mantenedor", points: "15" },
-                                      { action: "Participar de hackathon corporativo", points: "10" },
-                                      { action: "Vencer hackathon", points: "30 (bônus)" },
-                                      { action: "Relatório mensal para mantenedor de sala", points: "8" },
-                                      { action: "Convidado no podcast QDDO", points: "8" },
-                                      { action: "Pitch no Demo Day", points: "10" }
-                                    ].map((item, idx) => (
-                                      <tr key={idx} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors group">
-                                        <td className="px-8 py-6">
-                                          <span className="font-bold text-stone-900 group-hover:text-stone-600 transition-colors">{item.action}</span>
-                                        </td>
-                                        <td className="px-8 py-6 text-right">
-                                          <span className="inline-flex items-center justify-center min-w-[32px] h-8 px-3 bg-stone-100 rounded-full text-xs font-black text-stone-900 group-hover:bg-stone-900 group-hover:text-white transition-all">
-                                            {item.points}
-                                          </span>
-                                        </td>
+                                    {pontuacaoRows.map((row, idx) => (
+                                      <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
+                                        {(Object.keys(row) as (keyof typeof row)[]).map(key => (
+                                          <td key={key} className="px-3 py-1 align-top">
+                                            <textarea
+                                              value={row[key]}
+                                              rows={1}
+                                              ref={(el: HTMLTextAreaElement | null) => {
+                                                if (el) {
+                                                  el.style.height = 'auto';
+                                                  el.style.height = el.scrollHeight + 'px';
+                                                }
+                                              }}
+                                              onChange={e => {
+                                                const updated = pontuacaoRows.map((r, i) =>
+                                                  i === idx ? { ...r, [key]: e.target.value } : r
+                                                );
+                                                setPontuacaoRows(updated);
+                                              }}
+                                              onInput={e => {
+                                                const t = e.target as HTMLTextAreaElement;
+                                                t.style.height = 'auto';
+                                                t.style.height = t.scrollHeight + 'px';
+                                              }}
+                                              className="w-full px-3 py-1 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white transition-all resize-none overflow-hidden"
+                                              placeholder="—"
+                                            />
+                                          </td>
+                                        ))}
                                       </tr>
                                     ))}
                                   </tbody>
                                 </table>
+                              </div>
+                              <div className="px-5 py-3 border-t border-stone-100">
+                                <button
+                                  onClick={() => setPontuacaoRows(prev => [...prev, { col0: '', col1: '' }])}
+                                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                >
+                                  <Plus size={14} />
+                                  Nova linha
+                                </button>
                               </div>
                             </div>
                           )}
@@ -1234,7 +1304,7 @@ export default function App() {
                                     {estagiosRows.map((row, idx) => (
                                       <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
                                         {(Object.keys(row) as (keyof typeof row)[]).map(key => (
-                                          <td key={key} className="px-3 py-2 align-top">
+                                          <td key={key} className="px-3 py-1 align-top">
                                             <textarea
                                               value={row[key]}
                                               rows={1}
@@ -1255,7 +1325,7 @@ export default function App() {
                                                 t.style.height = 'auto';
                                                 t.style.height = t.scrollHeight + 'px';
                                               }}
-                                              className="w-full px-3 py-2 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white transition-all resize-none overflow-hidden"
+                                              className="w-full px-3 py-1 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white transition-all resize-none overflow-hidden"
                                               placeholder="—"
                                             />
                                           </td>
@@ -1324,7 +1394,7 @@ export default function App() {
                                     {rankingRows.map((row, idx) => (
                                       <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
                                         {(Object.keys(row) as (keyof typeof row)[]).map(key => (
-                                          <td key={key} className="px-3 py-2 align-top">
+                                          <td key={key} className="px-3 py-1 align-top">
                                             <textarea
                                               value={row[key]}
                                               rows={1}
@@ -1345,7 +1415,7 @@ export default function App() {
                                                 t.style.height = 'auto';
                                                 t.style.height = t.scrollHeight + 'px';
                                               }}
-                                              className="w-full px-3 py-2 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white transition-all resize-none overflow-hidden"
+                                              className="w-full px-3 py-1 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white transition-all resize-none overflow-hidden"
                                               placeholder="—"
                                             />
                                           </td>
@@ -1414,7 +1484,7 @@ export default function App() {
                                     {premiacoesRows.map((row, idx) => (
                                       <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
                                         {(Object.keys(row) as (keyof typeof row)[]).map(key => (
-                                          <td key={key} className="px-3 py-2 align-top">
+                                          <td key={key} className="px-3 py-1 align-top">
                                             <textarea
                                               value={row[key]}
                                               rows={1}
@@ -1435,7 +1505,7 @@ export default function App() {
                                                 t.style.height = 'auto';
                                                 t.style.height = t.scrollHeight + 'px';
                                               }}
-                                              className="w-full px-3 py-2 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white transition-all resize-none overflow-hidden"
+                                              className="w-full px-3 py-1 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white transition-all resize-none overflow-hidden"
                                               placeholder="—"
                                             />
                                           </td>
@@ -1504,7 +1574,7 @@ export default function App() {
                                     {consequenciasRows.map((row, idx) => (
                                       <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
                                         {(Object.keys(row) as (keyof typeof row)[]).map(key => (
-                                          <td key={key} className="px-3 py-2 align-top">
+                                          <td key={key} className="px-3 py-1 align-top">
                                             <textarea
                                               value={row[key]}
                                               rows={1}
@@ -1525,7 +1595,7 @@ export default function App() {
                                                 t.style.height = 'auto';
                                                 t.style.height = t.scrollHeight + 'px';
                                               }}
-                                              className="w-full px-3 py-2 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white transition-all resize-none overflow-hidden"
+                                              className="w-full px-3 py-1 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white transition-all resize-none overflow-hidden"
                                               placeholder="—"
                                             />
                                           </td>
