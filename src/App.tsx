@@ -1198,10 +1198,10 @@ export default function App() {
               </div>
             ) : view === 'regras' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="mb-8 flex items-center justify-between">
+                <div className="mb-8 flex items-start justify-between">
                   <div>
                     <h2 className="text-3xl font-serif italic text-stone-900">Regras</h2>
-                    <p className="text-stone-400 text-xs uppercase tracking-widest font-bold mt-1">Portal Founder</p>
+                    <p className="text-stone-500 text-sm leading-relaxed max-w-xl mt-2">O QDDO é uma comunidade de founders comprometidos em construir algo maior. Este espaço existe para que você cresça, conecte e realize — mas isso só funciona se todos cuidarmos dele juntos. As regras abaixo não são burocracias, são combinados para garantir que o QDDO continue sendo o lugar que você quer voltar todo dia.</p>
                   </div>
                   {isAdmin && !showAddRegra && (
                     <button
@@ -1357,6 +1357,16 @@ export default function App() {
                       )}
                     </div>
                   )}
+                </div>
+
+                {/* Rodapé da página de Regras */}
+                <div className="mt-10 text-center px-4">
+                  <p className="text-stone-500 text-sm leading-relaxed max-w-2xl mx-auto">
+                    Essas regras existem para proteger a comunidade e garantir que o QDDO continue sendo um lugar produtivo, respeitoso e inspirador. Se você está aqui, é porque acredita nisso também. Vamos construir juntos.
+                  </p>
+                  <p className="mt-3 text-stone-400 text-xs font-semibold tracking-wide uppercase">
+                    Gestão QDDO Central Hub
+                  </p>
                 </div>
               </div>
             ) : view === 'general' ? (
