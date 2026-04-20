@@ -222,6 +222,7 @@ export default function App() {
   const [qcoinEditContent, setQcoinEditContent] = useState('');
   const [savingQcoinSection, setSavingQcoinSection] = useState(false);
   const [qcoinTableSaveStatus, setQcoinTableSaveStatus] = useState<'success' | 'error' | null>(null);
+  const [qcoinTableSaveError, setQcoinTableSaveError] = useState<string>('');
   const [estagiosCols, setEstagiosCols] = useState(['Estágio', 'Threshold', 'Benefícios', 'Requisitos', 'Status']);
   const [estagiosColWidths, setEstagiosColWidths] = useState([130, 80, 200, 200, 200]);
   const estagiosResizingRef = useRef<{ colIdx: number; startX: number; startWidth: number } | null>(null);
@@ -559,30 +560,38 @@ export default function App() {
     const qcoinSectionsUnsubscribe = onSnapshot(collection(db, 'qcoin_sections'), (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setQcoinSections(data);
-      data.forEach((sectionDoc: any) => {
-        if (sectionDoc.id === 'pontuacao') {
-          if (sectionDoc.tableRows) setPontuacaoRows(sectionDoc.tableRows);
-          if (sectionDoc.tableCols) setPontuacaoCols(sectionDoc.tableCols);
-          if (sectionDoc.tableColWidths) setPontuacaoColWidths(sectionDoc.tableColWidths);
-        } else if (sectionDoc.id === 'estagios') {
-          if (sectionDoc.tableRows) setEstagiosRows(sectionDoc.tableRows);
-          if (sectionDoc.tableCols) setEstagiosCols(sectionDoc.tableCols);
-          if (sectionDoc.tableColWidths) setEstagiosColWidths(sectionDoc.tableColWidths);
-        } else if (sectionDoc.id === 'ranking') {
-          if (sectionDoc.tableRows) setRankingRows(sectionDoc.tableRows);
-          if (sectionDoc.tableCols) setRankingCols(sectionDoc.tableCols);
-          if (sectionDoc.tableColWidths) setRankingColWidths(sectionDoc.tableColWidths);
-        } else if (sectionDoc.id === 'premiacoes') {
-          if (sectionDoc.tableRows) setPremiacoesRows(sectionDoc.tableRows);
-          if (sectionDoc.tableCols) setPremiacoesCols(sectionDoc.tableCols);
-          if (sectionDoc.tableColWidths) setPremiacoesColWidths(sectionDoc.tableColWidths);
-        } else if (sectionDoc.id === 'consequencias') {
-          if (sectionDoc.tableRows) setConsequenciasRows(sectionDoc.tableRows);
-          if (sectionDoc.tableCols) setConsequenciasCols(sectionDoc.tableCols);
-          if (sectionDoc.tableColWidths) setConsequenciasColWidths(sectionDoc.tableColWidths);
-        }
-      });
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'qcoin_sections'));
+
+    const qcoinTablesUnsubscribe = onSnapshot(doc(db, 'settings', 'qcoin_tables'), (snapshot) => {
+      if (!snapshot.exists()) return;
+      const data = snapshot.data();
+      const hydrate = (sectionId: string, s: any) => {
+        if (sectionId === 'pontuacao') {
+          if (s.tableRows) setPontuacaoRows(s.tableRows);
+          if (s.tableCols) setPontuacaoCols(s.tableCols);
+          if (s.tableColWidths) setPontuacaoColWidths(s.tableColWidths);
+        } else if (sectionId === 'estagios') {
+          if (s.tableRows) setEstagiosRows(s.tableRows);
+          if (s.tableCols) setEstagiosCols(s.tableCols);
+          if (s.tableColWidths) setEstagiosColWidths(s.tableColWidths);
+        } else if (sectionId === 'ranking') {
+          if (s.tableRows) setRankingRows(s.tableRows);
+          if (s.tableCols) setRankingCols(s.tableCols);
+          if (s.tableColWidths) setRankingColWidths(s.tableColWidths);
+        } else if (sectionId === 'premiacoes') {
+          if (s.tableRows) setPremiacoesRows(s.tableRows);
+          if (s.tableCols) setPremiacoesCols(s.tableCols);
+          if (s.tableColWidths) setPremiacoesColWidths(s.tableColWidths);
+        } else if (sectionId === 'consequencias') {
+          if (s.tableRows) setConsequenciasRows(s.tableRows);
+          if (s.tableCols) setConsequenciasCols(s.tableCols);
+          if (s.tableColWidths) setConsequenciasColWidths(s.tableColWidths);
+        }
+      };
+      for (const sectionId of ['pontuacao', 'estagios', 'ranking', 'premiacoes', 'consequencias']) {
+        if (data[sectionId]) hydrate(sectionId, data[sectionId]);
+      }
+    }, (err) => console.error('Error loading qcoin tables:', err));
 
     let checkinsUnsubscribe = () => {};
     if (user) {
@@ -602,6 +611,7 @@ export default function App() {
       challengesUnsubscribe();
       newsUnsubscribe();
       qcoinSectionsUnsubscribe();
+      qcoinTablesUnsubscribe();
       checkinsUnsubscribe();
     };
   }, [user, founderData]);
@@ -691,14 +701,16 @@ export default function App() {
       } else if (sectionId === 'consequencias') {
         tableData = { tableRows: consequenciasRows, tableCols: consequenciasCols, tableColWidths: consequenciasColWidths };
       }
-      await setDoc(doc(db, 'qcoin_sections', sectionId), tableData, { merge: true });
+      await setDoc(doc(db, 'settings', 'qcoin_tables'), { [sectionId]: tableData }, { merge: true });
       setQcoinTableSaveStatus('success');
     } catch (error) {
-      console.error('Error saving QCoin table:', error);
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('Error saving QCoin table:', msg);
+      setQcoinTableSaveError(msg);
       setQcoinTableSaveStatus('error');
     } finally {
       setSavingQcoinSection(false);
-      setTimeout(() => setQcoinTableSaveStatus(null), 3000);
+      setTimeout(() => { setQcoinTableSaveStatus(null); setQcoinTableSaveError(''); }, 3000);
     }
   };
 
@@ -1755,6 +1767,9 @@ export default function App() {
                                 <p className="text-stone-400 italic">Nenhum conteúdo disponível no momento.</p>
                               </div>
                             ) : null
+                          )}
+                          {qcoinTableSaveStatus === 'error' && qcoinTableSaveError && (
+                            <p className="mt-2 text-xs text-red-500 break-all">Detalhe: {qcoinTableSaveError}</p>
                           )}
                         </div>
                       );
