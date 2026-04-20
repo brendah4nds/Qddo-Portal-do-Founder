@@ -1198,10 +1198,10 @@ export default function App() {
               </div>
             ) : view === 'regras' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="mb-8 flex items-center justify-between">
+                <div className="mb-8 flex items-start justify-between">
                   <div>
                     <h2 className="text-3xl font-serif italic text-stone-900">Regras</h2>
-                    <p className="text-stone-400 text-xs uppercase tracking-widest font-bold mt-1">Portal Founder</p>
+                    <p className="text-stone-500 text-sm leading-relaxed max-w-xl mt-2">O QDDO é uma comunidade de founders comprometidos em construir algo maior. Este espaço existe para que você cresça, conecte e realize — mas isso só funciona se todos cuidarmos dele juntos. As regras abaixo não são burocracias, são combinados para garantir que o QDDO continue sendo o lugar que você quer voltar todo dia.</p>
                   </div>
                   {isAdmin && !showAddRegra && (
                     <button
@@ -1251,70 +1251,70 @@ export default function App() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {newsItems.filter(item => item.category === 'regras').length > 0 ? (
                     newsItems
                       .filter(item => item.category === 'regras')
                       .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0))
                       .map((item, index) => (
-                        <div key={item.id} className="bg-white rounded-[40px] p-10 border border-stone-200 shadow-sm hover:shadow-xl transition-all">
+                        <div key={item.id} className="bg-white rounded-[24px] p-4 border border-stone-200 shadow-sm hover:shadow-xl transition-all">
                           {editingRuleId === item.id ? (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                               <input
                                 value={editingRuleData.title}
                                 onChange={e => setEditingRuleData(d => ({ ...d, title: e.target.value }))}
-                                className="w-full px-4 py-3 border border-stone-200 rounded-2xl text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                                className="w-full px-3 py-2 border border-stone-200 rounded-xl text-stone-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                               />
                               <textarea
-                                rows={6}
+                                rows={5}
                                 value={editingRuleData.content}
                                 onChange={e => setEditingRuleData(d => ({ ...d, content: e.target.value }))}
-                                className="w-full px-4 py-3 border border-stone-200 rounded-2xl text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
+                                className="w-full px-3 py-2 border border-stone-200 rounded-xl text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
                                 placeholder="Cada linha vira um tópico da lista"
                               />
                               <div className="flex gap-3 justify-end">
                                 <button
                                   onClick={() => setEditingRuleId(null)}
-                                  className="px-5 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-900 transition"
+                                  className="px-4 py-2 text-sm font-bold text-stone-500 hover:text-stone-900 transition"
                                 >
                                   Cancelar
                                 </button>
                                 <button
                                   onClick={handleSaveRule}
-                                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-sm font-bold rounded-2xl hover:bg-stone-700 transition"
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm font-bold rounded-xl hover:bg-stone-700 transition"
                                 >
-                                  <Check size={15} />
+                                  <Check size={14} />
                                   Salvar
                                 </button>
                               </div>
                             </div>
                           ) : (
                             <>
-                              <div className="flex justify-between items-start mb-6">
-                                <h3 className="text-2xl font-serif italic text-amber-600">
+                              <div className="flex justify-between items-start mb-2">
+                                <h3 className="text-base font-serif italic text-amber-600">
                                   {index + 1}. {item.title}
                                 </h3>
                                 {isAdmin && (
-                                  <div className="flex items-center gap-1 ml-4 shrink-0">
+                                  <div className="flex items-center gap-1 ml-3 shrink-0">
                                     <button
                                       onClick={() => { setEditingRuleId(item.id); setEditingRuleData({ title: item.title, content: item.content }); setDeletingRuleId(null); }}
-                                      className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition"
+                                      className="p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition"
                                       title="Editar"
                                     >
-                                      <Pencil size={15} />
+                                      <Pencil size={13} />
                                     </button>
                                     {deletingRuleId === item.id ? (
                                       <div className="flex items-center gap-1">
                                         <span className="text-xs text-red-500 font-bold">Confirmar?</span>
                                         <button
                                           onClick={() => handleDeleteRule(item.id)}
-                                          className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition font-bold text-xs"
+                                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition font-bold text-xs"
                                         >
                                           Sim
                                         </button>
                                         <button
                                           onClick={() => setDeletingRuleId(null)}
-                                          className="p-2 text-stone-400 hover:bg-stone-200 rounded-xl transition font-bold text-xs"
+                                          className="p-1.5 text-stone-400 hover:bg-stone-200 rounded-lg transition font-bold text-xs"
                                         >
                                           Não
                                         </button>
@@ -1322,19 +1322,19 @@ export default function App() {
                                     ) : (
                                       <button
                                         onClick={() => { setDeletingRuleId(item.id); setEditingRuleId(null); }}
-                                        className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition"
+                                        className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
                                         title="Excluir"
                                       >
-                                        <Trash2 size={15} />
+                                        <Trash2 size={13} />
                                       </button>
                                     )}
                                   </div>
                                 )}
                               </div>
-                              <ul className="space-y-3">
+                              <ul className="space-y-1.5">
                                 {(item.content || '').split('\n').filter(line => line.trim()).map((line, i) => (
-                                  <li key={i} className="flex items-start gap-3 text-stone-600 leading-relaxed">
-                                    <span className="mt-1 text-stone-300 shrink-0">•</span>
+                                  <li key={i} className="flex items-start gap-2 text-stone-600 text-sm leading-snug">
+                                    <span className="mt-0.5 text-stone-300 shrink-0">•</span>
                                     <span>{line.trim().replace(/^[•\-*]\s*/, '')}</span>
                                   </li>
                                 ))}
@@ -1357,6 +1357,16 @@ export default function App() {
                       )}
                     </div>
                   )}
+                </div>
+
+                {/* Rodapé da página de Regras */}
+                <div className="mt-10 text-center px-4">
+                  <p className="text-stone-500 text-sm leading-relaxed max-w-2xl mx-auto">
+                    Essas regras existem para proteger a comunidade e garantir que o QDDO continue sendo um lugar produtivo, respeitoso e inspirador. Se você está aqui, é porque acredita nisso também. Vamos construir juntos.
+                  </p>
+                  <p className="mt-3 text-stone-400 text-xs font-semibold tracking-wide uppercase">
+                    Gestão QDDO Central Hub
+                  </p>
                 </div>
               </div>
             ) : view === 'general' ? (
