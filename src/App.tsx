@@ -9,6 +9,7 @@ import {
   onSnapshot,
   doc,
   setDoc,
+  addDoc,
   updateDoc,
   deleteDoc,
   serverTimestamp,
@@ -106,6 +107,9 @@ export default function App() {
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [editingRuleData, setEditingRuleData] = useState<{ title: string; content: string }>({ title: '', content: '' });
   const [deletingRuleId, setDeletingRuleId] = useState<string | null>(null);
+  const [showAddRegra, setShowAddRegra] = useState(false);
+  const [newRegraTitle, setNewRegraTitle] = useState('');
+  const [newRegraContent, setNewRegraContent] = useState('');
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -513,6 +517,19 @@ export default function App() {
     setEditingRuleId(null);
   };
 
+  const handleAddRegra = async () => {
+    if (!newRegraTitle.trim()) return;
+    await addDoc(collection(db, 'news'), {
+      title: newRegraTitle.trim(),
+      content: newRegraContent.trim(),
+      category: 'regras',
+      createdAt: serverTimestamp(),
+    });
+    setNewRegraTitle('');
+    setNewRegraContent('');
+    setShowAddRegra(false);
+  };
+
   const handleDeleteRule = async (id: string) => {
     await deleteDoc(doc(db, 'news', id));
     setDeletingRuleId(null);
@@ -843,18 +860,18 @@ export default function App() {
             {/* Regras Section */}
             <div>
               <button
-                onClick={() => setActiveGeneralCategory('regras')}
+                onClick={() => { setView('regras'); setActiveSubTab('regras'); }}
                 className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  activeGeneralCategory === 'regras' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                  view === 'regras' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    activeGeneralCategory === 'regras' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'regras' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
                   }`}>
                     <ShieldCheck size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${activeGeneralCategory === 'regras' ? 'text-white' : 'text-stone-900'}`}>Regras</span>
+                  <span className={`font-serif italic text-lg ${view === 'regras' ? 'text-white' : 'text-stone-900'}`}>Regras</span>
                 </div>
               </button>
             </div>
@@ -1178,6 +1195,169 @@ export default function App() {
                     })}
                   </div>
                 )}
+              </div>
+            ) : view === 'regras' ? (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="mb-8 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-3xl font-serif italic text-stone-900">Regras</h2>
+                    <p className="text-stone-400 text-xs uppercase tracking-widest font-bold mt-1">Portal Founder</p>
+                  </div>
+                  {isAdmin && !showAddRegra && (
+                    <button
+                      onClick={() => setShowAddRegra(true)}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-sm font-bold rounded-2xl hover:bg-stone-800 transition-all"
+                    >
+                      <Plus size={16} />
+                      Adicionar
+                    </button>
+                  )}
+                </div>
+
+                {isAdmin && showAddRegra && (
+                  <div className="bg-white rounded-[40px] p-10 border border-stone-200 shadow-sm mb-8">
+                    <h4 className="text-lg font-serif italic text-stone-900 mb-6">Nova seção de Regras</h4>
+                    <div className="space-y-4">
+                      <input
+                        value={newRegraTitle}
+                        onChange={e => setNewRegraTitle(e.target.value)}
+                        placeholder="Título da seção (ex: Uso do Espaço)"
+                        className="w-full px-4 py-3 border border-stone-200 rounded-2xl text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                      />
+                      <textarea
+                        rows={6}
+                        value={newRegraContent}
+                        onChange={e => setNewRegraContent(e.target.value)}
+                        placeholder={"Cada linha vira um tópico:\nAcesso ao espaço: descrição aqui\nAmbientes compartilhados: descrição aqui"}
+                        className="w-full px-4 py-3 border border-stone-200 rounded-2xl text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
+                      />
+                      <div className="flex gap-3 justify-end">
+                        <button
+                          onClick={() => { setShowAddRegra(false); setNewRegraTitle(''); setNewRegraContent(''); }}
+                          className="px-5 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-900 transition"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleAddRegra}
+                          disabled={!newRegraTitle.trim()}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-sm font-bold rounded-2xl hover:bg-stone-700 disabled:opacity-40 transition"
+                        >
+                          <Check size={15} />
+                          Salvar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-8">
+                  {newsItems.filter(item => item.category === 'regras').length > 0 ? (
+                    newsItems
+                      .filter(item => item.category === 'regras')
+                      .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0))
+                      .map((item, index) => (
+                        <div key={item.id} className="bg-white rounded-[40px] p-10 border border-stone-200 shadow-sm hover:shadow-xl transition-all">
+                          {editingRuleId === item.id ? (
+                            <div className="space-y-4">
+                              <input
+                                value={editingRuleData.title}
+                                onChange={e => setEditingRuleData(d => ({ ...d, title: e.target.value }))}
+                                className="w-full px-4 py-3 border border-stone-200 rounded-2xl text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                              />
+                              <textarea
+                                rows={6}
+                                value={editingRuleData.content}
+                                onChange={e => setEditingRuleData(d => ({ ...d, content: e.target.value }))}
+                                className="w-full px-4 py-3 border border-stone-200 rounded-2xl text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
+                                placeholder="Cada linha vira um tópico da lista"
+                              />
+                              <div className="flex gap-3 justify-end">
+                                <button
+                                  onClick={() => setEditingRuleId(null)}
+                                  className="px-5 py-2.5 text-sm font-bold text-stone-500 hover:text-stone-900 transition"
+                                >
+                                  Cancelar
+                                </button>
+                                <button
+                                  onClick={handleSaveRule}
+                                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-sm font-bold rounded-2xl hover:bg-stone-700 transition"
+                                >
+                                  <Check size={15} />
+                                  Salvar
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex justify-between items-start mb-6">
+                                <h3 className="text-2xl font-serif italic text-amber-600">
+                                  {index + 1}. {item.title}
+                                </h3>
+                                {isAdmin && (
+                                  <div className="flex items-center gap-1 ml-4 shrink-0">
+                                    <button
+                                      onClick={() => { setEditingRuleId(item.id); setEditingRuleData({ title: item.title, content: item.content }); setDeletingRuleId(null); }}
+                                      className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition"
+                                      title="Editar"
+                                    >
+                                      <Pencil size={15} />
+                                    </button>
+                                    {deletingRuleId === item.id ? (
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-xs text-red-500 font-bold">Confirmar?</span>
+                                        <button
+                                          onClick={() => handleDeleteRule(item.id)}
+                                          className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition font-bold text-xs"
+                                        >
+                                          Sim
+                                        </button>
+                                        <button
+                                          onClick={() => setDeletingRuleId(null)}
+                                          className="p-2 text-stone-400 hover:bg-stone-200 rounded-xl transition font-bold text-xs"
+                                        >
+                                          Não
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => { setDeletingRuleId(item.id); setEditingRuleId(null); }}
+                                        className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition"
+                                        title="Excluir"
+                                      >
+                                        <Trash2 size={15} />
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <ul className="space-y-3">
+                                {(item.content || '').split('\n').filter(line => line.trim()).map((line, i) => (
+                                  <li key={i} className="flex items-start gap-3 text-stone-600 leading-relaxed">
+                                    <span className="mt-1 text-stone-300 shrink-0">•</span>
+                                    <span>{line.trim().replace(/^[•\-*]\s*/, '')}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+                        </div>
+                      ))
+                  ) : (
+                    <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-stone-200">
+                      <p className="text-stone-400 italic">Nenhuma regra cadastrada ainda.</p>
+                      {isAdmin && !showAddRegra && (
+                        <button
+                          onClick={() => setShowAddRegra(true)}
+                          className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-sm font-bold rounded-2xl hover:bg-stone-800 transition"
+                        >
+                          <Plus size={16} />
+                          Adicionar primeira regra
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             ) : view === 'general' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1773,7 +1953,7 @@ export default function App() {
                 </div>
               )}
             </div>
-            {activeGeneralCategory !== 'founders' && (user?.email === ADMIN_EMAIL || founderData?.role === 'admin') && (
+            {activeGeneralCategory !== 'founders' && isAdmin && (
               <div className="p-6 bg-stone-50 border-t border-stone-100 flex justify-center">
                 <button
                   onClick={() => {
