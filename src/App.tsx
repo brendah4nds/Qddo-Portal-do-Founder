@@ -221,6 +221,7 @@ export default function App() {
   const [editingQcoinSection, setEditingQcoinSection] = useState<string | null>(null);
   const [qcoinEditContent, setQcoinEditContent] = useState('');
   const [savingQcoinSection, setSavingQcoinSection] = useState(false);
+  const [qcoinTableSaveStatus, setQcoinTableSaveStatus] = useState<'success' | 'error' | null>(null);
   const [estagiosCols, setEstagiosCols] = useState(['Estágio', 'Threshold', 'Benefícios', 'Requisitos', 'Status']);
   const [estagiosColWidths, setEstagiosColWidths] = useState([130, 80, 200, 200, 200]);
   const estagiosResizingRef = useRef<{ colIdx: number; startX: number; startWidth: number } | null>(null);
@@ -558,6 +559,29 @@ export default function App() {
     const qcoinSectionsUnsubscribe = onSnapshot(collection(db, 'qcoin_sections'), (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setQcoinSections(data);
+      data.forEach((sectionDoc: any) => {
+        if (sectionDoc.id === 'pontuacao') {
+          if (sectionDoc.tableRows) setPontuacaoRows(sectionDoc.tableRows);
+          if (sectionDoc.tableCols) setPontuacaoCols(sectionDoc.tableCols);
+          if (sectionDoc.tableColWidths) setPontuacaoColWidths(sectionDoc.tableColWidths);
+        } else if (sectionDoc.id === 'estagios') {
+          if (sectionDoc.tableRows) setEstagiosRows(sectionDoc.tableRows);
+          if (sectionDoc.tableCols) setEstagiosCols(sectionDoc.tableCols);
+          if (sectionDoc.tableColWidths) setEstagiosColWidths(sectionDoc.tableColWidths);
+        } else if (sectionDoc.id === 'ranking') {
+          if (sectionDoc.tableRows) setRankingRows(sectionDoc.tableRows);
+          if (sectionDoc.tableCols) setRankingCols(sectionDoc.tableCols);
+          if (sectionDoc.tableColWidths) setRankingColWidths(sectionDoc.tableColWidths);
+        } else if (sectionDoc.id === 'premiacoes') {
+          if (sectionDoc.tableRows) setPremiacoesRows(sectionDoc.tableRows);
+          if (sectionDoc.tableCols) setPremiacoesCols(sectionDoc.tableCols);
+          if (sectionDoc.tableColWidths) setPremiacoesColWidths(sectionDoc.tableColWidths);
+        } else if (sectionDoc.id === 'consequencias') {
+          if (sectionDoc.tableRows) setConsequenciasRows(sectionDoc.tableRows);
+          if (sectionDoc.tableCols) setConsequenciasCols(sectionDoc.tableCols);
+          if (sectionDoc.tableColWidths) setConsequenciasColWidths(sectionDoc.tableColWidths);
+        }
+      });
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'qcoin_sections'));
 
     let checkinsUnsubscribe = () => {};
@@ -642,12 +666,39 @@ export default function App() {
       await setDoc(doc(db, 'qcoin_sections', sectionId), {
         content: qcoinEditContent,
         updatedAt: serverTimestamp()
-      });
+      }, { merge: true });
       setEditingQcoinSection(null);
     } catch (error) {
       console.error('Error saving QCoin section:', error);
     } finally {
       setSavingQcoinSection(false);
+    }
+  };
+
+  const handleSaveQcoinTable = async (sectionId: string) => {
+    setSavingQcoinSection(true);
+    setQcoinTableSaveStatus(null);
+    try {
+      let tableData: any = {};
+      if (sectionId === 'pontuacao') {
+        tableData = { tableRows: pontuacaoRows, tableCols: pontuacaoCols, tableColWidths: pontuacaoColWidths };
+      } else if (sectionId === 'estagios') {
+        tableData = { tableRows: estagiosRows, tableCols: estagiosCols, tableColWidths: estagiosColWidths };
+      } else if (sectionId === 'ranking') {
+        tableData = { tableRows: rankingRows, tableCols: rankingCols, tableColWidths: rankingColWidths };
+      } else if (sectionId === 'premiacoes') {
+        tableData = { tableRows: premiacoesRows, tableCols: premiacoesCols, tableColWidths: premiacoesColWidths };
+      } else if (sectionId === 'consequencias') {
+        tableData = { tableRows: consequenciasRows, tableCols: consequenciasCols, tableColWidths: consequenciasColWidths };
+      }
+      await setDoc(doc(db, 'qcoin_sections', sectionId), tableData, { merge: true });
+      setQcoinTableSaveStatus('success');
+    } catch (error) {
+      console.error('Error saving QCoin table:', error);
+      setQcoinTableSaveStatus('error');
+    } finally {
+      setSavingQcoinSection(false);
+      setTimeout(() => setQcoinTableSaveStatus(null), 3000);
     }
   };
 
@@ -1245,7 +1296,7 @@ export default function App() {
                                   </tbody>
                                 </table>
                               </div>
-                              <div className="px-5 py-3 border-t border-stone-100">
+                              <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
                                 <button
                                   onClick={() => setPontuacaoRows(prev => [...prev, { col0: '', col1: '' }])}
                                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
@@ -1253,6 +1304,16 @@ export default function App() {
                                   <Plus size={14} />
                                   Nova linha
                                 </button>
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleSaveQcoinTable('pontuacao')}
+                                    disabled={savingQcoinSection}
+                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-700'}`}
+                                  >
+                                    <Check size={14} />
+                                    {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           )}
@@ -1335,7 +1396,7 @@ export default function App() {
                                   </tbody>
                                 </table>
                               </div>
-                              <div className="px-5 py-3 border-t border-stone-100">
+                              <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
                                 <button
                                   onClick={() => setEstagiosRows(prev => [...prev, { estagio: '', threshold: '', beneficios: '', requisitos: '', status: '' }])}
                                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
@@ -1343,6 +1404,16 @@ export default function App() {
                                   <Plus size={14} />
                                   Nova linha
                                 </button>
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleSaveQcoinTable('estagios')}
+                                    disabled={savingQcoinSection}
+                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-700'}`}
+                                  >
+                                    <Check size={14} />
+                                    {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           )}
@@ -1425,7 +1496,7 @@ export default function App() {
                                   </tbody>
                                 </table>
                               </div>
-                              <div className="px-5 py-3 border-t border-stone-100">
+                              <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
                                 <button
                                   onClick={() => setRankingRows(prev => [...prev, { col0: '', col1: '', col2: '', col3: '', col4: '' }])}
                                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
@@ -1433,6 +1504,16 @@ export default function App() {
                                   <Plus size={14} />
                                   Nova linha
                                 </button>
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleSaveQcoinTable('ranking')}
+                                    disabled={savingQcoinSection}
+                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-700'}`}
+                                  >
+                                    <Check size={14} />
+                                    {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           )}
@@ -1515,7 +1596,7 @@ export default function App() {
                                   </tbody>
                                 </table>
                               </div>
-                              <div className="px-5 py-3 border-t border-stone-100">
+                              <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
                                 <button
                                   onClick={() => setPremiacoesRows(prev => [...prev, { col0: '', col1: '', col2: '', col3: '', col4: '' }])}
                                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
@@ -1523,6 +1604,16 @@ export default function App() {
                                   <Plus size={14} />
                                   Nova linha
                                 </button>
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleSaveQcoinTable('premiacoes')}
+                                    disabled={savingQcoinSection}
+                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-700'}`}
+                                  >
+                                    <Check size={14} />
+                                    {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           )}
@@ -1605,7 +1696,7 @@ export default function App() {
                                   </tbody>
                                 </table>
                               </div>
-                              <div className="px-5 py-3 border-t border-stone-100">
+                              <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
                                 <button
                                   onClick={() => setConsequenciasRows(prev => [...prev, { col0: '', col1: '', col2: '', col3: '', col4: '' }])}
                                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
@@ -1613,6 +1704,16 @@ export default function App() {
                                   <Plus size={14} />
                                   Nova linha
                                 </button>
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => handleSaveQcoinTable('consequencias')}
+                                    disabled={savingQcoinSection}
+                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-700'}`}
+                                  >
+                                    <Check size={14} />
+                                    {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           )}
