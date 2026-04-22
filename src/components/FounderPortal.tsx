@@ -86,7 +86,15 @@ export function FounderPortal({
 
   const [completionData, setCompletionData] = useState({
     helperName: '',
+    helperUsername: '',
     resolutionDescription: ''
+  });
+
+  const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
+  const [editData, setEditData] = useState({
+    title: '',
+    description: '',
+    type: 'public' as 'public' | 'private'
   });
 
   const [cnpjInput, setCnpjInput] = useState('');
@@ -284,11 +292,28 @@ export function FounderPortal({
       await updateDoc(doc(db, 'challenges', completingChallenge.id), {
         status: 'completed',
         helperName: completionData.helperName,
+        helperUsername: completionData.helperUsername,
         resolutionDescription: completionData.resolutionDescription,
         completedAt: serverTimestamp()
       });
       setCompletingChallenge(null);
-      setCompletionData({ helperName: '', resolutionDescription: '' });
+      setCompletionData({ helperName: '', helperUsername: '', resolutionDescription: '' });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleEditChallenge = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingChallenge) return;
+
+    try {
+      await updateDoc(doc(db, 'challenges', editingChallenge.id), {
+        title: editData.title,
+        description: editData.description,
+        type: editData.type
+      });
+      setEditingChallenge(null);
     } catch (error) {
       console.error(error);
     }
@@ -714,13 +739,26 @@ export function FounderPortal({
                 <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Quem te ajudou?</label>
                 <div className="relative">
                   <HelpCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={20} />
-                  <input 
+                  <input
                     required
-                    type="text" 
+                    type="text"
                     placeholder="Nome da pessoa ou parceiro"
                     value={completionData.helperName}
                     onChange={e => setCompletionData({ ...completionData, helperName: e.target.value })}
                     className="w-full pl-12 pr-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">@ do usuário que te ajudou</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm">@</span>
+                  <input
+                    type="text"
+                    placeholder="username"
+                    value={completionData.helperUsername}
+                    onChange={e => setCompletionData({ ...completionData, helperUsername: e.target.value.replace(/^@/, '') })}
+                    className="w-full pl-9 pr-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
                   />
                 </div>
               </div>
@@ -755,6 +793,78 @@ export function FounderPortal({
         </div>
       )}
 
+      {/* Edit Challenge Modal */}
+      {editingChallenge && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+          <div className="bg-white rounded-[40px] p-12 max-w-xl w-full shadow-2xl animate-in zoom-in-95 duration-300">
+            <h3 className="text-3xl font-serif italic mb-8">Editar Desafio</h3>
+            <form onSubmit={handleEditChallenge} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Título do Desafio</label>
+                <input
+                  required
+                  type="text"
+                  value={editData.title}
+                  onChange={e => setEditData({ ...editData, title: e.target.value })}
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Descrição</label>
+                <textarea
+                  rows={4}
+                  value={editData.description}
+                  onChange={e => setEditData({ ...editData, description: e.target.value })}
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all resize-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Visibilidade</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setEditData({ ...editData, type: 'public' })}
+                    className={cn(
+                      "flex items-center justify-center gap-2 py-4 rounded-2xl border font-bold transition-all",
+                      editData.type === 'public' ? "bg-stone-900 border-stone-900 text-white" : "border-stone-200 text-stone-400 hover:border-stone-400"
+                    )}
+                  >
+                    <Globe size={18} />
+                    Público
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditData({ ...editData, type: 'private' })}
+                    className={cn(
+                      "flex items-center justify-center gap-2 py-4 rounded-2xl border font-bold transition-all",
+                      editData.type === 'private' ? "bg-stone-900 border-stone-900 text-white" : "border-stone-200 text-stone-400 hover:border-stone-400"
+                    )}
+                  >
+                    <Lock size={18} />
+                    Privado
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingChallenge(null)}
+                  className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-2xl font-bold hover:bg-stone-50 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/20"
+                >
+                  Salvar Alterações
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Challenges List */}
       <div className="grid grid-cols-1 gap-6">
         {filteredChallenges.length === 0 ? (
@@ -772,14 +882,26 @@ export function FounderPortal({
           </div>
         ) : (
           filteredChallenges.map(challenge => (
-            <div 
+            <div
               key={challenge.id}
               className={cn(
-                "bg-white rounded-3xl p-8 border transition-all flex flex-col gap-8",
+                "bg-white rounded-3xl p-8 border transition-all flex flex-col gap-8 relative",
                 challenge.status === 'completed' ? "border-emerald-100 bg-emerald-50/10" : "border-stone-200 hover:border-stone-400 hover:shadow-xl",
                 expandedChallengeId === challenge.id && "border-stone-900 shadow-2xl"
               )}
             >
+              {challenge.founderId === user.uid && (
+                <button
+                  onClick={() => {
+                    setEditingChallenge(challenge);
+                    setEditData({ title: challenge.title, description: challenge.description || '', type: challenge.type });
+                  }}
+                  className="absolute top-6 right-6 w-8 h-8 rounded-xl bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-900 transition-all"
+                  title="Editar desafio"
+                >
+                  <Pencil size={14} />
+                </button>
+              )}
               <div className="flex flex-col sm:flex-row gap-8">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-4">
@@ -806,6 +928,9 @@ export function FounderPortal({
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Ajudado por</span>
                         <p className="font-bold text-stone-900">{challenge.helperName}</p>
+                        {challenge.helperUsername && (
+                          <p className="text-sm text-stone-500 mt-0.5">@{challenge.helperUsername}</p>
+                        )}
                       </div>
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Solução</span>

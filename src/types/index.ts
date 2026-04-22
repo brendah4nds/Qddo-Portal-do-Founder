@@ -43,6 +43,7 @@ export interface Challenge {
   type: 'public' | 'private';
   status: 'open' | 'completed';
   helperName?: string;
+  helperUsername?: string;
   resolutionDescription?: string;
   createdAt: any;
   completedAt?: any;
