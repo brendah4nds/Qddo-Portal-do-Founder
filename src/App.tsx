@@ -1463,107 +1463,79 @@ export default function App() {
                             </div>
                           )}
 
-                          {/* Tabela de ranking */}
-                          {expandedQcoinCard === 'ranking' && (
-                            <div className="mb-8 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
-                                  <thead>
-                                    <tr className="bg-stone-900 border-b border-stone-800">
-                                      {rankingCols.map((col: string, colIdx: number) => (
-                                        <th
-                                          key={colIdx}
-                                          className="relative px-3 py-4 select-none"
-                                          style={{ width: rankingColWidths[colIdx] }}
-                                        >
-                                          <input
-                                            type="text"
-                                            value={col}
-                                            readOnly={!isAdmin}
-                                            onChange={e => {
-                                              const updated = rankingCols.map((c: string, i: number) => i === colIdx ? e.target.value : c);
-                                              setRankingCols(updated);
-                                            }}
-                                            className={`w-full px-2 py-1 bg-transparent border border-transparent rounded-lg text-[10px] uppercase tracking-widest font-bold text-stone-400 placeholder-stone-600 transition-all${isAdmin ? ' hover:border-stone-700 focus:border-stone-500 focus:outline-none focus:bg-stone-800' : ' cursor-default'}`}
-                                            placeholder="Título"
-                                          />
-                                          {isAdmin && (
-                                            <div
-                                              title="Arraste para redimensionar"
-                                              onMouseDown={(e: React.MouseEvent) => {
-                                                e.preventDefault();
-                                                rankingResizingRef.current = {
-                                                  colIdx,
-                                                  startX: e.clientX,
-                                                  startWidth: rankingColWidths[colIdx],
-                                                };
-                                              }}
-                                              className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
-                                            >
-                                              <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
-                                            </div>
-                                          )}
-                                        </th>
-                                      ))}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {rankingRows.map((row, idx) => (
-                                      <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
-                                        {(row as string[]).map((cell, cellIdx) => (
-                                          <td key={cellIdx} className="px-3 py-1 align-top">
-                                            <textarea
-                                              value={cell}
-                                              rows={1}
-                                              readOnly={!isAdmin}
-                                              ref={(el: HTMLTextAreaElement | null) => {
-                                                if (el) {
-                                                  el.style.height = 'auto';
-                                                  el.style.height = el.scrollHeight + 'px';
-                                                }
-                                              }}
-                                              onChange={e => {
-                                                const updated = rankingRows.map((r, i) =>
-                                                  i === idx ? (r as string[]).map((c, j) => j === cellIdx ? e.target.value : c) : r
-                                                );
-                                                setRankingRows(updated);
-                                              }}
-                                              onInput={e => {
-                                                const t = e.target as HTMLTextAreaElement;
-                                                t.style.height = 'auto';
-                                                t.style.height = t.scrollHeight + 'px';
-                                              }}
-                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
-                                              placeholder="—"
-                                            />
-                                          </td>
-                                        ))}
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                              {isAdmin && (
-                                <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
-                                  <button
-                                    onClick={() => setRankingRows(prev => [...prev, new Array(rankingCols.length).fill('')])}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                  >
-                                    <Plus size={14} />
-                                    Nova linha
-                                  </button>
-                                  <button
-                                    onClick={() => handleSaveQcoinTable('ranking')}
-                                    disabled={savingQcoinSection}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-700'}`}
-                                  >
-                                    <Check size={14} />
-                                    {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
-                                  </button>
+                          {/* Ranking Geral dinâmico */}
+                          {expandedQcoinCard === 'ranking' && (() => {
+                            const allTimeScoresMap: Record<string, number> = {};
+                            allCheckins.forEach((c: any) => {
+                              allTimeScoresMap[c.userId] = (allTimeScoresMap[c.userId] || 0) + 10;
+                            });
+
+                            const fullRanking = allFounders
+                              .map((founder: any) => ({
+                                userId: founder.id,
+                                score: allTimeScoresMap[founder.id] || 0,
+                                name: founder.name || 'Founder',
+                                username: founder.username || founder.id?.slice(0, 6),
+                                photoURL: founder.photoURL || null,
+                              }))
+                              .sort((a: any, b: any) => b.score - a.score);
+
+                            return (
+                              <div className="mb-8 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                                {/* Header */}
+                                <div className="px-6 py-5 border-b border-stone-100 flex items-center gap-3">
+                                  <Crown className="text-amber-500" size={18} />
+                                  <h4 className="text-base font-serif italic text-stone-900">Ranking Geral</h4>
+                                  <span className="ml-auto text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                                    {fullRanking.length} founder{fullRanking.length !== 1 ? 's' : ''}
+                                  </span>
                                 </div>
-                              )}
-                            </div>
-                          )}
+
+                                {/* List */}
+                                <div className="divide-y divide-stone-50">
+                                  {fullRanking.length === 0 ? (
+                                    <p className="text-stone-400 italic text-sm text-center py-10">Nenhum founder cadastrado.</p>
+                                  ) : (
+                                    fullRanking.map((item: any, idx: number) => (
+                                      <div key={item.userId} className="flex items-center justify-between px-6 py-3 hover:bg-stone-50/50 transition-colors group">
+                                        <div className="flex items-center gap-3">
+                                          <div className={cn(
+                                            "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0",
+                                            idx === 0 ? "bg-amber-100 text-amber-600" :
+                                            idx === 1 ? "bg-stone-200 text-stone-600" :
+                                            idx === 2 ? "bg-orange-100 text-orange-600" :
+                                            "bg-stone-50 text-stone-400"
+                                          )}>
+                                            {idx + 1}
+                                          </div>
+                                          {item.photoURL ? (
+                                            <img
+                                              src={item.photoURL}
+                                              alt={item.name}
+                                              referrerPolicy="no-referrer"
+                                              onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
+                                              className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-stone-200"
+                                            />
+                                          ) : null}
+                                          <div className={cn("w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0 border border-stone-200", item.photoURL ? "hidden" : "")}>
+                                            <Users size={14} className="text-stone-400" />
+                                          </div>
+                                          <div>
+                                            <p className="text-sm font-bold text-stone-900 group-hover:text-amber-600 transition-colors line-clamp-1">{item.name}</p>
+                                            <p className="text-[10px] text-stone-400">@{item.username}</p>
+                                          </div>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                          <span className="text-sm font-black text-stone-900">{item.score}</span>
+                                          <span className="text-[10px] text-stone-400 ml-1">QCoins</span>
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
 
                           {/* Tabela de premiações */}
                           {expandedQcoinCard === 'premiacoes' && (
