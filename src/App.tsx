@@ -1019,7 +1019,7 @@ export default function App() {
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'qcoin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'qcoin' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-600 group-hover:bg-amber-500 group-hover:text-white'
                   }`}>
                     <Trophy size={18} />
                   </div>
@@ -1223,8 +1223,8 @@ export default function App() {
                         <div>
                           <div className="flex items-center justify-between mb-10">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center">
-                                <Icon size={22} className="text-stone-700" />
+                              <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center">
+                                <Icon size={22} className="text-amber-600" />
                               </div>
                               <h2 className="text-2xl md:text-3xl font-serif italic">{section.title}</h2>
                             </div>
@@ -1961,8 +1961,8 @@ export default function App() {
                         >
                           <div className="p-6">
                             <div className="flex items-start justify-between mb-5">
-                              <div className="w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center group-hover:bg-stone-900 transition-all">
-                                <Icon size={18} className="text-stone-600 group-hover:text-white transition-all" />
+                              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center group-hover:bg-amber-500 transition-all">
+                                <Icon size={18} className="text-amber-600 group-hover:text-white transition-all" />
                               </div>
                               <ArrowRight size={16} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-1 transition-all mt-1" />
                             </div>
