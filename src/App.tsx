@@ -1269,7 +1269,7 @@ export default function App() {
                                       {pontuacaoCols.map((col: string, colIdx: number) => (
                                         <th
                                           key={colIdx}
-                                          className="relative px-3 py-4 select-none"
+                                          className="relative px-3 py-4 select-none group/col"
                                           style={{ width: pontuacaoColWidths[colIdx] }}
                                         >
                                           <input
@@ -1284,23 +1284,39 @@ export default function App() {
                                             placeholder="Título"
                                           />
                                           {isAdmin && (
-                                            <div
-                                              title="Arraste para redimensionar"
-                                              onMouseDown={(e: React.MouseEvent) => {
-                                                e.preventDefault();
-                                                pontuacaoResizingRef.current = {
-                                                  colIdx,
-                                                  startX: e.clientX,
-                                                  startWidth: pontuacaoColWidths[colIdx],
-                                                };
-                                              }}
-                                              className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
-                                            >
-                                              <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
-                                            </div>
+                                            <>
+                                              <button
+                                                onClick={() => {
+                                                  setPontuacaoCols((prev: string[]) => prev.filter((_: string, i: number) => i !== colIdx));
+                                                  setPontuacaoColWidths((prev: number[]) => prev.filter((_: number, i: number) => i !== colIdx));
+                                                  setPontuacaoRows((prev: string[][]) => prev.map((r: string[]) => r.filter((_: string, i: number) => i !== colIdx)));
+                                                }}
+                                                className="absolute top-1 left-1 w-4 h-4 flex items-center justify-center rounded bg-red-500 text-white transition-all opacity-0 group-hover/col:opacity-100"
+                                                title="Excluir coluna"
+                                              >
+                                                <X size={8} />
+                                              </button>
+                                              <div
+                                                title="Arraste para redimensionar"
+                                                onMouseDown={(e: React.MouseEvent) => {
+                                                  e.preventDefault();
+                                                  pontuacaoResizingRef.current = {
+                                                    colIdx,
+                                                    startX: e.clientX,
+                                                    startWidth: pontuacaoColWidths[colIdx],
+                                                  };
+                                                }}
+                                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
+                                              >
+                                                <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
+                                              </div>
+                                            </>
                                           )}
                                         </th>
                                       ))}
+                                      {isAdmin && (
+                                        <th className="relative px-1 py-4 select-none" style={{ width: 32 }}></th>
+                                      )}
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -1334,6 +1350,17 @@ export default function App() {
                                             />
                                           </td>
                                         ))}
+                                        {isAdmin && (
+                                          <td className="px-1 py-1 align-middle" style={{ width: 32 }}>
+                                            <button
+                                              onClick={() => setPontuacaoRows((prev: string[][]) => prev.filter((_: string[], i: number) => i !== idx))}
+                                              className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                                              title="Excluir linha"
+                                            >
+                                              <Trash2 size={12} />
+                                            </button>
+                                          </td>
+                                        )}
                                       </tr>
                                     ))}
                                   </tbody>
@@ -1341,13 +1368,26 @@ export default function App() {
                               </div>
                               {isAdmin && (
                                 <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
-                                  <button
-                                    onClick={() => setPontuacaoRows(prev => [...prev, new Array(pontuacaoCols.length).fill('')])}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                  >
-                                    <Plus size={14} />
-                                    Nova linha
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => setPontuacaoRows((prev: string[][]) => [...prev, new Array(pontuacaoCols.length).fill('')])}
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                    >
+                                      <Plus size={14} />
+                                      Nova linha
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setPontuacaoCols((prev: string[]) => [...prev, 'Nova coluna']);
+                                        setPontuacaoColWidths((prev: number[]) => [...prev, 120]);
+                                        setPontuacaoRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
+                                      }}
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                    >
+                                      <Plus size={14} />
+                                      Nova coluna
+                                    </button>
+                                  </div>
                                   <button
                                     onClick={() => handleSaveQcoinTable('pontuacao')}
                                     disabled={savingQcoinSection}
@@ -1371,7 +1411,7 @@ export default function App() {
                                       {estagiosCols.map((col: string, colIdx: number) => (
                                         <th
                                           key={colIdx}
-                                          className="relative px-3 py-4 select-none"
+                                          className="relative px-3 py-4 select-none group/col"
                                           style={{ width: estagiosColWidths[colIdx] }}
                                         >
                                           <input
@@ -1386,23 +1426,39 @@ export default function App() {
                                             placeholder="Título"
                                           />
                                           {isAdmin && (
-                                            <div
-                                              title="Arraste para redimensionar"
-                                              onMouseDown={(e: React.MouseEvent) => {
-                                                e.preventDefault();
-                                                estagiosResizingRef.current = {
-                                                  colIdx,
-                                                  startX: e.clientX,
-                                                  startWidth: estagiosColWidths[colIdx],
-                                                };
-                                              }}
-                                              className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
-                                            >
-                                              <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
-                                            </div>
+                                            <>
+                                              <button
+                                                onClick={() => {
+                                                  setEstagiosCols((prev: string[]) => prev.filter((_: string, i: number) => i !== colIdx));
+                                                  setEstagiosColWidths((prev: number[]) => prev.filter((_: number, i: number) => i !== colIdx));
+                                                  setEstagiosRows((prev: string[][]) => prev.map((r: string[]) => r.filter((_: string, i: number) => i !== colIdx)));
+                                                }}
+                                                className="absolute top-1 left-1 w-4 h-4 flex items-center justify-center rounded bg-red-500 text-white transition-all opacity-0 group-hover/col:opacity-100"
+                                                title="Excluir coluna"
+                                              >
+                                                <X size={8} />
+                                              </button>
+                                              <div
+                                                title="Arraste para redimensionar"
+                                                onMouseDown={(e: React.MouseEvent) => {
+                                                  e.preventDefault();
+                                                  estagiosResizingRef.current = {
+                                                    colIdx,
+                                                    startX: e.clientX,
+                                                    startWidth: estagiosColWidths[colIdx],
+                                                  };
+                                                }}
+                                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
+                                              >
+                                                <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
+                                              </div>
+                                            </>
                                           )}
                                         </th>
                                       ))}
+                                      {isAdmin && (
+                                        <th className="relative px-1 py-4 select-none" style={{ width: 32 }}></th>
+                                      )}
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -1436,6 +1492,17 @@ export default function App() {
                                             />
                                           </td>
                                         ))}
+                                        {isAdmin && (
+                                          <td className="px-1 py-1 align-middle" style={{ width: 32 }}>
+                                            <button
+                                              onClick={() => setEstagiosRows((prev: string[][]) => prev.filter((_: string[], i: number) => i !== idx))}
+                                              className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                                              title="Excluir linha"
+                                            >
+                                              <Trash2 size={12} />
+                                            </button>
+                                          </td>
+                                        )}
                                       </tr>
                                     ))}
                                   </tbody>
@@ -1443,13 +1510,26 @@ export default function App() {
                               </div>
                               {isAdmin && (
                                 <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
-                                  <button
-                                    onClick={() => setEstagiosRows(prev => [...prev, new Array(estagiosCols.length).fill('')])}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                  >
-                                    <Plus size={14} />
-                                    Nova linha
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => setEstagiosRows((prev: string[][]) => [...prev, new Array(estagiosCols.length).fill('')])}
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                    >
+                                      <Plus size={14} />
+                                      Nova linha
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEstagiosCols((prev: string[]) => [...prev, 'Nova coluna']);
+                                        setEstagiosColWidths((prev: number[]) => [...prev, 120]);
+                                        setEstagiosRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
+                                      }}
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                    >
+                                      <Plus size={14} />
+                                      Nova coluna
+                                    </button>
+                                  </div>
                                   <button
                                     onClick={() => handleSaveQcoinTable('estagios')}
                                     disabled={savingQcoinSection}
@@ -1547,7 +1627,7 @@ export default function App() {
                                       {premiacoesCols.map((col: string, colIdx: number) => (
                                         <th
                                           key={colIdx}
-                                          className="relative px-3 py-4 select-none"
+                                          className="relative px-3 py-4 select-none group/col"
                                           style={{ width: premiacoesColWidths[colIdx] }}
                                         >
                                           <input
@@ -1562,23 +1642,39 @@ export default function App() {
                                             placeholder="Título"
                                           />
                                           {isAdmin && (
-                                            <div
-                                              title="Arraste para redimensionar"
-                                              onMouseDown={(e: React.MouseEvent) => {
-                                                e.preventDefault();
-                                                premiacoesResizingRef.current = {
-                                                  colIdx,
-                                                  startX: e.clientX,
-                                                  startWidth: premiacoesColWidths[colIdx],
-                                                };
-                                              }}
-                                              className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
-                                            >
-                                              <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
-                                            </div>
+                                            <>
+                                              <button
+                                                onClick={() => {
+                                                  setPremiacoesCols((prev: string[]) => prev.filter((_: string, i: number) => i !== colIdx));
+                                                  setPremiacoesColWidths((prev: number[]) => prev.filter((_: number, i: number) => i !== colIdx));
+                                                  setPremiacoesRows((prev: string[][]) => prev.map((r: string[]) => r.filter((_: string, i: number) => i !== colIdx)));
+                                                }}
+                                                className="absolute top-1 left-1 w-4 h-4 flex items-center justify-center rounded bg-red-500 text-white transition-all opacity-0 group-hover/col:opacity-100"
+                                                title="Excluir coluna"
+                                              >
+                                                <X size={8} />
+                                              </button>
+                                              <div
+                                                title="Arraste para redimensionar"
+                                                onMouseDown={(e: React.MouseEvent) => {
+                                                  e.preventDefault();
+                                                  premiacoesResizingRef.current = {
+                                                    colIdx,
+                                                    startX: e.clientX,
+                                                    startWidth: premiacoesColWidths[colIdx],
+                                                  };
+                                                }}
+                                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
+                                              >
+                                                <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
+                                              </div>
+                                            </>
                                           )}
                                         </th>
                                       ))}
+                                      {isAdmin && (
+                                        <th className="relative px-1 py-4 select-none" style={{ width: 32 }}></th>
+                                      )}
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -1612,6 +1708,17 @@ export default function App() {
                                             />
                                           </td>
                                         ))}
+                                        {isAdmin && (
+                                          <td className="px-1 py-1 align-middle" style={{ width: 32 }}>
+                                            <button
+                                              onClick={() => setPremiacoesRows((prev: string[][]) => prev.filter((_: string[], i: number) => i !== idx))}
+                                              className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                                              title="Excluir linha"
+                                            >
+                                              <Trash2 size={12} />
+                                            </button>
+                                          </td>
+                                        )}
                                       </tr>
                                     ))}
                                   </tbody>
@@ -1619,13 +1726,26 @@ export default function App() {
                               </div>
                               {isAdmin && (
                                 <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
-                                  <button
-                                    onClick={() => setPremiacoesRows(prev => [...prev, new Array(premiacoesCols.length).fill('')])}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                  >
-                                    <Plus size={14} />
-                                    Nova linha
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => setPremiacoesRows((prev: string[][]) => [...prev, new Array(premiacoesCols.length).fill('')])}
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                    >
+                                      <Plus size={14} />
+                                      Nova linha
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setPremiacoesCols((prev: string[]) => [...prev, 'Nova coluna']);
+                                        setPremiacoesColWidths((prev: number[]) => [...prev, 120]);
+                                        setPremiacoesRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
+                                      }}
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                    >
+                                      <Plus size={14} />
+                                      Nova coluna
+                                    </button>
+                                  </div>
                                   <button
                                     onClick={() => handleSaveQcoinTable('premiacoes')}
                                     disabled={savingQcoinSection}
@@ -1649,7 +1769,7 @@ export default function App() {
                                       {consequenciasCols.map((col: string, colIdx: number) => (
                                         <th
                                           key={colIdx}
-                                          className="relative px-3 py-4 select-none"
+                                          className="relative px-3 py-4 select-none group/col"
                                           style={{ width: consequenciasColWidths[colIdx] }}
                                         >
                                           <input
@@ -1664,23 +1784,39 @@ export default function App() {
                                             placeholder="Título"
                                           />
                                           {isAdmin && (
-                                            <div
-                                              title="Arraste para redimensionar"
-                                              onMouseDown={(e: React.MouseEvent) => {
-                                                e.preventDefault();
-                                                consequenciasResizingRef.current = {
-                                                  colIdx,
-                                                  startX: e.clientX,
-                                                  startWidth: consequenciasColWidths[colIdx],
-                                                };
-                                              }}
-                                              className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
-                                            >
-                                              <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
-                                            </div>
+                                            <>
+                                              <button
+                                                onClick={() => {
+                                                  setConsequenciasCols((prev: string[]) => prev.filter((_: string, i: number) => i !== colIdx));
+                                                  setConsequenciasColWidths((prev: number[]) => prev.filter((_: number, i: number) => i !== colIdx));
+                                                  setConsequenciasRows((prev: string[][]) => prev.map((r: string[]) => r.filter((_: string, i: number) => i !== colIdx)));
+                                                }}
+                                                className="absolute top-1 left-1 w-4 h-4 flex items-center justify-center rounded bg-red-500 text-white transition-all opacity-0 group-hover/col:opacity-100"
+                                                title="Excluir coluna"
+                                              >
+                                                <X size={8} />
+                                              </button>
+                                              <div
+                                                title="Arraste para redimensionar"
+                                                onMouseDown={(e: React.MouseEvent) => {
+                                                  e.preventDefault();
+                                                  consequenciasResizingRef.current = {
+                                                    colIdx,
+                                                    startX: e.clientX,
+                                                    startWidth: consequenciasColWidths[colIdx],
+                                                  };
+                                                }}
+                                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
+                                              >
+                                                <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
+                                              </div>
+                                            </>
                                           )}
                                         </th>
                                       ))}
+                                      {isAdmin && (
+                                        <th className="relative px-1 py-4 select-none" style={{ width: 32 }}></th>
+                                      )}
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -1714,6 +1850,17 @@ export default function App() {
                                             />
                                           </td>
                                         ))}
+                                        {isAdmin && (
+                                          <td className="px-1 py-1 align-middle" style={{ width: 32 }}>
+                                            <button
+                                              onClick={() => setConsequenciasRows((prev: string[][]) => prev.filter((_: string[], i: number) => i !== idx))}
+                                              className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                                              title="Excluir linha"
+                                            >
+                                              <Trash2 size={12} />
+                                            </button>
+                                          </td>
+                                        )}
                                       </tr>
                                     ))}
                                   </tbody>
@@ -1721,13 +1868,26 @@ export default function App() {
                               </div>
                               {isAdmin && (
                                 <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
-                                  <button
-                                    onClick={() => setConsequenciasRows(prev => [...prev, new Array(consequenciasCols.length).fill('')])}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                  >
-                                    <Plus size={14} />
-                                    Nova linha
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => setConsequenciasRows((prev: string[][]) => [...prev, new Array(consequenciasCols.length).fill('')])}
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                    >
+                                      <Plus size={14} />
+                                      Nova linha
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setConsequenciasCols((prev: string[]) => [...prev, 'Nova coluna']);
+                                        setConsequenciasColWidths((prev: number[]) => [...prev, 120]);
+                                        setConsequenciasRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
+                                      }}
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                    >
+                                      <Plus size={14} />
+                                      Nova coluna
+                                    </button>
+                                  </div>
                                   <button
                                     onClick={() => handleSaveQcoinTable('consequencias')}
                                     disabled={savingQcoinSection}
