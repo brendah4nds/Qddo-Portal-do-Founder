@@ -57,14 +57,14 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
     <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center p-6 py-20">
       <div className="max-w-2xl w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center mb-12">
-          <h2 className="text-5xl font-sans mb-4">Bem-vindo ao QDDO</h2>
+          <h2 className="text-display font-sans mb-4">Bem-vindo ao QDDO</h2>
           <p className="text-stone-500 font-sans text-lg">Complete seu cadastro de Founder para acessar a plataforma.</p>
         </div>
 
         <form onSubmit={handleRegister} className="bg-white rounded-[40px] p-12 border border-stone-200 shadow-2xl space-y-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Nome</label>
+              <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Nome</label>
               <input 
                 required
                 type="text" 
@@ -75,7 +75,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Nome de Usuário</label>
+              <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Nome de Usuário</label>
               <input 
                 required
                 type="text" 
@@ -88,7 +88,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Instagram</label>
+            <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Instagram</label>
             <div className="relative">
               <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={20} />
               <input 
@@ -102,7 +102,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Bio</label>
+            <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Bio</label>
             <textarea 
               rows={3}
               placeholder="Conte um pouco sobre você..."
@@ -113,13 +113,13 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
           </div>
 
           <div className="pt-8 border-t border-stone-100">
-            <h3 className="font-sans text-2xl mb-8 flex items-center gap-3">
+            <h3 className="font-sans text-h2 mb-8 flex items-center gap-3">
               <Building2 size={24} className="text-stone-400" />
               Sua Empresa
             </h3>
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Nome da Empresa</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Nome da Empresa</label>
                 <input 
                   type="text" 
                   placeholder="Nome da sua startup/negócio"
@@ -129,7 +129,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">CNPJ</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">CNPJ</label>
                 <input 
                   type="text" 
                   placeholder="00.000.000/0000-00"
@@ -139,7 +139,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Categoria de Empresa</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Categoria de Empresa</label>
                 <select
                   value={formData.companyTipo}
                   onChange={e => setFormData({ ...formData, companyTipo: e.target.value })}
@@ -155,7 +155,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Bio da Empresa</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Bio da Empresa</label>
                 <textarea
                   rows={2}
                   placeholder="O que sua empresa faz?"

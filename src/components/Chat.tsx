@@ -126,7 +126,7 @@ export function Chat({ user }: { user: User | null }) {
           : "hidden md:flex md:w-80 md:min-w-[320px]"
       )}>
         <div className="p-5 border-b border-stone-100">
-          <h2 className="text-2xl font-sans mb-4">Bate-papo</h2>
+          <h2 className="text-h2 font-sans mb-4">Bate-papo</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-300" size={16} />
             <input
@@ -155,12 +155,12 @@ export function Chat({ user }: { user: User | null }) {
             </div>
             <div className="text-left">
               <p className="font-bold text-sm">Chat Público</p>
-              <p className={cn("text-[10px] uppercase tracking-widest", activeChat === 'public' ? "text-white/60" : "text-stone-400")}>Todos os Founders</p>
+              <p className={cn("text-overline uppercase tracking-widest", activeChat === 'public' ? "text-white/60" : "text-stone-400")}>Todos os Founders</p>
             </div>
           </button>
 
           <div className="pt-4 pb-2 px-2">
-            <p className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Conversas Diretas</p>
+            <p className="text-overline uppercase tracking-widest font-bold text-stone-400">Conversas Diretas</p>
           </div>
 
           {filteredFounders.map(founder => (
@@ -177,7 +177,7 @@ export function Chat({ user }: { user: User | null }) {
               </div>
               <div className="text-left overflow-hidden">
                 <p className="font-bold text-sm truncate">{founder.name}</p>
-                <p className={cn("text-[10px] truncate", activeChat === founder.id ? "text-white/60" : "text-stone-400")}>{founder.username}</p>
+                <p className={cn("text-overline truncate", activeChat === founder.id ? "text-white/60" : "text-stone-400")}>{founder.username}</p>
               </div>
             </button>
           ))}
@@ -207,10 +207,10 @@ export function Chat({ user }: { user: User | null }) {
               {activeChat === 'public' ? <Users size={20} /> : <UserIcon size={20} />}
             </div>
             <div className="min-w-0">
-              <h3 className="font-sans text-lg md:text-xl truncate">
+              <h3 className="font-sans text-lg md:text-h3 truncate">
                 {activeChat === 'public' ? 'Chat Público' : activeFounder?.name}
               </h3>
-              <p className="text-[10px] uppercase tracking-widest font-bold text-stone-400 truncate">
+              <p className="text-overline uppercase tracking-widest font-bold text-stone-400 truncate">
                 {activeChat === 'public' ? 'Interaja com toda a comunidade' : `Conversa particular com ${activeFounder?.username}`}
               </p>
             </div>
@@ -242,14 +242,14 @@ export function Chat({ user }: { user: User | null }) {
                     "space-y-1 flex flex-col",
                     isMe ? "items-end" : "items-start"
                   )}>
-                    {!isMe && <p className="text-[10px] font-bold text-stone-400 ml-1">{msg.senderName}</p>}
+                    {!isMe && <p className="text-overline font-bold text-stone-400 ml-1">{msg.senderName}</p>}
                     <div className={cn(
                       "px-4 py-3 md:px-6 rounded-3xl text-sm",
                       isMe ? "bg-stone-900 text-white rounded-tr-none" : "bg-stone-100 text-stone-800 rounded-tl-none"
                     )}>
                       {msg.text}
                     </div>
-                    <p className="text-[8px] text-stone-300 font-bold uppercase tracking-widest">
+                    <p className="text-overline text-stone-300 font-bold uppercase tracking-widest">
                       {msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
                     </p>
                   </div>

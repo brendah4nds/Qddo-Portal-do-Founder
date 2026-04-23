@@ -84,7 +84,7 @@ export function ChallengeComments({ challengeId, user }: { challengeId: string; 
               <div className="flex-1 bg-stone-50 rounded-2xl p-4">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-bold text-stone-900">{comment.userName}</span>
-                  <span className="text-[8px] uppercase tracking-widest font-bold text-stone-300">
+                  <span className="text-overline uppercase tracking-widest font-bold text-stone-300">
                     {comment.createdAt?.seconds ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '...'}
                   </span>
                 </div>

@@ -16,7 +16,7 @@ export function TermsModal({ isOpen, onClose, onAccept }: TermsModalProps) {
         {/* Header */}
         <div className="px-8 py-6 border-b border-stone-100 flex items-center justify-between bg-stone-50">
           <div>
-            <h2 className="text-2xl font-sans text-stone-900">Termos e Autorizações</h2>
+            <h2 className="text-h2 font-sans text-stone-900">Termos e Autorizações</h2>
             <p className="text-stone-500 text-xs uppercase tracking-widest font-bold mt-1">Pendência de Cadastro</p>
           </div>
           <button 
@@ -86,7 +86,7 @@ export function TermsModal({ isOpen, onClose, onAccept }: TermsModalProps) {
           >
             Aceitar Termos e Autorizações
           </button>
-          <p className="text-center text-stone-400 text-[10px] mt-4 uppercase tracking-tighter">
+          <p className="text-center text-stone-400 text-overline mt-4 uppercase tracking-tighter">
             Ao clicar em aceitar, você confirma que leu e concorda com todos os pontos acima.
           </p>
         </div>

@@ -326,7 +326,7 @@ export function FounderPortal({
   if (!user) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-3xl font-sans mb-4">Acesso Restrito</h2>
+        <h2 className="text-h1 font-sans mb-4">Acesso Restrito</h2>
         <p className="text-stone-500">Por favor, faça login para acessar o Portal Founders.</p>
       </div>
     );
@@ -335,7 +335,7 @@ export function FounderPortal({
   if (!founder && !isAdmin) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-3xl font-sans mb-4">Perfil não encontrado</h2>
+        <h2 className="text-h1 font-sans mb-4">Perfil não encontrado</h2>
         <p className="text-stone-500">Por favor, complete seu cadastro para acessar o portal.</p>
       </div>
     );
@@ -401,7 +401,7 @@ export function FounderPortal({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div className="space-y-8">
                       <div>
-                        <h3 className="text-3xl font-sans mb-6">Dados do Founder</h3>
+                        <h3 className="text-h1 font-sans mb-6">Dados do Founder</h3>
                         {selectedCompanyFounder.photoURL && (
                           <div className="mb-6">
                             <img
@@ -413,21 +413,21 @@ export function FounderPortal({
                         )}
                         <div className="space-y-4">
                           <div>
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome Completo</span>
+                            <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome Completo</span>
                             <p className="font-bold text-stone-900">{selectedCompanyFounder.name}</p>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Username</span>
+                            <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Username</span>
                             <p className="text-stone-600">@{selectedCompanyFounder.username}</p>
                           </div>
                           {selectedCompanyFounder.instagram && (
                             <div>
-                              <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Instagram</span>
+                              <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Instagram</span>
                               <p className="text-stone-600">{selectedCompanyFounder.instagram}</p>
                             </div>
                           )}
                           <div>
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Bio</span>
+                            <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Bio</span>
                             <p className="text-sm text-stone-500 leading-relaxed">{selectedCompanyFounder.bio || 'Sem bio informada'}</p>
                           </div>
                         </div>
@@ -436,22 +436,22 @@ export function FounderPortal({
 
                     <div className="space-y-8">
                       <div className="bg-stone-50 rounded-3xl p-8 border border-stone-100">
-                        <h3 className="text-3xl font-sans mb-6">Dados da Empresa</h3>
+                        <h3 className="text-h1 font-sans mb-6">Dados da Empresa</h3>
                         <div className="space-y-4">
                           <div>
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
-                            <p className="font-bold text-stone-900 text-xl">{selectedCompanyFounder.company?.name || 'N/A'}</p>
+                            <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
+                            <p className="font-bold text-stone-900 text-h3">{selectedCompanyFounder.company?.name || 'N/A'}</p>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Categoria</span>
+                            <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Categoria</span>
                             <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.tipo || 'Não informado'}</p>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
+                            <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
                             <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>
+                            <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>
                             <p className="text-sm text-stone-500 leading-relaxed">{selectedCompanyFounder.company?.bio || 'Sem descrição informada'}</p>
                           </div>
                         </div>
@@ -462,7 +462,7 @@ export function FounderPortal({
               ) : (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-xl font-sans">Empresas que estão no QDDO</h3>
+                    <h3 className="text-h3 font-sans">Empresas que estão no QDDO</h3>
                     <p className="text-stone-400 text-sm mt-1">Classificadas por segmento de atuação.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -512,24 +512,24 @@ export function FounderPortal({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="space-y-8">
                   <div>
-                    <h3 className="text-3xl font-sans mb-6">Seu Perfil Founder</h3>
+                    <h3 className="text-h1 font-sans mb-6">Seu Perfil Founder</h3>
                     <div className="space-y-4">
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome Completo</span>
+                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome Completo</span>
                         <p className="font-bold text-stone-900">{founder?.name}</p>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Username</span>
+                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Username</span>
                         <p className="text-stone-600">@{founder?.username}</p>
                       </div>
                       {founder?.instagram && (
                         <div>
-                          <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Instagram</span>
+                          <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Instagram</span>
                           <p className="text-stone-600">{founder.instagram}</p>
                         </div>
                       )}
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Sua Bio</span>
+                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Sua Bio</span>
                         <p className="text-sm text-stone-500 leading-relaxed">{founder?.bio || 'Você ainda não adicionou uma bio.'}</p>
                       </div>
                     </div>
@@ -539,7 +539,7 @@ export function FounderPortal({
                 <div className="space-y-8">
                   <div className="bg-stone-50 rounded-3xl p-8 border border-stone-100">
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-3xl font-sans">Sua Empresa</h3>
+                      <h3 className="text-h1 font-sans">Sua Empresa</h3>
                       {!editingCompany ? (
                         <button
                           onClick={handleStartEditCompany}
@@ -570,7 +570,7 @@ export function FounderPortal({
                     </div>
                     <div className="space-y-4">
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
+                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
                         {editingCompany ? (
                           <input
                             type="text"
@@ -580,11 +580,11 @@ export function FounderPortal({
                             placeholder="Nome da sua empresa"
                           />
                         ) : (
-                          <p className="font-bold text-stone-900 text-xl">{founder?.company?.name || 'N/A'}</p>
+                          <p className="font-bold text-stone-900 text-h3">{founder?.company?.name || 'N/A'}</p>
                         )}
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Categoria de Empresa</span>
+                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Categoria de Empresa</span>
                         {editingCompany ? (
                           <select
                             value={companyEditData.tipo}
@@ -604,7 +604,7 @@ export function FounderPortal({
                         )}
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
+                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
                         {editingCompany ? (
                           <input
                             type="text"
@@ -625,7 +625,7 @@ export function FounderPortal({
                         )}
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>
+                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>
                         {editingCompany ? (
                           <textarea
                             rows={4}
@@ -653,10 +653,10 @@ export function FounderPortal({
       {showNewChallenge && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
           <div className="bg-white rounded-[40px] p-12 max-w-xl w-full shadow-2xl animate-in zoom-in-95 duration-300">
-            <h3 className="text-3xl font-sans mb-8">Criar Novo Desafio</h3>
+            <h3 className="text-h1 font-sans mb-8">Criar Novo Desafio</h3>
             <form onSubmit={handleCreateChallenge} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Título do Desafio</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Título do Desafio</label>
                 <input 
                   required
                   type="text" 
@@ -667,7 +667,7 @@ export function FounderPortal({
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Descrição</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Descrição</label>
                 <textarea 
                   rows={4}
                   placeholder="Descreva o que você precisa resolver..."
@@ -677,7 +677,7 @@ export function FounderPortal({
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Visibilidade</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Visibilidade</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
@@ -702,7 +702,7 @@ export function FounderPortal({
                     Privado
                   </button>
                 </div>
-                <p className="text-[10px] text-stone-400 mt-2">
+                <p className="text-overline text-stone-400 mt-2">
                   * Desafios privados são visíveis apenas para você e administradores do QDDO.
                 </p>
               </div>
@@ -731,12 +731,12 @@ export function FounderPortal({
       {completingChallenge && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
           <div className="bg-white rounded-[40px] p-12 max-w-xl w-full shadow-2xl animate-in zoom-in-95 duration-300">
-            <h3 className="text-3xl font-sans mb-2">Concluir Desafio</h3>
+            <h3 className="text-h1 font-sans mb-2">Concluir Desafio</h3>
             <p className="text-stone-500 mb-8 font-sans">"{completingChallenge.title}"</p>
             
             <form onSubmit={handleCompleteChallenge} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Quem te ajudou?</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Quem te ajudou?</label>
                 <div className="relative">
                   <HelpCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={20} />
                   <input
@@ -750,7 +750,7 @@ export function FounderPortal({
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">@ do usuário que te ajudou</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">@ do usuário que te ajudou</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm">@</span>
                   <input
@@ -763,7 +763,7 @@ export function FounderPortal({
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Como foi resolvido?</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Como foi resolvido?</label>
                 <textarea 
                   rows={4}
                   placeholder="Descreva a solução encontrada..."
@@ -797,10 +797,10 @@ export function FounderPortal({
       {editingChallenge && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
           <div className="bg-white rounded-[40px] p-12 max-w-xl w-full shadow-2xl animate-in zoom-in-95 duration-300">
-            <h3 className="text-3xl font-sans mb-8">Editar Desafio</h3>
+            <h3 className="text-h1 font-sans mb-8">Editar Desafio</h3>
             <form onSubmit={handleEditChallenge} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Título do Desafio</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Título do Desafio</label>
                 <input
                   required
                   type="text"
@@ -810,7 +810,7 @@ export function FounderPortal({
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Descrição</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Descrição</label>
                 <textarea
                   rows={4}
                   value={editData.description}
@@ -819,7 +819,7 @@ export function FounderPortal({
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Visibilidade</label>
+                <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Visibilidade</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
@@ -872,7 +872,7 @@ export function FounderPortal({
             <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-300">
               <CheckSquare size={32} />
             </div>
-            <h3 className="text-xl font-sans text-stone-400">Nenhum desafio encontrado nesta categoria</h3>
+            <h3 className="text-h3 font-sans text-stone-400">Nenhum desafio encontrado nesta categoria</h3>
             <button 
               onClick={() => setShowNewChallenge(true)}
               className="mt-6 text-stone-900 font-bold underline underline-offset-4 hover:text-stone-600 transition-colors"
@@ -906,34 +906,34 @@ export function FounderPortal({
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-4">
                     <div className={cn(
-                      "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5",
+                      "px-3 py-1 rounded-full text-overline font-bold uppercase tracking-widest flex items-center gap-1.5",
                       challenge.type === 'private' ? "bg-stone-100 text-stone-500" : "bg-blue-50 text-blue-500"
                     )}>
                       {challenge.type === 'private' ? <Lock size={12} /> : <Globe size={12} />}
                       {challenge.type === 'private' ? 'Privado' : 'Público'}
                     </div>
                     {challenge.status === 'completed' && (
-                      <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+                      <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-overline font-bold uppercase tracking-widest flex items-center gap-1.5">
                         <CheckCircle2 size={12} />
                         Concluído
                       </div>
                     )}
                   </div>
                   
-                  <h3 className="text-2xl font-sans mb-2">{challenge.title}</h3>
+                  <h3 className="text-h2 font-sans mb-2">{challenge.title}</h3>
                   <p className="text-stone-500 text-sm mb-6 leading-relaxed">{challenge.description}</p>
                   
                   {challenge.status === 'completed' && (
                     <div className="mt-6 p-6 bg-white rounded-2xl border border-emerald-100 space-y-4">
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Ajudado por</span>
+                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Ajudado por</span>
                         <p className="font-bold text-stone-900">{challenge.helperName}</p>
                         {challenge.helperUsername && (
                           <p className="text-sm text-stone-500 mt-0.5">@{challenge.helperUsername}</p>
                         )}
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Solução</span>
+                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Solução</span>
                         <p className="text-sm text-stone-600">"{challenge.resolutionDescription}"</p>
                       </div>
                     </div>
@@ -954,7 +954,7 @@ export function FounderPortal({
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 text-stone-400">
                       <Clock size={16} />
-                      <span className="text-[10px] font-bold uppercase">
+                      <span className="text-overline font-bold uppercase">
                         {challenge.createdAt?.seconds ? new Date(challenge.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '...'}
                       </span>
                     </div>
@@ -971,7 +971,7 @@ export function FounderPortal({
                   
                   {challenge.founderId !== user.uid && (
                     <div className="mt-4 pt-4 border-t border-stone-50">
-                      <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Founder</span>
+                      <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Founder</span>
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-stone-100 rounded-full flex items-center justify-center text-stone-400">
                           <UserIcon size={12} />

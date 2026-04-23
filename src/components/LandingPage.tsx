@@ -10,7 +10,7 @@ export function LandingPage({ onLogin, onRegister }: { onLogin: () => void, onRe
             <div className="w-12 h-12 border-[6px] border-white rounded-full"></div>
             <div className="absolute bottom-3 right-3 w-5 h-5 bg-[#FF4500] rounded-full shadow-[0_0_15px_rgba(255,69,0,0.6)]"></div>
           </div>
-          <h1 className="font-sans font-black text-6xl tracking-tighter mb-4">qddo</h1>
+          <h1 className="font-sans font-black text-display tracking-tighter mb-4">qddo</h1>
           <p className="text-stone-500 text-lg">Gestão Inteligente de Espaços & Comunidade Founders</p>
         </div>
 
@@ -48,7 +48,7 @@ export function LandingPage({ onLogin, onRegister }: { onLogin: () => void, onRe
           </div>
 
           <div className="pt-8 border-t border-stone-50 text-center">
-            <p className="text-[10px] uppercase tracking-widest font-bold text-stone-300">
+            <p className="text-overline uppercase tracking-widest font-bold text-stone-300">
               Exclusivo para Founders & Equipe QDDO
             </p>
           </div>
