@@ -748,7 +748,7 @@ export default function App() {
   if (loading || (user && checkingFounder)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F5F0]">
-        <div className="animate-pulse text-stone-500 font-serif italic text-xl">Carregando...</div>
+        <div className="animate-pulse text-stone-500 text-xl">Carregando...</div>
       </div>
     );
   }
@@ -789,7 +789,7 @@ export default function App() {
               <div className="w-6 h-6 border-[3px] border-white rounded-full"></div>
               <div className="absolute bottom-1.5 right-1.5 w-2.5 h-2.5 bg-[#FF4500] rounded-full shadow-[0_0_8px_rgba(255,69,0,0.4)]"></div>
             </div>
-            <h1 className="font-sans font-black text-2xl tracking-tighter italic">qddo</h1>
+            <h1 className="font-sans font-black text-2xl tracking-tighter">qddo</h1>
           </div>
           </div>
           
@@ -891,7 +891,7 @@ export default function App() {
                   }`}>
                     <LayoutGrid size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${view === 'general' ? 'text-white' : 'text-stone-900'}`}>Geral</span>
+                  <span className={`text-lg ${view === 'general' ? 'text-white font-semibold' : 'text-stone-900'}`}>Geral</span>
                 </div>
               </button>
             </div>
@@ -913,7 +913,7 @@ export default function App() {
                   }`}>
                     <Calendar size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${view === 'booking' ? 'text-white' : 'text-stone-900'}`}>Agendamento</span>
+                  <span className={`text-lg ${view === 'booking' ? 'text-white font-semibold' : 'text-stone-900'}`}>Agendamento</span>
                 </div>
               </button>
             </div>
@@ -935,7 +935,7 @@ export default function App() {
                   }`}>
                     <CheckSquare size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${view === 'portal' && activeSubTab === 'checkin' ? 'text-white' : 'text-stone-900'}`}>Check-in</span>
+                  <span className={`text-lg ${view === 'portal' && activeSubTab === 'checkin' ? 'text-white font-semibold' : 'text-stone-900'}`}>Check-in</span>
                 </div>
               </button>
             </div>
@@ -957,7 +957,7 @@ export default function App() {
                   }`}>
                     <Building2 size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${view === 'portal' && activeSubTab === 'empresa' ? 'text-white' : 'text-stone-900'}`}>Empresa</span>
+                  <span className={`text-lg ${view === 'portal' && activeSubTab === 'empresa' ? 'text-white font-semibold' : 'text-stone-900'}`}>Empresa</span>
                 </div>
               </button>
             </div>
@@ -979,7 +979,7 @@ export default function App() {
                   }`}>
                     <Globe size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'text-white' : 'text-stone-900'}`}>Desafios</span>
+                  <span className={`text-lg ${view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'text-white font-semibold' : 'text-stone-900'}`}>Desafios</span>
                 </div>
               </button>
             </div>
@@ -1001,7 +1001,7 @@ export default function App() {
                   }`}>
                     <Newspaper size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${view === 'news' ? 'text-white' : 'text-stone-900'}`}>Notícias</span>
+                  <span className={`text-lg ${view === 'news' ? 'text-white font-semibold' : 'text-stone-900'}`}>Notícias</span>
                 </div>
               </button>
             </div>
@@ -1019,11 +1019,11 @@ export default function App() {
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'qcoin' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-600 group-hover:bg-amber-500 group-hover:text-white'
+                    view === 'qcoin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
                   }`}>
                     <Trophy size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${view === 'qcoin' ? 'text-white' : 'text-stone-900'}`}>QCoin</span>
+                  <span className={`text-lg ${view === 'qcoin' ? 'text-white font-semibold' : 'text-stone-900'}`}>QCoin</span>
                 </div>
               </button>
             </div>
@@ -1045,7 +1045,7 @@ export default function App() {
                   }`}>
                     <MessageSquare size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${view === 'chat' ? 'text-white' : 'text-stone-900'}`}>Bate-papo</span>
+                  <span className={`text-lg ${view === 'chat' ? 'text-white font-semibold' : 'text-stone-900'}`}>Bate-papo</span>
                 </div>
               </button>
             </div>
@@ -1064,7 +1064,7 @@ export default function App() {
                   }`}>
                     <ShieldCheck size={18} />
                   </div>
-                  <span className={`font-serif italic text-lg ${view === 'regras' ? 'text-white' : 'text-stone-900'}`}>Regras</span>
+                  <span className={`text-lg ${view === 'regras' ? 'text-white font-semibold' : 'text-stone-900'}`}>Regras</span>
                 </div>
               </button>
             </div>
@@ -1165,7 +1165,7 @@ export default function App() {
                               </span>
                             )}
                           </div>
-                          <h3 className="text-2xl font-serif italic mb-4 group-hover:text-stone-600 transition-colors uppercase tracking-tight">{item.title}</h3>
+                          <h3 className="text-2xl font-sans mb-4 group-hover:text-stone-600 transition-colors uppercase tracking-tight">{item.title}</h3>
                           <p className="text-stone-500 leading-relaxed mb-6 whitespace-pre-wrap">{item.content}</p>
 
                           <div className="flex flex-wrap gap-4 items-center justify-between">
@@ -1196,7 +1196,7 @@ export default function App() {
                     })}
                   {newsItems.filter(item => item.category === 'evento' || item.category === 'aviso').length === 0 && (
                     <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-stone-200">
-                      <p className="text-stone-400 italic">Nenhum aviso ou evento publicado no momento.</p>
+                      <p className="text-stone-400">Nenhum aviso ou evento publicado no momento.</p>
                     </div>
                   )}
                 </div>
@@ -1226,7 +1226,7 @@ export default function App() {
                               <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center">
                                 <Icon size={22} className="text-amber-600" />
                               </div>
-                              <h2 className="text-2xl md:text-3xl font-serif italic">{section.title}</h2>
+                              <h2 className="text-2xl md:text-3xl font-sans">{section.title}</h2>
                             </div>
                             {isAdmin && (
                               editingQcoinSection === expandedQcoinCard ? (
@@ -1565,7 +1565,7 @@ export default function App() {
                                 {/* Header */}
                                 <div className="px-6 py-5 border-b border-stone-100 flex items-center gap-3">
                                   <Crown className="text-amber-500" size={18} />
-                                  <h4 className="text-base font-serif italic text-stone-900">Ranking Geral</h4>
+                                  <h4 className="text-base font-sans text-stone-900">Ranking Geral</h4>
                                   <span className="ml-auto text-[10px] font-bold uppercase tracking-widest text-stone-400">
                                     {fullRanking.length} founder{fullRanking.length !== 1 ? 's' : ''}
                                   </span>
@@ -1574,7 +1574,7 @@ export default function App() {
                                 {/* List */}
                                 <div className="divide-y divide-stone-50">
                                   {fullRanking.length === 0 ? (
-                                    <p className="text-stone-400 italic text-sm text-center py-10">Nenhum founder cadastrado.</p>
+                                    <p className="text-stone-400 text-sm text-center py-10">Nenhum founder cadastrado.</p>
                                   ) : (
                                     fullRanking.map((item: any, idx: number) => (
                                       <div key={item.userId} className="flex items-center justify-between px-6 py-3 hover:bg-stone-50/50 transition-colors group">
@@ -1935,7 +1935,7 @@ export default function App() {
                               </div>
                             ) : expandedQcoinCard !== 'pontuacao' ? (
                               <div className="text-center py-12">
-                                <p className="text-stone-400 italic">Nenhum conteúdo disponível no momento.</p>
+                                <p className="text-stone-400">Nenhum conteúdo disponível no momento.</p>
                               </div>
                             ) : null
                           )}
@@ -1977,7 +1977,7 @@ export default function App() {
                                 Adicionar conteúdo
                               </p>
                             ) : (
-                              <p className="text-xs text-stone-400 italic">Em breve</p>
+                              <p className="text-xs text-stone-400">Em breve</p>
                             )}
                           </div>
                         </div>
@@ -1990,7 +1990,7 @@ export default function App() {
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="mb-8 flex items-start justify-between">
                   <div>
-                    <h2 className="text-3xl font-serif italic text-stone-900">Regras</h2>
+                    <h2 className="text-3xl font-sans text-stone-900">Regras</h2>
                     <p className="text-stone-500 text-sm leading-relaxed max-w-xl mt-2">O QDDO é uma comunidade de founders comprometidos em construir algo maior. Este espaço existe para que você cresça, conecte e realize — mas isso só funciona se todos cuidarmos dele juntos. As regras abaixo não são burocracias, são combinados para garantir que o QDDO continue sendo o lugar que você quer voltar todo dia.</p>
                   </div>
                   {isAdmin && !showAddRegra && (
@@ -2006,7 +2006,7 @@ export default function App() {
 
                 {isAdmin && showAddRegra && (
                   <div className="bg-white rounded-[40px] p-10 border border-stone-200 shadow-sm mb-8">
-                    <h4 className="text-lg font-serif italic text-stone-900 mb-6">Nova seção de Regras</h4>
+                    <h4 className="text-lg font-sans text-stone-900 mb-6">Nova seção de Regras</h4>
                     <div className="space-y-4">
                       <input
                         value={newRegraTitle}
@@ -2081,7 +2081,7 @@ export default function App() {
                           ) : (
                             <>
                               <div className="flex justify-between items-start mb-2">
-                                <h3 className="text-base font-serif italic text-amber-600">
+                                <h3 className="text-base font-sans text-amber-600">
                                   {index + 1}. {item.title}
                                 </h3>
                                 {isAdmin && (
@@ -2135,7 +2135,7 @@ export default function App() {
                       ))
                   ) : (
                     <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-stone-200">
-                      <p className="text-stone-400 italic">Nenhuma regra cadastrada ainda.</p>
+                      <p className="text-stone-400">Nenhuma regra cadastrada ainda.</p>
                       {isAdmin && !showAddRegra && (
                         <button
                           onClick={() => setShowAddRegra(true)}
@@ -2186,7 +2186,7 @@ export default function App() {
                 <div className="mb-6 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
                   <div className="bg-stone-900 px-8 py-4 flex items-center gap-3">
                     <Bell size={20} className="text-white" />
-                    <h3 className="text-white font-serif italic text-xl">News</h3>
+                    <h3 className="text-white font-sans text-xl">News</h3>
                   </div>
                   <div className="p-8 space-y-6">
                     {/* Filtered News Items */}
@@ -2261,7 +2261,7 @@ export default function App() {
                                 <div key={aviso.id || idx} className="bg-white rounded-[32px] p-5 border border-stone-200 shadow-sm hover:shadow-md transition-all group">
                                   <div className="flex items-center gap-2 mb-3">
                                     <AlertTriangle className="text-amber-500 shrink-0" size={18} />
-                                    <h4 className="text-base font-serif italic text-stone-900">Aviso</h4>
+                                    <h4 className="text-base font-sans text-stone-900">Aviso</h4>
                                     <span className="ml-auto text-[10px] font-bold uppercase tracking-widest text-stone-400">
                                       {aviso.createdAt?.seconds ? new Date(aviso.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : ''}
                                     </span>
@@ -2287,7 +2287,7 @@ export default function App() {
                             {/* Eventos da Semana */}
                             <div className="bg-white rounded-[32px] p-5 border border-stone-200 shadow-sm flex flex-col">
                               <div className="flex items-center justify-between mb-3">
-                                <h4 className="text-base font-serif italic text-stone-900 flex items-center gap-2">
+                                <h4 className="text-base font-sans text-stone-900 flex items-center gap-2">
                                   <CalendarDays className="text-amber-500" size={18} />
                                   Próximos Eventos
                                 </h4>
@@ -2299,7 +2299,7 @@ export default function App() {
                               <div className="flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar">
                                 {relevantEvents.length === 0 ? (
                                   <div className="h-full flex flex-col items-center justify-center text-center p-5 bg-stone-50 rounded-2xl border border-dashed border-stone-200">
-                                    <p className="text-stone-400 italic text-xs">Nenhum evento programado para esta semana.</p>
+                                    <p className="text-stone-400 text-xs">Nenhum evento programado para esta semana.</p>
                                   </div>
                                 ) : (
                                   relevantEvents.map((event, idx) => (
@@ -2328,7 +2328,7 @@ export default function App() {
                                           <p className="text-stone-500 text-xs line-clamp-2">{event.content}</p>
                                         </div>
                                         <div className="text-right shrink-0">
-                                          <div className="text-2xl font-serif italic text-stone-300 group-hover:text-amber-200 transition-colors">
+                                          <div className="text-2xl font-sans text-stone-300 group-hover:text-amber-200 transition-colors">
                                             {format(event.eventDate?.toDate ? event.eventDate.toDate() : new Date(event.eventDate + 'T00:00:00'), 'dd')}
                                           </div>
                                           <div className="text-[10px] font-bold uppercase text-stone-400">
@@ -2346,12 +2346,12 @@ export default function App() {
                             <div className="bg-stone-900 rounded-[28px] p-4 text-white shadow-xl shadow-stone-900/20 flex flex-col">
                               <div className="flex items-center gap-2 mb-3">
                                 <Trophy className="text-amber-400" size={20} />
-                                <h4 className="text-lg font-serif italic">Desafios Públicos</h4>
+                                <h4 className="text-lg font-sans">Desafios Públicos</h4>
                               </div>
                               
                               <div className="flex-1 flex flex-col justify-center">
                                 {publicChallenges.length === 0 ? (
-                                  <p className="text-stone-500 italic text-sm text-center">Nenhum desafio público aberto no momento.</p>
+                                  <p className="text-stone-500 text-sm text-center">Nenhum desafio público aberto no momento.</p>
                                 ) : (
                                   <div className="space-y-3">
                                     <div>
@@ -2359,7 +2359,7 @@ export default function App() {
                                         Lançado por {allFounders.find(f => f.id === publicChallenges[0].founderId)?.name || 'Founder'}
                                       </p>
                                       <h5 className="text-sm font-bold leading-tight mb-1">{publicChallenges[0].title}</h5>
-                                      <p className="text-stone-400 text-xs line-clamp-2 italic">"{publicChallenges[0].description}"</p>
+                                      <p className="text-stone-400 text-xs line-clamp-2">"{publicChallenges[0].description}"</p>
                                     </div>
                                     <button
                                       onClick={() => {
@@ -2382,7 +2382,7 @@ export default function App() {
                             <div className="bg-white rounded-[32px] p-5 border border-stone-200 shadow-sm flex flex-col">
                               <div className="flex items-center gap-2 mb-4">
                                 <Trophy className="text-stone-900" size={16} />
-                                <h4 className="text-sm font-serif italic text-stone-900">Ranking Top 5</h4>
+                                <h4 className="text-sm font-sans text-stone-900">Ranking Top 5</h4>
                               </div>
                               <div className="space-y-2">
                                 {ranking.map((item, idx) => (
@@ -2420,7 +2420,7 @@ export default function App() {
                                   </div>
                                 ))}
                                 {ranking.length === 0 && (
-                                  <p className="text-stone-400 italic text-xs text-center py-4">Nenhum ponto este mês.</p>
+                                  <p className="text-stone-400 text-xs text-center py-4">Nenhum ponto este mês.</p>
                                 )}
                               </div>
                             </div>
@@ -2431,7 +2431,7 @@ export default function App() {
                                 <Trophy size={80} />
                               </div>
                               <span className="text-[10px] uppercase tracking-widest font-bold text-amber-100 mb-1 relative z-10">Seu Score QDDO</span>
-                              <div className="text-4xl font-serif italic mb-0.5 relative z-10">{userScore}</div>
+                              <div className="text-4xl font-sans mb-0.5 relative z-10">{userScore}</div>
                               <span className="text-xs font-bold text-amber-100 relative z-10">pontos este mês</span>
                               {userRankPosition > 0 && (
                                 <span className="text-[11px] text-amber-200 relative z-10 mt-0.5">#{userRankPosition}º no ranking</span>
@@ -2466,7 +2466,7 @@ export default function App() {
                     <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                       <Users size={18} />
                     </div>
-                    <h3 className="text-base font-serif italic mb-1">Founders</h3>
+                    <h3 className="text-base font-sans mb-1">Founders</h3>
                     <p className="text-stone-400 text-xs hidden sm:block">Conheça todos os founders cadastrados na nossa comunidade.</p>
                   </div>
 
@@ -2478,7 +2478,7 @@ export default function App() {
                     <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                       <AlertTriangle size={18} />
                     </div>
-                    <h3 className="text-base font-serif italic mb-1">Avisos</h3>
+                    <h3 className="text-base font-sans mb-1">Avisos</h3>
                     <p className="text-stone-400 text-xs hidden sm:block">Comunicados importantes e atualizações de última hora.</p>
                   </div>
 
@@ -2490,7 +2490,7 @@ export default function App() {
                     <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                       <CalendarDays size={18} />
                     </div>
-                    <h3 className="text-base font-serif italic mb-1">Eventos</h3>
+                    <h3 className="text-base font-sans mb-1">Eventos</h3>
                     <p className="text-stone-400 text-xs hidden sm:block">Calendário de workshops, meetups e encontros.</p>
                   </div>
 
@@ -2502,7 +2502,7 @@ export default function App() {
                     <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                       <MessageSquare size={18} />
                     </div>
-                    <h3 className="text-base font-serif italic mb-1">Comunicação</h3>
+                    <h3 className="text-base font-sans mb-1">Comunicação</h3>
                     <p className="text-stone-400 text-xs hidden sm:block">Canais oficiais de suporte e interação entre membros.</p>
                   </div>
                 </div>
@@ -2523,7 +2523,7 @@ export default function App() {
                       <UserPlus size={22} className="text-white" />
                     </div>
                     <div className="text-center">
-                      <h2 className="text-xl font-serif italic">Indicar um Founder</h2>
+                      <h2 className="text-xl font-sans">Indicar um Founder</h2>
                       <p className="text-stone-400 text-sm">Conhece alguém que deveria fazer parte da nossa comunidade?</p>
                     </div>
                     <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
@@ -2575,7 +2575,7 @@ export default function App() {
                    <MessageSquare size={24} />}
                 </div>
                 <div>
-                  <h3 className="text-2xl font-serif italic text-stone-900 capitalize">{activeGeneralCategory}</h3>
+                  <h3 className="text-2xl font-sans text-stone-900 capitalize">{activeGeneralCategory}</h3>
                   <p className="text-stone-400 text-xs uppercase tracking-widest font-bold">Portal Founder</p>
                 </div>
               </div>
@@ -2624,7 +2624,7 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-stone-400 italic">Nenhum founder cadastrado ainda.</p>
+                    <p className="text-stone-400">Nenhum founder cadastrado ainda.</p>
                   </div>
                 )
               ) : newsItems.filter(item => item.category === activeGeneralCategory).length > 0 ? (
@@ -2749,7 +2749,7 @@ export default function App() {
                   ))
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-stone-400 italic">Nenhum conteúdo disponível nesta categoria.</p>
+                  <p className="text-stone-400">Nenhum conteúdo disponível nesta categoria.</p>
                 </div>
               )}
             </div>
@@ -2786,7 +2786,7 @@ export default function App() {
               <div className="bg-stone-900 p-3 rounded-2xl">
                 <UserPlus size={22} className="text-white" />
               </div>
-              <h2 className="text-2xl font-serif italic text-stone-900">Indicar um Founder</h2>
+              <h2 className="text-2xl font-sans text-stone-900">Indicar um Founder</h2>
             </div>
 
             {indicarSuccess ? (
@@ -3169,7 +3169,7 @@ export default function App() {
                   <Users size={28} className="text-stone-400" />
                 )}
               </div>
-              <h3 className="text-xl font-serif italic text-stone-900 leading-tight">{selectedFounderDetail.name}</h3>
+              <h3 className="text-xl font-sans text-stone-900 leading-tight">{selectedFounderDetail.name}</h3>
               {selectedFounderDetail.username && (
                 <p className="text-xs text-stone-400 font-bold mt-0.5">@{selectedFounderDetail.username}</p>
               )}
@@ -3220,7 +3220,7 @@ export default function App() {
                 </a>
               )}
               {!selectedFounderDetail.socialLinkedin && !selectedFounderDetail.socialInstagram && !selectedFounderDetail.socialSite && (
-                <p className="text-center text-stone-400 text-sm italic py-4">Nenhum link social cadastrado.</p>
+                <p className="text-center text-stone-400 text-sm py-4">Nenhum link social cadastrado.</p>
               )}
             </div>
           </div>

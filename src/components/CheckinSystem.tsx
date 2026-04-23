@@ -283,7 +283,7 @@ export function CheckinSystem({
               <LogIn size={48} className="text-stone-900" />
             </div>
             <div>
-              <h3 className="text-3xl font-serif italic mb-2">Bem-vindo!</h3>
+              <h3 className="text-3xl font-sans mb-2">Bem-vindo!</h3>
               <p className="text-stone-500">Registre sua chegada no espaço QDDO hoje.</p>
               <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 bg-stone-100 rounded-full">
                 <Trophy size={14} className="text-stone-900" />
@@ -354,7 +354,7 @@ export function CheckinSystem({
               <LogOut size={48} className="text-stone-900" />
             </div>
             <div>
-              <h3 className="text-3xl font-serif italic mb-2">Até logo!</h3>
+              <h3 className="text-3xl font-sans mb-2">Até logo!</h3>
               <p className="text-stone-500">Não esqueça de registrar sua saída.</p>
               <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 bg-stone-100 rounded-full">
                 <Trophy size={14} className="text-stone-900" />
@@ -384,7 +384,7 @@ export function CheckinSystem({
 
             {!todayCheckin ? (
               <div className="p-6 bg-stone-50 rounded-3xl border border-stone-100">
-                <p className="text-stone-500 italic">Você ainda não realizou check-in hoje.</p>
+                <p className="text-stone-500">Você ainda não realizou check-in hoje.</p>
               </div>
             ) : todayCheckin.status === 'completed' ? (
               <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
@@ -430,7 +430,7 @@ export function CheckinSystem({
               <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100">
                 <span className="text-[9px] md:text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Visitas este mês</span>
                 <div className="flex items-end gap-2">
-                  <span className="text-3xl md:text-4xl font-serif italic text-stone-900">{currentMonthCheckins}</span>
+                  <span className="text-3xl md:text-4xl font-sans text-stone-900">{currentMonthCheckins}</span>
                   <div className={cn(
                     "flex items-center gap-1 text-xs font-bold mb-1",
                     diff >= 0 ? "text-emerald-600" : "text-rose-600"
@@ -443,7 +443,7 @@ export function CheckinSystem({
 
               <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100">
                 <span className="text-[9px] md:text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Média Semanal</span>
-                <span className="text-3xl md:text-4xl font-serif italic text-stone-900">
+                <span className="text-3xl md:text-4xl font-sans text-stone-900">
                   {(currentMonthCheckins / 4).toFixed(1)}
                 </span>
               </div>
@@ -451,7 +451,7 @@ export function CheckinSystem({
               <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100">
                 <span className="text-[9px] md:text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-2">Score QDDO</span>
                 <div className="flex items-end gap-2">
-                  <span className="text-3xl md:text-4xl font-serif italic text-stone-900">{currentMonthCheckins * 10}</span>
+                  <span className="text-3xl md:text-4xl font-sans text-stone-900">{currentMonthCheckins * 10}</span>
                   <span className="text-xs font-bold text-stone-400 mb-1">pts</span>
                 </div>
               </div>
@@ -473,7 +473,7 @@ export function CheckinSystem({
             {/* Calendar */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-xl md:text-2xl font-serif italic capitalize">
+                <h4 className="text-xl md:text-2xl font-sans capitalize">
                   {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
                 </h4>
                 <div className="flex gap-1">
@@ -539,7 +539,7 @@ export function CheckinSystem({
               <div className="w-16 h-16 md:w-20 md:h-20 bg-stone-900 text-white rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-stone-900/20">
                 <Trophy size={32} />
               </div>
-              <h3 className="text-2xl md:text-4xl font-serif italic mb-3">Sistema de Score QDDO</h3>
+              <h3 className="text-2xl md:text-4xl font-sans mb-3">Sistema de Score QDDO</h3>
               <p className="text-stone-500 text-sm md:text-base">Valorizamos sua presença e participação na nossa comunidade. Entenda como funciona nossa pontuação.</p>
             </div>
 
@@ -547,7 +547,7 @@ export function CheckinSystem({
               <div className="space-y-3 md:space-y-4">
                 <div className="flex items-center gap-3 text-stone-900">
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold shrink-0">01</div>
-                  <h4 className="font-serif italic text-lg md:text-xl">Descrição</h4>
+                  <h4 className="font-sans text-lg md:text-xl">Descrição</h4>
                 </div>
                 <div className="bg-stone-50 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-stone-100">
                   <p className="text-stone-600 leading-relaxed text-sm">
@@ -560,7 +560,7 @@ export function CheckinSystem({
               <div className="space-y-3 md:space-y-4">
                 <div className="flex items-center gap-3 text-stone-900">
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold shrink-0">02</div>
-                  <h4 className="font-serif italic text-lg md:text-xl">Regras</h4>
+                  <h4 className="font-sans text-lg md:text-xl">Regras</h4>
                 </div>
                 <div className="bg-stone-50 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-stone-100">
                   <ul className="space-y-3">
@@ -582,7 +582,7 @@ export function CheckinSystem({
               <div className="space-y-3 md:space-y-4">
                 <div className="flex items-center gap-3 text-stone-900">
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold shrink-0">03</div>
-                  <h4 className="font-serif italic text-lg md:text-xl">Benefícios</h4>
+                  <h4 className="font-sans text-lg md:text-xl">Benefícios</h4>
                 </div>
                 <div className="bg-stone-50 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-stone-100">
                   <ul className="space-y-3">
@@ -604,11 +604,11 @@ export function CheckinSystem({
 
             <div className="bg-stone-900 rounded-[24px] md:rounded-[32px] p-6 md:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
-                <h4 className="text-lg md:text-xl font-serif italic mb-1">Seu Score Atual</h4>
+                <h4 className="text-lg md:text-xl font-sans mb-1">Seu Score Atual</h4>
                 <p className="text-stone-400 text-sm">Continue frequentando para subir no ranking!</p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-4xl md:text-5xl font-serif italic">{currentMonthCheckins * 10}</span>
+                <span className="text-4xl md:text-5xl font-sans">{currentMonthCheckins * 10}</span>
                 <span className="text-stone-400 uppercase tracking-widest text-xs font-bold">Pontos Acumulados</span>
               </div>
             </div>

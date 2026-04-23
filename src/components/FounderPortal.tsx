@@ -320,13 +320,13 @@ export function FounderPortal({
   };
 
   if (loading) {
-    return <div className="text-center py-20 italic text-stone-400">Carregando portal...</div>;
+    return <div className="text-center py-20 text-stone-400">Carregando portal...</div>;
   }
 
   if (!user) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-3xl font-serif italic mb-4">Acesso Restrito</h2>
+        <h2 className="text-3xl font-sans mb-4">Acesso Restrito</h2>
         <p className="text-stone-500">Por favor, faça login para acessar o Portal Founders.</p>
       </div>
     );
@@ -335,7 +335,7 @@ export function FounderPortal({
   if (!founder && !isAdmin) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-3xl font-serif italic mb-4">Perfil não encontrado</h2>
+        <h2 className="text-3xl font-sans mb-4">Perfil não encontrado</h2>
         <p className="text-stone-500">Por favor, complete seu cadastro para acessar o portal.</p>
       </div>
     );
@@ -401,7 +401,7 @@ export function FounderPortal({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div className="space-y-8">
                       <div>
-                        <h3 className="text-3xl font-serif italic mb-6">Dados do Founder</h3>
+                        <h3 className="text-3xl font-sans mb-6">Dados do Founder</h3>
                         {selectedCompanyFounder.photoURL && (
                           <div className="mb-6">
                             <img
@@ -436,7 +436,7 @@ export function FounderPortal({
 
                     <div className="space-y-8">
                       <div className="bg-stone-50 rounded-3xl p-8 border border-stone-100">
-                        <h3 className="text-3xl font-serif italic mb-6">Dados da Empresa</h3>
+                        <h3 className="text-3xl font-sans mb-6">Dados da Empresa</h3>
                         <div className="space-y-4">
                           <div>
                             <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
@@ -462,7 +462,7 @@ export function FounderPortal({
               ) : (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-xl font-serif italic">Empresas que estão no QDDO</h3>
+                    <h3 className="text-xl font-sans">Empresas que estão no QDDO</h3>
                     <p className="text-stone-400 text-sm mt-1">Classificadas por segmento de atuação.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -512,7 +512,7 @@ export function FounderPortal({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="space-y-8">
                   <div>
-                    <h3 className="text-3xl font-serif italic mb-6">Seu Perfil Founder</h3>
+                    <h3 className="text-3xl font-sans mb-6">Seu Perfil Founder</h3>
                     <div className="space-y-4">
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome Completo</span>
@@ -539,7 +539,7 @@ export function FounderPortal({
                 <div className="space-y-8">
                   <div className="bg-stone-50 rounded-3xl p-8 border border-stone-100">
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-3xl font-serif italic">Sua Empresa</h3>
+                      <h3 className="text-3xl font-sans">Sua Empresa</h3>
                       {!editingCompany ? (
                         <button
                           onClick={handleStartEditCompany}
@@ -653,7 +653,7 @@ export function FounderPortal({
       {showNewChallenge && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
           <div className="bg-white rounded-[40px] p-12 max-w-xl w-full shadow-2xl animate-in zoom-in-95 duration-300">
-            <h3 className="text-3xl font-serif italic mb-8">Criar Novo Desafio</h3>
+            <h3 className="text-3xl font-sans mb-8">Criar Novo Desafio</h3>
             <form onSubmit={handleCreateChallenge} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Título do Desafio</label>
@@ -702,7 +702,7 @@ export function FounderPortal({
                     Privado
                   </button>
                 </div>
-                <p className="text-[10px] text-stone-400 mt-2 italic">
+                <p className="text-[10px] text-stone-400 mt-2">
                   * Desafios privados são visíveis apenas para você e administradores do QDDO.
                 </p>
               </div>
@@ -731,8 +731,8 @@ export function FounderPortal({
       {completingChallenge && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
           <div className="bg-white rounded-[40px] p-12 max-w-xl w-full shadow-2xl animate-in zoom-in-95 duration-300">
-            <h3 className="text-3xl font-serif italic mb-2">Concluir Desafio</h3>
-            <p className="text-stone-500 mb-8 font-serif italic">"{completingChallenge.title}"</p>
+            <h3 className="text-3xl font-sans mb-2">Concluir Desafio</h3>
+            <p className="text-stone-500 mb-8 font-sans">"{completingChallenge.title}"</p>
             
             <form onSubmit={handleCompleteChallenge} className="space-y-6">
               <div className="space-y-2">
@@ -797,7 +797,7 @@ export function FounderPortal({
       {editingChallenge && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
           <div className="bg-white rounded-[40px] p-12 max-w-xl w-full shadow-2xl animate-in zoom-in-95 duration-300">
-            <h3 className="text-3xl font-serif italic mb-8">Editar Desafio</h3>
+            <h3 className="text-3xl font-sans mb-8">Editar Desafio</h3>
             <form onSubmit={handleEditChallenge} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-wider font-bold text-stone-400 ml-1">Título do Desafio</label>
@@ -872,7 +872,7 @@ export function FounderPortal({
             <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-300">
               <CheckSquare size={32} />
             </div>
-            <h3 className="text-xl font-serif italic text-stone-400">Nenhum desafio encontrado nesta categoria</h3>
+            <h3 className="text-xl font-sans text-stone-400">Nenhum desafio encontrado nesta categoria</h3>
             <button 
               onClick={() => setShowNewChallenge(true)}
               className="mt-6 text-stone-900 font-bold underline underline-offset-4 hover:text-stone-600 transition-colors"
@@ -920,7 +920,7 @@ export function FounderPortal({
                     )}
                   </div>
                   
-                  <h3 className="text-2xl font-serif italic mb-2">{challenge.title}</h3>
+                  <h3 className="text-2xl font-sans mb-2">{challenge.title}</h3>
                   <p className="text-stone-500 text-sm mb-6 leading-relaxed">{challenge.description}</p>
                   
                   {challenge.status === 'completed' && (
@@ -934,7 +934,7 @@ export function FounderPortal({
                       </div>
                       <div>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block mb-1">Solução</span>
-                        <p className="text-sm text-stone-600 italic">"{challenge.resolutionDescription}"</p>
+                        <p className="text-sm text-stone-600">"{challenge.resolutionDescription}"</p>
                       </div>
                     </div>
                   )}

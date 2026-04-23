@@ -120,7 +120,7 @@ export function AdminPanel({
         <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-8">
           <Settings size={40} className="text-stone-400" />
         </div>
-        <h2 className="text-3xl font-serif italic mb-4">Área Administrativa</h2>
+        <h2 className="text-3xl font-sans mb-4">Área Administrativa</h2>
         <p className="text-stone-500 mb-10 leading-relaxed">Acesse para gerenciar agendamentos, salas e configurações do sistema.</p>
         <button 
           onClick={onLogin}
@@ -139,7 +139,7 @@ export function AdminPanel({
         <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <AlertCircle size={32} />
         </div>
-        <h2 className="text-2xl font-serif italic mb-2">Acesso Negado</h2>
+        <h2 className="text-2xl font-sans mb-2">Acesso Negado</h2>
         <p className="text-stone-500 mb-8">Você não tem permissão para acessar esta área.</p>
         <button onClick={() => signOut(auth)} className="text-stone-900 underline font-semibold">Sair</button>
       </div>
@@ -409,17 +409,17 @@ export function AdminPanel({
     <div className="space-y-8">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-3xl md:text-4xl font-serif italic mb-1">Painel de Controle</h2>
+          <h2 className="text-3xl md:text-4xl font-sans mb-1">Painel de Controle</h2>
           <p className="text-stone-500 text-sm md:text-base">Gerencie todos os agendamentos e salas do sistema.</p>
         </div>
         <div className="flex gap-3 shrink-0">
           <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-2xl border border-stone-200 shadow-sm flex flex-col">
             <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Total Reservas</span>
-            <span className="text-xl md:text-2xl font-serif italic">{bookings.length}</span>
+            <span className="text-xl md:text-2xl font-sans">{bookings.length}</span>
           </div>
           <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-2xl border border-stone-200 shadow-sm flex flex-col">
             <span className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Salas Ativas</span>
-            <span className="text-xl md:text-2xl font-serif italic">{rooms.length}</span>
+            <span className="text-xl md:text-2xl font-sans">{rooms.length}</span>
           </div>
         </div>
       </header>
@@ -481,7 +481,7 @@ export function AdminPanel({
                         <div className="text-xs text-stone-400">{booking.startTime} - {booking.endTime}</div>
                       </td>
                       <td className="px-8 py-6">
-                        <div className="font-serif italic text-stone-700">{room?.name || 'Sala excluída'}</div>
+                        <div className="font-sans text-stone-700">{room?.name || 'Sala excluída'}</div>
                       </td>
                       <td className="px-8 py-6">
                         <div className="font-bold text-stone-900">{booking.userName}</div>
@@ -501,7 +501,7 @@ export function AdminPanel({
                 })}
                 {bookings.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-8 py-20 text-center text-stone-400 italic">Nenhum agendamento encontrado.</td>
+                    <td colSpan={4} className="px-8 py-20 text-center text-stone-400">Nenhum agendamento encontrado.</td>
                   </tr>
                 )}
               </tbody>
@@ -531,7 +531,7 @@ export function AdminPanel({
                       <div className="text-xs text-stone-400">@{founder.username}</div>
                     </td>
                     <td className="px-8 py-6">
-                      <div className="font-serif italic text-stone-700">{founder.company?.name || 'N/A'}</div>
+                      <div className="font-sans text-stone-700">{founder.company?.name || 'N/A'}</div>
                     </td>
                     <td className="px-8 py-6">
                       <select
@@ -664,7 +664,7 @@ export function AdminPanel({
                 })}
                 {challenges.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-8 py-20 text-center text-stone-400 italic">Nenhum desafio encontrado.</td>
+                    <td colSpan={5} className="px-8 py-20 text-center text-stone-400">Nenhum desafio encontrado.</td>
                   </tr>
                 )}
               </tbody>
@@ -676,7 +676,7 @@ export function AdminPanel({
       {adminTab === 'news' && (
         <section className="space-y-8 animate-in fade-in duration-500">
           <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-serif italic">Gerenciar News</h3>
+            <h3 className="text-2xl font-sans">Gerenciar News</h3>
             <button 
               onClick={() => setIsAddingNews(!isAddingNews)}
               className="flex items-center gap-2 bg-stone-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/10"
@@ -689,7 +689,7 @@ export function AdminPanel({
           {isAddingNews && (
             <div className="bg-white rounded-[24px] md:rounded-[40px] p-6 md:p-10 border border-stone-200 shadow-sm animate-in zoom-in-95 duration-300">
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-serif italic">{editingNewsId ? 'Editar Notícia' : 'Nova Notícia'}</h3>
+                <h3 className="text-2xl font-sans">{editingNewsId ? 'Editar Notícia' : 'Nova Notícia'}</h3>
                 {editingNewsId && (
                   <button 
                     onClick={() => {
@@ -898,7 +898,7 @@ export function AdminPanel({
                   ))}
                   {newsItems.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-8 py-20 text-center text-stone-400 italic">Nenhuma notícia publicada.</td>
+                      <td colSpan={4} className="px-8 py-20 text-center text-stone-400">Nenhuma notícia publicada.</td>
                     </tr>
                   )}
                 </tbody>
@@ -912,7 +912,7 @@ export function AdminPanel({
         <section className="space-y-8 animate-in fade-in duration-500">
           <div className="bg-white rounded-3xl p-8 border border-stone-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="font-serif italic text-lg">Horários Disponíveis</h4>
+              <h4 className="font-sans text-lg">Horários Disponíveis</h4>
               <button 
                 onClick={() => {
                   setModalConfig({
@@ -960,7 +960,7 @@ export function AdminPanel({
               </button>
             </div>
 
-            <h4 className="font-serif italic text-lg mb-4">Links de Agendamento</h4>
+            <h4 className="font-sans text-lg mb-4">Links de Agendamento</h4>
             <p className="text-stone-500 text-sm mb-6">Compartilhe estes links para que os usuários acessem diretamente o agendamento de cada sala.</p>
             <div className="space-y-3">
               {rooms.map(room => {
@@ -992,19 +992,19 @@ export function AdminPanel({
         <section className="space-y-6 animate-in fade-in duration-500">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-xl md:text-2xl font-serif italic">Indicações de Founders</h3>
+              <h3 className="text-xl md:text-2xl font-sans">Indicações de Founders</h3>
               <p className="text-stone-500 text-sm mt-1">Revise e aprove ou rejeite as indicações enviadas pela comunidade.</p>
             </div>
             <div className="flex gap-3 shrink-0">
               <div className="bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-2xl flex flex-col items-center">
                 <span className="text-[10px] uppercase tracking-widest font-bold text-amber-500">Pendentes</span>
-                <span className="text-xl md:text-2xl font-serif italic text-amber-600">
+                <span className="text-xl md:text-2xl font-sans text-amber-600">
                   {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length}
                 </span>
               </div>
               <div className="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-2xl flex flex-col items-center">
                 <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-500">Aprovadas</span>
-                <span className="text-xl md:text-2xl font-serif italic text-emerald-600">
+                <span className="text-xl md:text-2xl font-sans text-emerald-600">
                   {indicacoes.filter((i: any) => i.status === 'aprovada').length}
                 </span>
               </div>
@@ -1016,7 +1016,7 @@ export function AdminPanel({
               <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserPlus size={28} className="text-stone-400" />
               </div>
-              <p className="text-stone-400 italic">Nenhuma indicação recebida ainda.</p>
+              <p className="text-stone-400">Nenhuma indicação recebida ainda.</p>
             </div>
           ) : (
             <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
@@ -1042,7 +1042,7 @@ export function AdminPanel({
                           <div className="font-bold text-stone-900">{ind.nomeIndicado}</div>
                         </td>
                         <td className="px-8 py-6">
-                          <div className="font-serif italic text-stone-700">{ind.empresa}</div>
+                          <div className="font-sans text-stone-700">{ind.empresa}</div>
                         </td>
                         <td className="px-8 py-6">
                           <div className="text-sm text-stone-600">{ind.area}</div>
@@ -1082,7 +1082,7 @@ export function AdminPanel({
                             </div>
                           )}
                           {!isPendente && (
-                            <span className="text-xs text-stone-300 italic">Revisado</span>
+                            <span className="text-xs text-stone-300">Revisado</span>
                           )}
                         </td>
                       </tr>
@@ -1111,7 +1111,7 @@ export function AdminPanel({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-serif italic text-stone-900">Editar Perfil</h3>
+              <h3 className="text-xl font-sans text-stone-900">Editar Perfil</h3>
               <button
                 onClick={() => setEditingFounder(null)}
                 className="p-2 hover:bg-stone-100 rounded-xl transition-all text-stone-400 hover:text-stone-700"

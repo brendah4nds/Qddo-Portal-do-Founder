@@ -126,7 +126,7 @@ export function Chat({ user }: { user: User | null }) {
           : "hidden md:flex md:w-80 md:min-w-[320px]"
       )}>
         <div className="p-5 border-b border-stone-100">
-          <h2 className="text-2xl font-serif italic mb-4">Bate-papo</h2>
+          <h2 className="text-2xl font-sans mb-4">Bate-papo</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-300" size={16} />
             <input
@@ -207,7 +207,7 @@ export function Chat({ user }: { user: User | null }) {
               {activeChat === 'public' ? <Users size={20} /> : <UserIcon size={20} />}
             </div>
             <div className="min-w-0">
-              <h3 className="font-serif italic text-lg md:text-xl truncate">
+              <h3 className="font-sans text-lg md:text-xl truncate">
                 {activeChat === 'public' ? 'Chat Público' : activeFounder?.name}
               </h3>
               <p className="text-[10px] uppercase tracking-widest font-bold text-stone-400 truncate">
@@ -222,7 +222,7 @@ export function Chat({ user }: { user: User | null }) {
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-stone-300 space-y-4">
               <MessageSquare size={48} />
-              <p className="font-serif italic text-lg">Nenhuma mensagem por aqui ainda...</p>
+              <p className="font-sans text-lg">Nenhuma mensagem por aqui ainda...</p>
             </div>
           ) : (
             messages.map((msg) => {

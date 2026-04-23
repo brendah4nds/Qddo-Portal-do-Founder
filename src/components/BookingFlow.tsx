@@ -159,7 +159,7 @@ export function BookingFlow({
         <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle size={32} />
         </div>
-        <h2 className="text-2xl font-serif italic mb-2">Agendamento Confirmado!</h2>
+        <h2 className="text-2xl font-sans mb-2">Agendamento Confirmado!</h2>
         <p className="text-stone-500 mb-8">Sua reserva para a {selectedRoom?.name} foi realizada com sucesso.</p>
         <button 
           onClick={() => {
@@ -219,7 +219,7 @@ export function BookingFlow({
         {/* Step 1: Room Selection */}
         {step === 1 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 className="text-3xl font-serif italic mb-8 text-center">Qual sala você deseja reservar?</h2>
+            <h2 className="text-3xl font-sans mb-8 text-center">Qual sala você deseja reservar?</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {rooms.map(room => (
                 <button
@@ -234,7 +234,7 @@ export function BookingFlow({
                   <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
                     <RoomIcon size={24} />
                   </div>
-                  <h3 className="font-serif italic text-xl leading-tight mb-2">{room.name}</h3>
+                  <h3 className="font-sans text-xl leading-tight mb-2">{room.name}</h3>
                   <p className="text-sm text-stone-400">
                     {room.description}
                   </p>
@@ -254,12 +254,12 @@ export function BookingFlow({
               >
                 <ChevronLeft size={24} />
               </button>
-              <h2 className="text-3xl font-serif italic">Escolha a data para {selectedRoom?.name}</h2>
+              <h2 className="text-3xl font-sans">Escolha a data para {selectedRoom?.name}</h2>
             </div>
             
             <div className="bg-white rounded-3xl p-8 border border-stone-200 shadow-sm">
               <div className="flex items-center justify-between mb-8">
-                <h3 className="font-serif italic text-xl">{format(selectedDate, "MMMM yyyy", { locale: ptBR })}</h3>
+                <h3 className="font-sans text-xl">{format(selectedDate, "MMMM yyyy", { locale: ptBR })}</h3>
                 <div className="flex gap-2">
                   <button onClick={() => setSelectedDate(addMonths(selectedDate, -1))} className="p-2 hover:bg-stone-100 rounded-full transition-colors">
                     <ChevronLeft size={20} />
@@ -325,7 +325,7 @@ export function BookingFlow({
                 <ChevronLeft size={24} />
               </button>
               <div>
-                <h2 className="text-3xl font-serif italic">Finalize seu agendamento</h2>
+                <h2 className="text-3xl font-sans">Finalize seu agendamento</h2>
                 <p className="text-stone-500 text-sm">{selectedRoom?.name} • {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}</p>
               </div>
             </div>

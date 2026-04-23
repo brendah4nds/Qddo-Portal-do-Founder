@@ -10,8 +10,8 @@ export function LandingPage({ onLogin, onRegister }: { onLogin: () => void, onRe
             <div className="w-12 h-12 border-[6px] border-white rounded-full"></div>
             <div className="absolute bottom-3 right-3 w-5 h-5 bg-[#FF4500] rounded-full shadow-[0_0_15px_rgba(255,69,0,0.6)]"></div>
           </div>
-          <h1 className="font-sans font-black text-6xl tracking-tighter italic mb-4">qddo</h1>
-          <p className="text-stone-500 font-serif italic text-lg">Gestão Inteligente de Espaços & Comunidade Founders</p>
+          <h1 className="font-sans font-black text-6xl tracking-tighter mb-4">qddo</h1>
+          <p className="text-stone-500 text-lg">Gestão Inteligente de Espaços & Comunidade Founders</p>
         </div>
 
         <div className="bg-white rounded-[40px] p-10 border border-stone-200 shadow-xl space-y-8">
@@ -54,7 +54,7 @@ export function LandingPage({ onLogin, onRegister }: { onLogin: () => void, onRe
           </div>
         </div>
         
-        <p className="text-center mt-12 text-stone-400 text-xs font-serif italic">
+        <p className="text-center mt-12 text-stone-400 text-xs">
           © 2026 qddo - Brenda Ribeiro
         </p>
       </div>

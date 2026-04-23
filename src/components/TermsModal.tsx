@@ -16,7 +16,7 @@ export function TermsModal({ isOpen, onClose, onAccept }: TermsModalProps) {
         {/* Header */}
         <div className="px-8 py-6 border-b border-stone-100 flex items-center justify-between bg-stone-50">
           <div>
-            <h2 className="text-2xl font-serif italic text-stone-900">Termos e Autorizações</h2>
+            <h2 className="text-2xl font-sans text-stone-900">Termos e Autorizações</h2>
             <p className="text-stone-500 text-xs uppercase tracking-widest font-bold mt-1">Pendência de Cadastro</p>
           </div>
           <button 

@@ -63,18 +63,18 @@ export function ChallengeComments({ challengeId, user }: { challengeId: string; 
     }
   };
 
-  if (loading) return <div className="text-center py-4 text-stone-300 italic text-xs">Carregando comentários...</div>;
+  if (loading) return <div className="text-center py-4 text-stone-300 text-xs">Carregando comentários...</div>;
 
   return (
     <div className="mt-8 pt-8 border-t border-stone-100 space-y-6">
       <div className="flex items-center gap-2 mb-6">
         <MessageCircle size={18} className="text-stone-400" />
-        <h4 className="font-serif italic text-lg">Comentários ({comments.length})</h4>
+        <h4 className="font-sans text-lg">Comentários ({comments.length})</h4>
       </div>
 
       <div className="space-y-4 max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-stone-200">
         {comments.length === 0 ? (
-          <p className="text-stone-400 italic text-sm py-4">Nenhum comentário ainda. Seja o primeiro a ajudar!</p>
+          <p className="text-stone-400 text-sm py-4">Nenhum comentário ainda. Seja o primeiro a ajudar!</p>
         ) : (
           comments.map(comment => (
             <div key={comment.id} className="flex gap-3 animate-in fade-in slide-in-from-left-2 duration-300">

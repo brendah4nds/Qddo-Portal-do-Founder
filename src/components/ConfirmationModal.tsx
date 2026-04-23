@@ -28,7 +28,7 @@ export function ConfirmationModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
-        <h3 className="text-2xl font-serif italic mb-3">{title}</h3>
+        <h3 className="text-2xl font-sans mb-3">{title}</h3>
         <p className="text-stone-500 mb-8 leading-relaxed">{message}</p>
         <div className="flex gap-3">
           <button 

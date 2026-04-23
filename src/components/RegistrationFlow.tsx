@@ -57,8 +57,8 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
     <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center p-6 py-20">
       <div className="max-w-2xl w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center mb-12">
-          <h2 className="text-5xl font-serif italic mb-4">Bem-vindo ao QDDO</h2>
-          <p className="text-stone-500 font-serif italic text-lg">Complete seu cadastro de Founder para acessar a plataforma.</p>
+          <h2 className="text-5xl font-sans mb-4">Bem-vindo ao QDDO</h2>
+          <p className="text-stone-500 font-sans text-lg">Complete seu cadastro de Founder para acessar a plataforma.</p>
         </div>
 
         <form onSubmit={handleRegister} className="bg-white rounded-[40px] p-12 border border-stone-200 shadow-2xl space-y-8">
@@ -113,7 +113,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
           </div>
 
           <div className="pt-8 border-t border-stone-100">
-            <h3 className="font-serif italic text-2xl mb-8 flex items-center gap-3">
+            <h3 className="font-sans text-2xl mb-8 flex items-center gap-3">
               <Building2 size={24} className="text-stone-400" />
               Sua Empresa
             </h3>
