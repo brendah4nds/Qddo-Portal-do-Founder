@@ -905,13 +905,6 @@ export function FounderPortal({
               <div className="flex flex-col sm:flex-row gap-8">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={cn(
-                      "px-3 py-1 rounded-full text-overline font-bold uppercase tracking-widest flex items-center gap-1.5",
-                      challenge.type === 'private' ? "bg-stone-100 text-stone-500" : "bg-blue-50 text-blue-500"
-                    )}>
-                      {challenge.type === 'private' ? <Lock size={12} /> : <Globe size={12} />}
-                      {challenge.type === 'private' ? 'Privado' : 'Público'}
-                    </div>
                     {challenge.status === 'completed' && (
                       <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-overline font-bold uppercase tracking-widest flex items-center gap-1.5">
                         <CheckCircle2 size={12} />

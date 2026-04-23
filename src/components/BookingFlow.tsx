@@ -229,15 +229,24 @@ export function BookingFlow({
                     window.history.pushState({}, '', `/sala/${room.id}`);
                     setStep(2);
                   }}
-                  className="p-8 rounded-xl border border-stone-200 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group"
+                  className="rounded-xl border border-stone-200 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group overflow-hidden flex flex-col"
                 >
-                  <div className="w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
-                    <RoomIcon size={24} />
+                  <div className="w-full h-44 bg-stone-100 overflow-hidden flex-shrink-0">
+                    {room.imageUrl ? (
+                      <img src={room.imageUrl} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <RoomIcon size={40} className="text-stone-300" />
+                      </div>
+                    )}
                   </div>
-                  <h3 className="font-sans text-h3 leading-tight mb-2">{room.name}</h3>
-                  <p className="text-sm text-stone-400">
-                    {room.description}
-                  </p>
+                  <div className="p-6 flex flex-col flex-1">
+                    <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                      <RoomIcon size={20} />
+                    </div>
+                    <h3 className="font-sans text-h3 leading-tight mb-2">{room.name}</h3>
+                    <p className="text-sm text-stone-400">{room.description}</p>
+                  </div>
                 </button>
               ))}
             </div>

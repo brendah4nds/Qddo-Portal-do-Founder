@@ -86,6 +86,7 @@ export function AdminPanel({
     eventDate: '',
     startTime: '',
     endTime: '',
+    imageUrl: '',
     attachmentUrl: '',
     attachmentName: '',
     attachmentType: '' as 'pdf' | 'png' | ''
@@ -320,13 +321,14 @@ export function AdminPanel({
         });
       }
 
-      setNewNews({ 
-        title: '', 
-        content: '', 
-        category: 'aviso', 
-        eventDate: '', 
-        startTime: '', 
+      setNewNews({
+        title: '',
+        content: '',
+        category: 'aviso',
+        eventDate: '',
+        startTime: '',
         endTime: '',
+        imageUrl: '',
         attachmentUrl: '',
         attachmentName: '',
         attachmentType: ''
@@ -346,6 +348,7 @@ export function AdminPanel({
       eventDate: item.eventDate?.toDate ? item.eventDate.toDate().toISOString().split('T')[0] : (item.eventDate || ''),
       startTime: item.startTime || '',
       endTime: item.endTime || '',
+      imageUrl: item.imageUrl || '',
       attachmentUrl: item.attachmentUrl || '',
       attachmentName: item.attachmentName || '',
       attachmentType: item.attachmentType || ''
@@ -694,9 +697,9 @@ export function AdminPanel({
                   <button 
                     onClick={() => {
                       setEditingNewsId(null);
-                      setNewNews({ 
+                      setNewNews({
                         title: '', content: '', category: 'aviso', eventDate: '', startTime: '', endTime: '',
-                        attachmentUrl: '', attachmentName: '', attachmentType: ''
+                        imageUrl: '', attachmentUrl: '', attachmentName: '', attachmentType: ''
                       });
                       setIsAddingNews(false);
                     }}
@@ -774,6 +777,20 @@ export function AdminPanel({
                     onChange={e => setNewNews({ ...newNews, content: e.target.value })}
                     className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:border-primary transition-all resize-none"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Imagem de Capa (URL)</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={newNews.imageUrl}
+                    onChange={e => setNewNews({ ...newNews, imageUrl: e.target.value })}
+                    className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:border-primary transition-all"
+                  />
+                  {newNews.imageUrl && (
+                    <img src={newNews.imageUrl} alt="preview" className="w-full h-32 object-cover rounded-lg border border-stone-100 mt-1" onError={e => (e.currentTarget.style.display = 'none')} />
+                  )}
                 </div>
 
                 <div className="space-y-2">

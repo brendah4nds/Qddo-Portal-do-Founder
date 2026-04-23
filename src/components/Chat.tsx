@@ -177,7 +177,7 @@ export function Chat({ user }: { user: User | null }) {
               </div>
               <div className="text-left overflow-hidden">
                 <p className="font-bold text-sm truncate">{founder.name}</p>
-                <p className={cn("text-overline truncate", activeChat === founder.id ? "text-white/60" : "text-stone-400")}>{founder.username}</p>
+                <p className={cn("text-overline truncate", activeChat === founder.id ? "text-white/60" : "text-stone-400")}>@{founder.username?.replace(/^@/, '')}</p>
               </div>
             </button>
           ))}

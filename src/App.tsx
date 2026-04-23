@@ -1130,7 +1130,7 @@ export default function App() {
               <Chat user={user} />
             ) : view === 'news' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="grid grid-cols-1 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {newsItems
                     .filter(item => item.category === 'evento' || item.category === 'aviso')
                     .sort((a, b) => {
@@ -1141,61 +1141,67 @@ export default function App() {
                     .map((item, i) => {
                       const isAviso = item.category === 'aviso';
                       return (
-                        <div key={item.id || i} className="bg-white rounded-xl p-10 border border-stone-200 shadow-sm hover:shadow-xl transition-all group">
-                          <div className="flex items-center gap-4 mb-4">
-                            {isAviso ? (
-                              <span className="text-overline uppercase tracking-widest font-bold bg-rose-50 px-3 py-1 rounded-full text-rose-500 flex items-center gap-1.5">
-                                <AlertTriangle size={10} />
-                                Aviso
-                              </span>
+                        <div key={item.id || i} className="bg-white rounded-xl border border-stone-200 shadow-sm hover:shadow-xl transition-all group overflow-hidden flex flex-col">
+                          {/* Image area */}
+                          <div className="w-full h-32 bg-stone-100 overflow-hidden flex-shrink-0">
+                            {item.imageUrl ? (
+                              <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                             ) : (
-                              <span className="text-overline uppercase tracking-widest font-bold bg-stone-100 px-3 py-1 rounded-full text-stone-500">Evento</span>
-                            )}
-                            <span className="text-overline uppercase tracking-widest font-bold text-stone-400">
-                              {isAviso
-                                ? (item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '')
-                                : (item.eventDate ? new Date(item.eventDate + 'T00:00:00').toLocaleDateString('pt-BR') :
-                                   item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '')}
-                            </span>
-                            {!isAviso && (item.startTime || item.endTime) && (
-                              <span className="text-overline uppercase tracking-widest font-bold text-primary flex items-center gap-2">
-                                <Clock size={12} />
-                                <span>Início: {item.startTime || '--:--'}</span>
-                                {item.endTime && <span>Término: {item.endTime}</span>}
-                              </span>
+                              <div className="w-full h-full flex items-center justify-center">
+                                {isAviso
+                                  ? <AlertTriangle size={28} className="text-stone-200" />
+                                  : <CalendarDays size={28} className="text-stone-200" />
+                                }
+                              </div>
                             )}
                           </div>
-                          <h3 className="text-h2 font-sans mb-4 group-hover:text-stone-600 transition-colors uppercase tracking-tight">{item.title}</h3>
-                          <p className="text-stone-500 leading-relaxed mb-6 whitespace-pre-wrap">{item.content}</p>
 
-                          <div className="flex flex-wrap gap-4 items-center justify-between">
-                            <button
-                              onClick={() => {
-                                setActiveGeneralCategory(item.category);
-                              }}
-                              className="text-xs font-bold uppercase tracking-widest text-stone-900 flex items-center gap-2 group-hover:gap-3 transition-all"
-                            >
-                              {isAviso ? 'Ver Avisos' : 'Detalhes do Evento'} <ArrowRight size={16} />
-                            </button>
+                          <div className="p-4 flex flex-col flex-1">
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                              {isAviso ? (
+                                <span className="text-overline uppercase tracking-widest font-bold bg-rose-50 px-2 py-0.5 rounded-full text-rose-500 flex items-center gap-1">
+                                  <AlertTriangle size={9} />
+                                  Aviso
+                                </span>
+                              ) : (
+                                <span className="text-overline uppercase tracking-widest font-bold bg-stone-100 px-2 py-0.5 rounded-full text-stone-500">Evento</span>
+                              )}
+                              <span className="text-overline uppercase tracking-widest font-bold text-stone-400">
+                                {isAviso
+                                  ? (item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '')
+                                  : (item.eventDate?.toDate ? item.eventDate.toDate().toLocaleDateString('pt-BR') : item.eventDate ? new Date(item.eventDate + 'T00:00:00').toLocaleDateString('pt-BR') : item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '')}
+                              </span>
+                            </div>
 
-                            {item.attachmentUrl && (
-                              <a
-                                href={item.attachmentUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-4 py-2 bg-stone-50 border border-stone-100 rounded-md text-xs font-bold text-stone-600 hover:bg-stone-100 transition-all"
-                              >
-                                <Paperclip size={14} />
-                                {item.attachmentName || 'Ver Anexo'}
-                                <ExternalLink size={14} />
-                              </a>
+                            {!isAviso && (item.startTime || item.endTime) && (
+                              <span className="text-overline uppercase tracking-widest font-bold text-primary flex items-center gap-1.5 mb-2">
+                                <Clock size={10} />
+                                {item.startTime || '--:--'}{item.endTime && ` – ${item.endTime}`}
+                              </span>
                             )}
+
+                            <h3 className="text-sm font-sans font-bold mb-1 group-hover:text-stone-600 transition-colors line-clamp-2 uppercase tracking-tight">{item.title}</h3>
+                            <p className="text-stone-500 text-xs leading-relaxed line-clamp-3 flex-1">{item.content}</p>
+
+                            <div className="mt-3 pt-3 border-t border-stone-50 flex items-center justify-between gap-2">
+                              <button
+                                onClick={() => setActiveGeneralCategory(item.category)}
+                                className="text-overline font-bold uppercase tracking-widest text-stone-900 flex items-center gap-1.5 group-hover:gap-2 transition-all"
+                              >
+                                {isAviso ? 'Ver aviso' : 'Detalhes'} <ArrowRight size={12} />
+                              </button>
+                              {item.attachmentUrl && (
+                                <a href={item.attachmentUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-stone-50 rounded-md text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all">
+                                  <Paperclip size={13} />
+                                </a>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
                     })}
                   {newsItems.filter(item => item.category === 'evento' || item.category === 'aviso').length === 0 && (
-                    <div className="text-center py-20 bg-white rounded-xl border border-dashed border-stone-200">
+                    <div className="col-span-4 text-center py-20 bg-white rounded-xl border border-dashed border-stone-200">
                       <p className="text-stone-400">Nenhum aviso ou evento publicado no momento.</p>
                     </div>
                   )}
@@ -2041,13 +2047,18 @@ export default function App() {
                   </div>
                 )}
 
+                {(() => {
+                    const RULE_ICONS = [ShieldCheck, Globe, Users, AlertTriangle, Trophy, CalendarDays, MessageSquare, Award];
+                    return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {newsItems.filter(item => item.category === 'regras').length > 0 ? (
                     newsItems
                       .filter(item => item.category === 'regras')
                       .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0))
-                      .map((item, index) => (
-                        <div key={item.id} className="bg-white rounded-xl p-4 border border-stone-200 shadow-sm hover:shadow-xl transition-all">
+                      .map((item, index) => {
+                        const RuleIcon = RULE_ICONS[index % RULE_ICONS.length];
+                        return (
+                        <div key={item.id} className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm hover:shadow-xl transition-all flex flex-col">
                           {editingRuleId === item.id ? (
                             <div className="space-y-3">
                               <input
@@ -2080,12 +2091,15 @@ export default function App() {
                             </div>
                           ) : (
                             <>
-                              <div className="flex justify-between items-start mb-2">
-                                <h3 className="text-base font-sans text-primary">
-                                  {index + 1}. {item.title}
-                                </h3>
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="w-9 h-9 rounded-lg bg-terracota-50 flex items-center justify-center shrink-0">
+                                  <RuleIcon size={16} className="text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-sm font-sans font-bold text-stone-900 truncate">{item.title}</h3>
+                                </div>
                                 {isAdmin && (
-                                  <div className="flex items-center gap-1 ml-3 shrink-0">
+                                  <div className="flex items-center gap-1 shrink-0">
                                     <button
                                       onClick={() => { setEditingRuleId(item.id); setEditingRuleData({ title: item.title, content: item.content }); setDeletingRuleId(null); }}
                                       className="p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition"
@@ -2096,18 +2110,8 @@ export default function App() {
                                     {deletingRuleId === item.id ? (
                                       <div className="flex items-center gap-1">
                                         <span className="text-xs text-red-500 font-bold">Confirmar?</span>
-                                        <button
-                                          onClick={() => handleDeleteRule(item.id)}
-                                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition font-bold text-xs"
-                                        >
-                                          Sim
-                                        </button>
-                                        <button
-                                          onClick={() => setDeletingRuleId(null)}
-                                          className="p-1.5 text-stone-400 hover:bg-stone-200 rounded-lg transition font-bold text-xs"
-                                        >
-                                          Não
-                                        </button>
+                                        <button onClick={() => handleDeleteRule(item.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition font-bold text-xs">Sim</button>
+                                        <button onClick={() => setDeletingRuleId(null)} className="p-1.5 text-stone-400 hover:bg-stone-200 rounded-lg transition font-bold text-xs">Não</button>
                                       </div>
                                     ) : (
                                       <button
@@ -2122,17 +2126,21 @@ export default function App() {
                                 )}
                               </div>
                               <ul className="space-y-1.5">
-                                {(item.content || '').split('\n').filter(line => line.trim()).map((line, i) => (
+                                {(item.content || '').split('\n').filter(line => line.trim()).slice(0, 3).map((line, i) => (
                                   <li key={i} className="flex items-start gap-2 text-stone-600 text-sm leading-snug">
-                                    <span className="mt-0.5 text-stone-300 shrink-0">•</span>
+                                    <span className="mt-0.5 text-primary/40 shrink-0">•</span>
                                     <span>{line.trim().replace(/^[•\-*]\s*/, '')}</span>
                                   </li>
                                 ))}
+                                {(item.content || '').split('\n').filter(line => line.trim()).length > 3 && (
+                                  <li className="text-xs text-stone-400 pl-4">+ {(item.content || '').split('\n').filter(line => line.trim()).length - 3} mais</li>
+                                )}
                               </ul>
                             </>
                           )}
                         </div>
-                      ))
+                        );
+                      }))
                   ) : (
                     <div className="text-center py-20 bg-white rounded-xl border border-dashed border-stone-200">
                       <p className="text-stone-400">Nenhuma regra cadastrada ainda.</p>
@@ -2148,13 +2156,15 @@ export default function App() {
                     </div>
                   )}
                 </div>
+                  );
+                })()}
 
                 {/* Rodapé da página de Regras */}
-                <div className="mt-10 text-center px-4">
-                  <p className="text-stone-500 text-sm leading-relaxed max-w-2xl mx-auto">
-                    Essas regras existem para proteger a comunidade e garantir que o QDDO continue sendo um lugar produtivo, respeitoso e inspirador. Se você está aqui, é porque acredita nisso também. Vamos construir juntos.
+                <div className="mt-8 text-center px-4">
+                  <p className="text-stone-400 text-xs leading-snug max-w-xl mx-auto">
+                    Essas regras existem para proteger a comunidade e garantir que o QDDO continue sendo um lugar produtivo, respeitoso e inspirador. Vamos construir juntos.
                   </p>
-                  <p className="mt-3 text-stone-400 text-xs font-semibold tracking-wide uppercase">
+                  <p className="mt-2 text-stone-300 text-xs font-semibold tracking-wide uppercase">
                     Gestão QDDO Central Hub
                   </p>
                 </div>
@@ -2212,7 +2222,7 @@ export default function App() {
                       const publicChallenges = allChallenges
                         .filter(c => c.type === 'public' && c.status === 'open')
                         .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
-                        .slice(0, 1);
+                        .slice(0, 3);
 
                       const currentMonthStart = startOfMonth(now);
                       const currentMonthEnd = endOfMonth(now);
@@ -2423,35 +2433,58 @@ export default function App() {
                         </div>
 
                         {/* Desafios Públicos — largura total */}
-                        <div className="bg-stone-900 rounded-xl p-4 text-white shadow-xl shadow-stone-900/20 flex flex-col">
-                          <div className="flex items-center gap-2 mb-3">
-                            <Trophy className="text-white/50" size={20} />
-                            <h4 className="text-lg font-sans">Desafios Públicos</h4>
+                        <div className="bg-stone-900 rounded-xl p-4 text-white shadow-xl shadow-stone-900/20">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <Trophy className="text-white/50" size={20} />
+                              <h4 className="text-lg font-sans">Desafios Públicos</h4>
+                            </div>
+                            <button
+                              onClick={() => { setView('portal'); setActiveSubTab('desafios-publicos'); }}
+                              className="text-overline font-bold uppercase tracking-widest text-white/50 hover:text-white transition-colors flex items-center gap-1"
+                            >
+                              Ver todos <ArrowRight size={11} />
+                            </button>
                           </div>
-                          <div className="flex-1 flex flex-col justify-center">
-                            {publicChallenges.length === 0 ? (
-                              <p className="text-white/50 text-sm text-center">Nenhum desafio público aberto no momento.</p>
-                            ) : (
-                              <div className="space-y-3">
+
+                          {publicChallenges.length === 0 ? (
+                            <p className="text-white/50 text-sm text-center py-4">Nenhum desafio público aberto no momento.</p>
+                          ) : (
+                            <div className="flex flex-col lg:flex-row gap-3">
+                              {/* Desafio em destaque */}
+                              <div className="lg:flex-1 bg-white/10 rounded-lg p-4 flex flex-col gap-3">
                                 <div>
                                   <p className="text-overline uppercase tracking-widest font-bold text-white/60 mb-1">
                                     Lançado por {allFounders.find(f => f.id === publicChallenges[0].founderId)?.name || 'Founder'}
                                   </p>
-                                  <h5 className="text-sm font-bold leading-tight mb-1">{publicChallenges[0].title}</h5>
-                                  <p className="text-white/60 text-xs line-clamp-2">"{publicChallenges[0].description}"</p>
+                                  <h5 className="text-base font-bold leading-tight mb-1">{publicChallenges[0].title}</h5>
+                                  {publicChallenges[0].description && (
+                                    <p className="text-white/60 text-xs line-clamp-2">"{publicChallenges[0].description}"</p>
+                                  )}
                                 </div>
                                 <button
-                                  onClick={() => {
-                                    setView('portal');
-                                    setActiveSubTab('desafios-publicos');
-                                  }}
-                                  className="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-md text-overline font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                  onClick={() => { setView('portal'); setActiveSubTab('desafios-publicos'); }}
+                                  className="mt-auto w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-md text-overline font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                                 >
-                                  clique aqui para ajuda-lo a resolver <ArrowRight size={12} />
+                                  Ajudar a resolver <ArrowRight size={12} />
                                 </button>
                               </div>
-                            )}
-                          </div>
+
+                              {/* Outros desafios recentes */}
+                              {publicChallenges.length > 1 && (
+                                <div className="lg:w-72 flex flex-col gap-2">
+                                  {publicChallenges.slice(1).map(ch => (
+                                    <div key={ch.id} className="bg-white/5 hover:bg-white/10 rounded-lg p-3 transition-colors cursor-pointer flex flex-col gap-0.5" onClick={() => { setView('portal'); setActiveSubTab('desafios-publicos'); }}>
+                                      <p className="text-overline uppercase tracking-widest font-bold text-white/50">
+                                        {allFounders.find(f => f.id === ch.founderId)?.name || 'Founder'}
+                                      </p>
+                                      <p className="text-sm font-bold text-white line-clamp-2">{ch.title}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                         </div>
                       );
