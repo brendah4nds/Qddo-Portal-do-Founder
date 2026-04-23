@@ -124,7 +124,7 @@ export function AdminPanel({
         <p className="text-stone-500 mb-10 leading-relaxed">Acesse para gerenciar agendamentos, salas e configurações do sistema.</p>
         <button 
           onClick={onLogin}
-          className="w-full bg-stone-900 text-white py-4 rounded-xl font-semibold hover:bg-stone-800 transition-all flex items-center justify-center gap-3"
+          className="w-full bg-primary text-white py-4 rounded-md font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-3"
         >
           <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="" />
           Entrar com Google
@@ -413,11 +413,11 @@ export function AdminPanel({
           <p className="text-stone-500 text-sm md:text-base">Gerencie todos os agendamentos e salas do sistema.</p>
         </div>
         <div className="flex gap-3 shrink-0">
-          <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-2xl border border-stone-200 shadow-sm flex flex-col">
+          <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-lg border border-stone-200 shadow-sm flex flex-col">
             <span className="text-overline uppercase tracking-widest font-bold text-stone-400">Total Reservas</span>
             <span className="text-h3 md:text-h2 font-sans">{bookings.length}</span>
           </div>
-          <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-2xl border border-stone-200 shadow-sm flex flex-col">
+          <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-lg border border-stone-200 shadow-sm flex flex-col">
             <span className="text-overline uppercase tracking-widest font-bold text-stone-400">Salas Ativas</span>
             <span className="text-h3 md:text-h2 font-sans">{rooms.length}</span>
           </div>
@@ -452,7 +452,7 @@ export function AdminPanel({
         >
           Indicações
           {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length > 0 && (
-            <span className="bg-amber-500 text-white text-overline font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="bg-primary text-white text-overline font-bold rounded-full w-5 h-5 flex items-center justify-center">
               {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length}
             </span>
           )}
@@ -460,7 +460,7 @@ export function AdminPanel({
       </div>
 
       {adminTab === 'bookings' && (
-        <section className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+        <section className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -490,7 +490,7 @@ export function AdminPanel({
                       <td className="px-8 py-6 text-right">
                         <button 
                           onClick={() => handleDelete(booking.id)}
-                          className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
+                          className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-md transition-all font-bold text-xs"
                         >
                           <Trash2 size={14} />
                           <span>Cancelar</span>
@@ -511,7 +511,7 @@ export function AdminPanel({
       )}
 
       {adminTab === 'founders' && (
-        <section className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+        <section className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -543,7 +543,7 @@ export function AdminPanel({
                             company: { ...founder.company, tipo: novoTipo }
                           });
                         }}
-                        className="px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all appearance-none cursor-pointer"
+                        className="px-3 py-2 bg-stone-50 border border-stone-200 rounded-md text-xs font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all appearance-none cursor-pointer"
                       >
                         <option value="">Sem categoria</option>
                         <option value="HealthTech">HealthTech</option>
@@ -557,7 +557,7 @@ export function AdminPanel({
                     <td className="px-8 py-6">
                       <span className={cn(
                         "px-3 py-1 rounded-full text-overline font-bold uppercase tracking-wider",
-                        founder.role === 'admin' ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-400"
+                        founder.role === 'admin' ? "bg-primary text-white" : "bg-stone-100 text-stone-400"
                       )}>
                         {founder.role || 'user'}
                       </span>
@@ -587,7 +587,7 @@ export function AdminPanel({
                         <button
                           onClick={() => handleOpenEditFounder(founder)}
                           title="Editar perfil"
-                          className="p-2 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition-all"
+                          className="p-2 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-all"
                         >
                           <Pencil size={15} />
                         </button>
@@ -595,7 +595,7 @@ export function AdminPanel({
                           <button
                             onClick={() => handleDeleteFounder(founder)}
                             title="Excluir conta"
-                            className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                            className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all"
                           >
                             <Trash2 size={15} />
                           </button>
@@ -611,7 +611,7 @@ export function AdminPanel({
       )}
 
       {adminTab === 'challenges' && (
-        <section className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+        <section className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -641,7 +641,7 @@ export function AdminPanel({
                       <td className="px-8 py-6">
                         <div className={cn(
                           "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-overline font-bold uppercase tracking-widest",
-                          challenge.status === 'completed' ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                          challenge.status === 'completed' ? "bg-emerald-100 text-emerald-600" : "bg-terracota-100 text-primary"
                         )}>
                           {challenge.status === 'completed' ? 'Concluído' : 'Aberto'}
                         </div>
@@ -653,7 +653,7 @@ export function AdminPanel({
                       <td className="px-8 py-6 text-right">
                         <button 
                           onClick={() => handleDeleteChallenge(challenge.id)}
-                          className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
+                          className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-md transition-all font-bold text-xs"
                         >
                           <Trash2 size={14} />
                           <span>Excluir</span>
@@ -679,7 +679,7 @@ export function AdminPanel({
             <h3 className="text-h2 font-sans">Gerenciar News</h3>
             <button 
               onClick={() => setIsAddingNews(!isAddingNews)}
-              className="flex items-center gap-2 bg-stone-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/10"
+              className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-stone-900/10"
             >
               <Plus size={20} />
               Nova Notícia
@@ -687,7 +687,7 @@ export function AdminPanel({
           </div>
 
           {isAddingNews && (
-            <div className="bg-white rounded-[24px] md:rounded-[40px] p-6 md:p-10 border border-stone-200 shadow-sm animate-in zoom-in-95 duration-300">
+            <div className="bg-white rounded-xl md:rounded-xl p-6 md:p-10 border border-stone-200 shadow-sm animate-in zoom-in-95 duration-300">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-h2 font-sans">{editingNewsId ? 'Editar Notícia' : 'Nova Notícia'}</h3>
                 {editingNewsId && (
@@ -715,7 +715,7 @@ export function AdminPanel({
                       type="text" 
                       value={newNews.title}
                       onChange={e => setNewNews({ ...newNews, title: e.target.value })}
-                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:border-primary transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -723,7 +723,7 @@ export function AdminPanel({
                     <select 
                       value={newNews.category}
                       onChange={e => setNewNews({ ...newNews, category: e.target.value as any })}
-                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:border-primary transition-all"
                     >
                       <option value="aviso">Aviso</option>
                       <option value="info">Info</option>
@@ -742,7 +742,7 @@ export function AdminPanel({
                       type="date" 
                       value={newNews.eventDate}
                       onChange={e => setNewNews({ ...newNews, eventDate: e.target.value })}
-                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:border-primary transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -751,7 +751,7 @@ export function AdminPanel({
                       type="time" 
                       value={newNews.startTime}
                       onChange={e => setNewNews({ ...newNews, startTime: e.target.value })}
-                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:border-primary transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -760,7 +760,7 @@ export function AdminPanel({
                       type="time" 
                       value={newNews.endTime}
                       onChange={e => setNewNews({ ...newNews, endTime: e.target.value })}
-                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all"
+                      className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:border-primary transition-all"
                     />
                   </div>
                 </div>
@@ -772,7 +772,7 @@ export function AdminPanel({
                     rows={4}
                     value={newNews.content}
                     onChange={e => setNewNews({ ...newNews, content: e.target.value })}
-                    className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-900 transition-all resize-none"
+                    className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:border-primary transition-all resize-none"
                   />
                 </div>
 
@@ -780,7 +780,7 @@ export function AdminPanel({
                   <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Anexo (PDF ou Imagem)</label>
                   <div className="flex items-center gap-4">
                     <label className={cn(
-                      "flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-stone-50 border border-dashed border-stone-200 rounded-2xl cursor-pointer hover:bg-stone-100 transition-all",
+                      "flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-stone-50 border border-dashed border-stone-200 rounded-lg cursor-pointer hover:bg-stone-100 transition-all",
                       isUploading && "opacity-50 cursor-not-allowed"
                     )}>
                       <Paperclip size={20} className="text-stone-400" />
@@ -796,7 +796,7 @@ export function AdminPanel({
                       />
                     </label>
                     {newNews.attachmentUrl && (
-                      <div className="flex items-center gap-2 p-4 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100">
+                      <div className="flex items-center gap-2 p-4 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">
                         {newNews.attachmentType === 'pdf' ? <FileText size={20} /> : <Newspaper size={20} />}
                         <div className="flex flex-col">
                           <span className="text-overline uppercase font-bold tracking-widest leading-none">Anexo Pronto</span>
@@ -818,14 +818,14 @@ export function AdminPanel({
                   <button 
                     type="button"
                     onClick={() => setIsAddingNews(false)}
-                    className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-2xl font-bold hover:bg-stone-50 transition-all"
+                    className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-lg font-bold hover:bg-stone-50 transition-all"
                   >
                     Cancelar
                   </button>
                   <button 
                     type="submit"
                     disabled={isUploading}
-                    className="flex-1 bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/20 disabled:opacity-50"
+                    className="flex-1 bg-primary text-white py-4 rounded-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
                   >
                     {editingNewsId ? 'Salvar Alterações' : 'Publicar'}
                   </button>
@@ -834,7 +834,7 @@ export function AdminPanel({
             </div>
           )}
 
-          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -858,7 +858,7 @@ export function AdminPanel({
                           item.category === 'aviso' ? "bg-rose-50 text-rose-500" :
                           item.category === 'info' ? "bg-blue-50 text-blue-500" :
                           item.category === 'evento' ? "bg-emerald-50 text-emerald-500" :
-                          item.category === 'regras' ? "bg-amber-50 text-amber-500" :
+                          item.category === 'regras' ? "bg-terracota-50 text-primary" :
                           item.category === 'comunicacao' ? "bg-purple-50 text-purple-500" :
                           "bg-stone-100 text-stone-500"
                         )}>
@@ -880,14 +880,14 @@ export function AdminPanel({
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => handleEditNews(item)}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-stone-600 hover:bg-stone-50 rounded-xl transition-all font-bold text-xs"
+                            className="inline-flex items-center gap-2 px-4 py-2 text-stone-600 hover:bg-stone-50 rounded-md transition-all font-bold text-xs"
                           >
                             <Pencil size={14} />
                             <span>Editar</span>
                           </button>
                           <button 
                             onClick={() => handleDeleteNews(item.id)}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all font-bold text-xs"
+                            className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-md transition-all font-bold text-xs"
                           >
                             <Trash2 size={14} />
                             <span>Excluir</span>
@@ -910,7 +910,7 @@ export function AdminPanel({
 
       {adminTab === 'settings' && (
         <section className="space-y-8 animate-in fade-in duration-500">
-          <div className="bg-white rounded-3xl p-8 border border-stone-200 shadow-sm">
+          <div className="bg-white rounded-xl p-8 border border-stone-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h4 className="font-sans text-lg">Horários Disponíveis</h4>
               <button 
@@ -926,7 +926,7 @@ export function AdminPanel({
                     }
                   });
                 }}
-                className="text-overline bg-stone-900 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-stone-800 transition-colors"
+                className="text-overline bg-primary text-white px-3 py-1.5 rounded-lg font-bold hover:bg-primary/90 transition-colors"
               >
                 Restaurar Padrão (30 min)
               </button>
@@ -950,11 +950,11 @@ export function AdminPanel({
                 placeholder="HH:mm"
                 value={newHour}
                 onChange={e => setNewHour(e.target.value)}
-                className="flex-1 px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-stone-900"
+                className="flex-1 px-4 py-3 bg-stone-50 border border-stone-200 rounded-md focus:outline-none focus:border-primary"
               />
               <button 
                 onClick={handleAddHour}
-                className="bg-stone-900 text-white px-6 py-3 rounded-xl hover:bg-stone-800 transition-all"
+                className="bg-primary text-white px-6 py-3 rounded-md hover:bg-primary/90 transition-all"
               >
                 <Plus size={20} />
               </button>
@@ -966,7 +966,7 @@ export function AdminPanel({
               {rooms.map(room => {
                 const link = `${window.location.origin}/sala/${room.id}`;
                 return (
-                  <div key={room.id} className="p-4 bg-stone-50 border border-stone-100 rounded-2xl flex items-center justify-between">
+                  <div key={room.id} className="p-4 bg-stone-50 border border-stone-100 rounded-lg flex items-center justify-between">
                     <div>
                       <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">{room.name}</span>
                       <div className="text-sm font-mono text-stone-600 break-all">{link}</div>
@@ -996,13 +996,13 @@ export function AdminPanel({
               <p className="text-stone-500 text-sm mt-1">Revise e aprove ou rejeite as indicações enviadas pela comunidade.</p>
             </div>
             <div className="flex gap-3 shrink-0">
-              <div className="bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-2xl flex flex-col items-center">
-                <span className="text-overline uppercase tracking-widest font-bold text-amber-500">Pendentes</span>
-                <span className="text-h3 md:text-h2 font-sans text-amber-600">
+              <div className="bg-terracota-50 border border-terracota-200 px-4 py-2.5 rounded-lg flex flex-col items-center">
+                <span className="text-overline uppercase tracking-widest font-bold text-primary">Pendentes</span>
+                <span className="text-h3 md:text-h2 font-sans text-primary">
                   {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length}
                 </span>
               </div>
-              <div className="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-2xl flex flex-col items-center">
+              <div className="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-lg flex flex-col items-center">
                 <span className="text-overline uppercase tracking-widest font-bold text-emerald-500">Aprovadas</span>
                 <span className="text-h3 md:text-h2 font-sans text-emerald-600">
                   {indicacoes.filter((i: any) => i.status === 'aprovada').length}
@@ -1012,14 +1012,14 @@ export function AdminPanel({
           </div>
 
           {indicacoes.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-12 md:p-20 text-center">
+            <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-12 md:p-20 text-center">
               <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserPlus size={28} className="text-stone-400" />
               </div>
               <p className="text-stone-400">Nenhuma indicação recebida ainda.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -1057,7 +1057,7 @@ export function AdminPanel({
                               ? "bg-emerald-100 text-emerald-600"
                               : ind.status === 'rejeitada'
                               ? "bg-red-100 text-red-500"
-                              : "bg-amber-100 text-amber-600"
+                              : "bg-terracota-100 text-primary"
                           )}>
                             {isAprovada ? 'Aprovada' : ind.status === 'rejeitada' ? 'Rejeitada' : 'Pendente'}
                           </span>
@@ -1067,14 +1067,14 @@ export function AdminPanel({
                             <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={() => handleAprovarIndicacao(ind.id)}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all font-bold text-xs"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-all font-bold text-xs"
                               >
                                 <CheckCircle2 size={14} />
                                 Aprovar
                               </button>
                               <button
                                 onClick={() => handleRejeitarIndicacao(ind.id)}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all font-bold text-xs"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-md transition-all font-bold text-xs"
                               >
                                 <X size={14} />
                                 Rejeitar
@@ -1109,12 +1109,12 @@ export function AdminPanel({
       {/* Modal de Edição de Founder */}
       {editingFounder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-h3 font-sans text-stone-900">Editar Perfil</h3>
               <button
                 onClick={() => setEditingFounder(null)}
-                className="p-2 hover:bg-stone-100 rounded-xl transition-all text-stone-400 hover:text-stone-700"
+                className="p-2 hover:bg-stone-100 rounded-md transition-all text-stone-400 hover:text-stone-700"
               >
                 <X size={18} />
               </button>
@@ -1127,7 +1127,7 @@ export function AdminPanel({
                   type="text"
                   value={editFounderForm.name}
                   onChange={e => setEditFounderForm({ ...editFounderForm, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all"
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all"
                 />
               </div>
               <div>
@@ -1136,7 +1136,7 @@ export function AdminPanel({
                   type="text"
                   value={editFounderForm.username}
                   onChange={e => setEditFounderForm({ ...editFounderForm, username: e.target.value })}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all"
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all"
                 />
               </div>
               <div>
@@ -1145,7 +1145,7 @@ export function AdminPanel({
                   type="text"
                   value={editFounderForm.companyName}
                   onChange={e => setEditFounderForm({ ...editFounderForm, companyName: e.target.value })}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all"
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all"
                 />
               </div>
               <div>
@@ -1154,7 +1154,7 @@ export function AdminPanel({
                   value={editFounderForm.companyBio}
                   onChange={e => setEditFounderForm({ ...editFounderForm, companyBio: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all resize-none"
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all resize-none"
                 />
               </div>
             </div>
@@ -1162,13 +1162,13 @@ export function AdminPanel({
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setEditingFounder(null)}
-                className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-600 font-semibold text-sm hover:bg-stone-50 transition-all"
+                className="flex-1 py-3 rounded-md border border-stone-200 text-stone-600 font-semibold text-sm hover:bg-stone-50 transition-all"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSaveFounderEdit}
-                className="flex-1 py-3 rounded-xl bg-stone-900 text-white font-semibold text-sm hover:bg-stone-800 transition-all"
+                className="flex-1 py-3 rounded-md bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-all"
               >
                 Salvar
               </button>

@@ -772,7 +772,7 @@ export default function App() {
           <div className="flex items-center gap-3 sm:gap-4">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 -ml-2 rounded-xl text-stone-500 hover:bg-stone-100 transition-colors"
+              className="p-2 -ml-2 rounded-md text-stone-500 hover:bg-stone-100 transition-colors"
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -818,7 +818,7 @@ export default function App() {
                 </button>
 
                 {profileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-stone-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     <div className="px-4 py-3 border-b border-stone-100">
                       <p className="text-sm font-semibold text-stone-900 truncate">{user.displayName || 'Founder'}</p>
                       <p className="text-xs text-stone-400 truncate">{user.email}</p>
@@ -881,13 +881,13 @@ export default function App() {
                   setView('general');
                   setActiveSubTab('general');
                 }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  view === 'general' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
+                  view === 'general' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'general' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'general' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
                   }`}>
                     <LayoutGrid size={18} />
                   </div>
@@ -903,13 +903,13 @@ export default function App() {
                   setView('booking');
                   setActiveSubTab('escolha-sala');
                 }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  view === 'booking' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
+                  view === 'booking' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'booking' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'booking' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
                   }`}>
                     <Calendar size={18} />
                   </div>
@@ -925,13 +925,13 @@ export default function App() {
                   setView('portal');
                   setActiveSubTab('checkin');
                 }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  view === 'portal' && activeSubTab === 'checkin' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
+                  view === 'portal' && activeSubTab === 'checkin' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'portal' && activeSubTab === 'checkin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'portal' && activeSubTab === 'checkin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
                   }`}>
                     <CheckSquare size={18} />
                   </div>
@@ -947,13 +947,13 @@ export default function App() {
                   setView('portal');
                   setActiveSubTab('empresa');
                 }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  view === 'portal' && activeSubTab === 'empresa' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
+                  view === 'portal' && activeSubTab === 'empresa' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'portal' && activeSubTab === 'empresa' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'portal' && activeSubTab === 'empresa' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
                   }`}>
                     <Building2 size={18} />
                   </div>
@@ -969,13 +969,13 @@ export default function App() {
                   setView('portal');
                   setActiveSubTab('desafios-publicos');
                 }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
+                  view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
                   }`}>
                     <Globe size={18} />
                   </div>
@@ -991,13 +991,13 @@ export default function App() {
                   setView('news');
                   setActiveSubTab('news');
                 }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  view === 'news' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
+                  view === 'news' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'news' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'news' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
                   }`}>
                     <Newspaper size={18} />
                   </div>
@@ -1013,13 +1013,13 @@ export default function App() {
                   setView('qcoin');
                   setActiveSubTab('qcoin');
                 }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  view === 'qcoin' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
+                  view === 'qcoin' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'qcoin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'qcoin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
                   }`}>
                     <Trophy size={18} />
                   </div>
@@ -1035,13 +1035,13 @@ export default function App() {
                   setView('chat');
                   setActiveSubTab('bate-papo');
                 }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  view === 'chat' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
+                  view === 'chat' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'chat' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'chat' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
                   }`}>
                     <MessageSquare size={18} />
                   </div>
@@ -1054,13 +1054,13 @@ export default function App() {
             <div>
               <button
                 onClick={() => { setView('regras'); setActiveSubTab('regras'); }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-xl ${
-                  view === 'regras' ? 'bg-stone-900 text-white shadow-lg shadow-stone-200' : 'hover:bg-stone-50'
+                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
+                  view === 'regras' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'regras' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-900 group-hover:text-white'
+                    view === 'regras' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
                   }`}>
                     <ShieldCheck size={18} />
                   </div>
@@ -1141,7 +1141,7 @@ export default function App() {
                     .map((item, i) => {
                       const isAviso = item.category === 'aviso';
                       return (
-                        <div key={item.id || i} className="bg-white rounded-[40px] p-10 border border-stone-200 shadow-sm hover:shadow-xl transition-all group">
+                        <div key={item.id || i} className="bg-white rounded-xl p-10 border border-stone-200 shadow-sm hover:shadow-xl transition-all group">
                           <div className="flex items-center gap-4 mb-4">
                             {isAviso ? (
                               <span className="text-overline uppercase tracking-widest font-bold bg-rose-50 px-3 py-1 rounded-full text-rose-500 flex items-center gap-1.5">
@@ -1158,7 +1158,7 @@ export default function App() {
                                    item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '')}
                             </span>
                             {!isAviso && (item.startTime || item.endTime) && (
-                              <span className="text-overline uppercase tracking-widest font-bold text-amber-500 flex items-center gap-2">
+                              <span className="text-overline uppercase tracking-widest font-bold text-primary flex items-center gap-2">
                                 <Clock size={12} />
                                 <span>Início: {item.startTime || '--:--'}</span>
                                 {item.endTime && <span>Término: {item.endTime}</span>}
@@ -1183,7 +1183,7 @@ export default function App() {
                                 href={item.attachmentUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-4 py-2 bg-stone-50 border border-stone-100 rounded-xl text-xs font-bold text-stone-600 hover:bg-stone-100 transition-all"
+                                className="flex items-center gap-2 px-4 py-2 bg-stone-50 border border-stone-100 rounded-md text-xs font-bold text-stone-600 hover:bg-stone-100 transition-all"
                               >
                                 <Paperclip size={14} />
                                 {item.attachmentName || 'Ver Anexo'}
@@ -1195,7 +1195,7 @@ export default function App() {
                       );
                     })}
                   {newsItems.filter(item => item.category === 'evento' || item.category === 'aviso').length === 0 && (
-                    <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-stone-200">
+                    <div className="text-center py-20 bg-white rounded-xl border border-dashed border-stone-200">
                       <p className="text-stone-400">Nenhum aviso ou evento publicado no momento.</p>
                     </div>
                   )}
@@ -1204,7 +1204,7 @@ export default function App() {
             ) : view === 'qcoin' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {expandedQcoinCard ? (
-                  <div className="bg-white rounded-[40px] p-10 md:p-12 border border-stone-200 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+                  <div className="bg-white rounded-xl p-10 md:p-12 border border-stone-200 shadow-sm animate-in fade-in zoom-in-95 duration-300">
                     <button
                       onClick={() => { setExpandedQcoinCard(null); setEditingQcoinSection(null); }}
                       className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 mb-8 flex items-center gap-2 transition-colors"
@@ -1223,8 +1223,8 @@ export default function App() {
                         <div>
                           <div className="flex items-center justify-between mb-10">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center">
-                                <Icon size={22} className="text-amber-600" />
+                              <div className="w-12 h-12 rounded-lg bg-terracota-100 flex items-center justify-center">
+                                <Icon size={22} className="text-primary" />
                               </div>
                               <h2 className="text-h2 md:text-h1 font-sans">{section.title}</h2>
                             </div>
@@ -1233,7 +1233,7 @@ export default function App() {
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => setEditingQcoinSection(null)}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
                                   >
                                     <X size={14} />
                                     Cancelar
@@ -1241,7 +1241,7 @@ export default function App() {
                                   <button
                                     onClick={() => handleSaveQcoinSection(expandedQcoinCard)}
                                     disabled={savingQcoinSection}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest bg-stone-900 text-white hover:bg-stone-700 transition-all disabled:opacity-50"
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary/80 transition-all disabled:opacity-50"
                                   >
                                     <Check size={14} />
                                     {savingQcoinSection ? 'Salvando...' : 'Salvar'}
@@ -1250,7 +1250,7 @@ export default function App() {
                               ) : (
                                 <button
                                   onClick={() => { setEditingQcoinSection(expandedQcoinCard); setQcoinEditContent(sectionData?.content || ''); }}
-                                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                  className="flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
                                 >
                                   <Pencil size={14} />
                                   {sectionData?.content ? 'Editar conteúdo' : 'Adicionar conteúdo'}
@@ -1261,7 +1261,7 @@ export default function App() {
 
                           {/* Tabela de pontuação — editável, padronizada com os demais cards */}
                           {expandedQcoinCard === 'pontuacao' && (
-                            <div className="mb-8 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                            <div className="mb-8 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
                                   <thead>
@@ -1345,7 +1345,7 @@ export default function App() {
                                                 t.style.height = 'auto';
                                                 t.style.height = t.scrollHeight + 'px';
                                               }}
-                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
+                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-md text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
                                               placeholder="—"
                                             />
                                           </td>
@@ -1371,7 +1371,7 @@ export default function App() {
                                   <div className="flex items-center gap-2">
                                     <button
                                       onClick={() => setPontuacaoRows((prev: string[][]) => [...prev, new Array(pontuacaoCols.length).fill('')])}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
                                     >
                                       <Plus size={14} />
                                       Nova linha
@@ -1382,7 +1382,7 @@ export default function App() {
                                         setPontuacaoColWidths((prev: number[]) => [...prev, 120]);
                                         setPontuacaoRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
                                       }}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
                                     >
                                       <Plus size={14} />
                                       Nova coluna
@@ -1391,7 +1391,7 @@ export default function App() {
                                   <button
                                     onClick={() => handleSaveQcoinTable('pontuacao')}
                                     disabled={savingQcoinSection}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-700'}`}
+                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-primary/80'}`}
                                   >
                                     <Check size={14} />
                                     {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
@@ -1403,7 +1403,7 @@ export default function App() {
 
                           {/* Tabela de estágios — sempre visível dentro da caixa "Estágios e Thresholds de Progressão" */}
                           {expandedQcoinCard === 'estagios' && (
-                            <div className="mb-8 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                            <div className="mb-8 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
                                   <thead>
@@ -1487,7 +1487,7 @@ export default function App() {
                                                 t.style.height = 'auto';
                                                 t.style.height = t.scrollHeight + 'px';
                                               }}
-                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
+                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-md text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
                                               placeholder="—"
                                             />
                                           </td>
@@ -1513,7 +1513,7 @@ export default function App() {
                                   <div className="flex items-center gap-2">
                                     <button
                                       onClick={() => setEstagiosRows((prev: string[][]) => [...prev, new Array(estagiosCols.length).fill('')])}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
                                     >
                                       <Plus size={14} />
                                       Nova linha
@@ -1524,7 +1524,7 @@ export default function App() {
                                         setEstagiosColWidths((prev: number[]) => [...prev, 120]);
                                         setEstagiosRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
                                       }}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
                                     >
                                       <Plus size={14} />
                                       Nova coluna
@@ -1533,7 +1533,7 @@ export default function App() {
                                   <button
                                     onClick={() => handleSaveQcoinTable('estagios')}
                                     disabled={savingQcoinSection}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-700'}`}
+                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-primary/80'}`}
                                   >
                                     <Check size={14} />
                                     {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
@@ -1561,10 +1561,10 @@ export default function App() {
                               .sort((a: any, b: any) => b.score - a.score);
 
                             return (
-                              <div className="mb-8 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                              <div className="mb-8 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
                                 {/* Header */}
                                 <div className="px-6 py-5 border-b border-stone-100 flex items-center gap-3">
-                                  <Crown className="text-amber-500" size={18} />
+                                  <Crown className="text-primary" size={18} />
                                   <h4 className="text-base font-sans text-stone-900">Ranking Geral</h4>
                                   <span className="ml-auto text-overline font-bold uppercase tracking-widest text-stone-400">
                                     {fullRanking.length} founder{fullRanking.length !== 1 ? 's' : ''}
@@ -1581,7 +1581,7 @@ export default function App() {
                                         <div className="flex items-center gap-3">
                                           <div className={cn(
                                             "w-6 h-6 rounded-full flex items-center justify-center text-overline font-bold flex-shrink-0",
-                                            idx === 0 ? "bg-amber-100 text-amber-600" :
+                                            idx === 0 ? "bg-terracota-100 text-primary" :
                                             idx === 1 ? "bg-stone-200 text-stone-600" :
                                             idx === 2 ? "bg-orange-100 text-orange-600" :
                                             "bg-stone-50 text-stone-400"
@@ -1601,7 +1601,7 @@ export default function App() {
                                             <Users size={14} className="text-stone-400" />
                                           </div>
                                           <div>
-                                            <p className="text-sm font-bold text-stone-900 group-hover:text-amber-600 transition-colors line-clamp-1">{item.name}</p>
+                                            <p className="text-sm font-bold text-stone-900 group-hover:text-primary transition-colors line-clamp-1">{item.name}</p>
                                             <p className="text-xs text-stone-400">@{item.username?.replace(/^@/, '')}</p>
                                           </div>
                                         </div>
@@ -1619,7 +1619,7 @@ export default function App() {
 
                           {/* Tabela de premiações */}
                           {expandedQcoinCard === 'premiacoes' && (
-                            <div className="mb-8 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                            <div className="mb-8 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
                                   <thead>
@@ -1703,7 +1703,7 @@ export default function App() {
                                                 t.style.height = 'auto';
                                                 t.style.height = t.scrollHeight + 'px';
                                               }}
-                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
+                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-md text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
                                               placeholder="—"
                                             />
                                           </td>
@@ -1729,7 +1729,7 @@ export default function App() {
                                   <div className="flex items-center gap-2">
                                     <button
                                       onClick={() => setPremiacoesRows((prev: string[][]) => [...prev, new Array(premiacoesCols.length).fill('')])}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
                                     >
                                       <Plus size={14} />
                                       Nova linha
@@ -1740,7 +1740,7 @@ export default function App() {
                                         setPremiacoesColWidths((prev: number[]) => [...prev, 120]);
                                         setPremiacoesRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
                                       }}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
                                     >
                                       <Plus size={14} />
                                       Nova coluna
@@ -1749,7 +1749,7 @@ export default function App() {
                                   <button
                                     onClick={() => handleSaveQcoinTable('premiacoes')}
                                     disabled={savingQcoinSection}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-700'}`}
+                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-primary/80'}`}
                                   >
                                     <Check size={14} />
                                     {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
@@ -1761,7 +1761,7 @@ export default function App() {
 
                           {/* Tabela de consequências */}
                           {expandedQcoinCard === 'consequencias' && (
-                            <div className="mb-8 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                            <div className="mb-8 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
                                   <thead>
@@ -1845,7 +1845,7 @@ export default function App() {
                                                 t.style.height = 'auto';
                                                 t.style.height = t.scrollHeight + 'px';
                                               }}
-                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-xl text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
+                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-md text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
                                               placeholder="—"
                                             />
                                           </td>
@@ -1871,7 +1871,7 @@ export default function App() {
                                   <div className="flex items-center gap-2">
                                     <button
                                       onClick={() => setConsequenciasRows((prev: string[][]) => [...prev, new Array(consequenciasCols.length).fill('')])}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
                                     >
                                       <Plus size={14} />
                                       Nova linha
@@ -1882,7 +1882,7 @@ export default function App() {
                                         setConsequenciasColWidths((prev: number[]) => [...prev, 120]);
                                         setConsequenciasRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
                                       }}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
                                     >
                                       <Plus size={14} />
                                       Nova coluna
@@ -1891,7 +1891,7 @@ export default function App() {
                                   <button
                                     onClick={() => handleSaveQcoinTable('consequencias')}
                                     disabled={savingQcoinSection}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-700'}`}
+                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-primary/80'}`}
                                   >
                                     <Check size={14} />
                                     {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
@@ -1911,7 +1911,7 @@ export default function App() {
                                 value={qcoinEditContent}
                                 onChange={e => setQcoinEditContent(e.target.value)}
                                 rows={12}
-                                className="w-full px-5 py-4 bg-stone-50 border border-stone-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all resize-none"
+                                className="w-full px-5 py-4 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all resize-none"
                                 placeholder="Digite o conteúdo desta seção..."
                               />
                             </div>
@@ -1926,9 +1926,9 @@ export default function App() {
                             isAdmin ? (
                               <div
                                 onClick={() => { setEditingQcoinSection(expandedQcoinCard); setQcoinEditContent(''); }}
-                                className="text-center py-14 border-2 border-dashed border-stone-200 rounded-3xl cursor-pointer hover:border-stone-400 hover:bg-stone-50 transition-all group"
+                                className="text-center py-14 border-2 border-dashed border-stone-200 rounded-xl cursor-pointer hover:border-stone-400 hover:bg-stone-50 transition-all group"
                               >
-                                <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-stone-200 transition-all">
+                                <div className="w-12 h-12 bg-stone-100 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:bg-stone-200 transition-all">
                                   <Plus size={22} className="text-stone-400" />
                                 </div>
                                 <p className="text-stone-400 font-bold text-sm uppercase tracking-widest">Adicionar conteúdo</p>
@@ -1957,12 +1957,12 @@ export default function App() {
                         <div
                           key={section.id}
                           onClick={() => setExpandedQcoinCard(section.id)}
-                          className="bg-white rounded-3xl border border-stone-200 shadow-sm hover:shadow-md hover:border-stone-300 transition-all cursor-pointer group"
+                          className="bg-white rounded-xl border border-stone-200 shadow-sm hover:shadow-md hover:border-stone-300 transition-all cursor-pointer group"
                         >
                           <div className="p-6">
                             <div className="flex items-start justify-between mb-5">
-                              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center group-hover:bg-amber-500 transition-all">
-                                <Icon size={18} className="text-amber-600 group-hover:text-white transition-all" />
+                              <div className="w-10 h-10 rounded-md bg-terracota-100 flex items-center justify-center group-hover:bg-terracota-500 transition-all">
+                                <Icon size={18} className="text-primary group-hover:text-white transition-all" />
                               </div>
                               <ArrowRight size={16} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-1 transition-all mt-1" />
                             </div>
@@ -1996,7 +1996,7 @@ export default function App() {
                   {isAdmin && !showAddRegra && (
                     <button
                       onClick={() => setShowAddRegra(true)}
-                      className="flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-sm font-bold rounded-2xl hover:bg-stone-800 transition-all"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all"
                     >
                       <Plus size={16} />
                       Adicionar
@@ -2005,21 +2005,21 @@ export default function App() {
                 </div>
 
                 {isAdmin && showAddRegra && (
-                  <div className="bg-white rounded-[40px] p-10 border border-stone-200 shadow-sm mb-8">
+                  <div className="bg-white rounded-xl p-10 border border-stone-200 shadow-sm mb-8">
                     <h4 className="text-lg font-sans text-stone-900 mb-6">Nova seção de Regras</h4>
                     <div className="space-y-4">
                       <input
                         value={newRegraTitle}
                         onChange={e => setNewRegraTitle(e.target.value)}
                         placeholder="Título da seção (ex: Uso do Espaço)"
-                        className="w-full px-4 py-3 border border-stone-200 rounded-2xl text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                        className="w-full px-4 py-3 border border-stone-200 rounded-lg text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                       />
                       <textarea
                         rows={6}
                         value={newRegraContent}
                         onChange={e => setNewRegraContent(e.target.value)}
                         placeholder={"Cada linha vira um tópico:\nAcesso ao espaço: descrição aqui\nAmbientes compartilhados: descrição aqui"}
-                        className="w-full px-4 py-3 border border-stone-200 rounded-2xl text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
+                        className="w-full px-4 py-3 border border-stone-200 rounded-lg text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
                       />
                       <div className="flex gap-3 justify-end">
                         <button
@@ -2031,7 +2031,7 @@ export default function App() {
                         <button
                           onClick={handleAddRegra}
                           disabled={!newRegraTitle.trim()}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-sm font-bold rounded-2xl hover:bg-stone-700 disabled:opacity-40 transition"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/80 disabled:opacity-40 transition"
                         >
                           <Check size={15} />
                           Salvar
@@ -2047,19 +2047,19 @@ export default function App() {
                       .filter(item => item.category === 'regras')
                       .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0))
                       .map((item, index) => (
-                        <div key={item.id} className="bg-white rounded-[24px] p-4 border border-stone-200 shadow-sm hover:shadow-xl transition-all">
+                        <div key={item.id} className="bg-white rounded-xl p-4 border border-stone-200 shadow-sm hover:shadow-xl transition-all">
                           {editingRuleId === item.id ? (
                             <div className="space-y-3">
                               <input
                                 value={editingRuleData.title}
                                 onChange={e => setEditingRuleData(d => ({ ...d, title: e.target.value }))}
-                                className="w-full px-3 py-2 border border-stone-200 rounded-xl text-stone-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                                className="w-full px-3 py-2 border border-stone-200 rounded-md text-stone-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                               />
                               <textarea
                                 rows={5}
                                 value={editingRuleData.content}
                                 onChange={e => setEditingRuleData(d => ({ ...d, content: e.target.value }))}
-                                className="w-full px-3 py-2 border border-stone-200 rounded-xl text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
+                                className="w-full px-3 py-2 border border-stone-200 rounded-md text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
                                 placeholder="Cada linha vira um tópico da lista"
                               />
                               <div className="flex gap-3 justify-end">
@@ -2071,7 +2071,7 @@ export default function App() {
                                 </button>
                                 <button
                                   onClick={handleSaveRule}
-                                  className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm font-bold rounded-xl hover:bg-stone-700 transition"
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-md hover:bg-primary/80 transition"
                                 >
                                   <Check size={14} />
                                   Salvar
@@ -2081,7 +2081,7 @@ export default function App() {
                           ) : (
                             <>
                               <div className="flex justify-between items-start mb-2">
-                                <h3 className="text-base font-sans text-amber-600">
+                                <h3 className="text-base font-sans text-primary">
                                   {index + 1}. {item.title}
                                 </h3>
                                 {isAdmin && (
@@ -2134,12 +2134,12 @@ export default function App() {
                         </div>
                       ))
                   ) : (
-                    <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-stone-200">
+                    <div className="text-center py-20 bg-white rounded-xl border border-dashed border-stone-200">
                       <p className="text-stone-400">Nenhuma regra cadastrada ainda.</p>
                       {isAdmin && !showAddRegra && (
                         <button
                           onClick={() => setShowAddRegra(true)}
-                          className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-sm font-bold rounded-2xl hover:bg-stone-800 transition"
+                          className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition"
                         >
                           <Plus size={16} />
                           Adicionar primeira regra
@@ -2163,27 +2163,27 @@ export default function App() {
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Pendência Banner */}
                 {founderData && !founderData.termsAccepted && (
-                  <div className="mb-8 bg-amber-50 border border-amber-200 rounded-[30px] p-6 flex items-center justify-between group animate-in slide-in-from-top-4 duration-500 cursor-pointer" onClick={() => setIsTermsModalOpen(true)}>
+                  <div className="mb-8 bg-terracota-50 border border-terracota-200 rounded-xl p-6 flex items-center justify-between group animate-in slide-in-from-top-4 duration-500 cursor-pointer" onClick={() => setIsTermsModalOpen(true)}>
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600">
+                      <div className="w-12 h-12 bg-terracota-100 rounded-lg flex items-center justify-center text-primary">
                         <AlertTriangle size={24} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-amber-900">Você está com uma pendência</h4>
-                        <p className="text-amber-700 text-sm">
+                        <h4 className="font-bold text-terracota-900">Você está com uma pendência</h4>
+                        <p className="text-primary text-sm">
                           Para continuar utilizando o portal, você precisa aceitar os nossos termos de uso e autorizações.
-                          <span className="ml-1 font-bold underline hover:text-amber-900 transition-colors">
+                          <span className="ml-1 font-bold underline hover:text-terracota-900 transition-colors">
                             Clique aqui para resolver
                           </span>
                         </p>
                       </div>
                     </div>
-                    <ArrowRight className="text-amber-400 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="text-primary/80 group-hover:translate-x-1 transition-transform" />
                   </div>
                 )}
 
                 {/* News Box */}
-                <div className="mb-6 bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">
+                <div className="mb-6 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
                   <div className="bg-stone-900 px-8 py-4 flex items-center gap-3">
                     <Bell size={20} className="text-white" />
                     <h3 className="text-white font-sans text-h3">News</h3>
@@ -2250,6 +2250,7 @@ export default function App() {
                       const userRankPosition = fullRanking.findIndex(r => r.userId === user?.uid) + 1;
 
                       return (
+                        <div className="flex flex-col gap-4">
                         <div className="flex flex-col lg:flex-row gap-4">
                           {/* Part 1: Eventos & Desafios (66%) */}
                           <div className="lg:w-[66%] flex flex-col gap-4">
@@ -2258,16 +2259,16 @@ export default function App() {
                               .filter(item => item.category === 'aviso')
                               .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
                               .map((aviso, idx) => (
-                                <div key={aviso.id || idx} className="bg-white rounded-[32px] p-5 border border-stone-200 shadow-sm hover:shadow-md transition-all group">
+                                <div key={aviso.id || idx} className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm hover:shadow-md transition-all group">
                                   <div className="flex items-center gap-2 mb-3">
-                                    <AlertTriangle className="text-amber-500 shrink-0" size={18} />
+                                    <AlertTriangle className="text-primary shrink-0" size={18} />
                                     <h4 className="text-base font-sans text-stone-900">Aviso</h4>
                                     <span className="ml-auto text-overline font-bold uppercase tracking-widest text-stone-400">
                                       {aviso.createdAt?.seconds ? new Date(aviso.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : ''}
                                     </span>
                                   </div>
-                                  <div className="p-3 bg-stone-50 rounded-2xl border border-stone-100 hover:border-stone-300 transition-all">
-                                    <h5 className="font-bold text-stone-900 text-sm mb-1 group-hover:text-amber-600 transition-colors">{aviso.title}</h5>
+                                  <div className="p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 transition-all">
+                                    <h5 className="font-bold text-stone-900 text-sm mb-1 group-hover:text-primary transition-colors">{aviso.title}</h5>
                                     <p className="text-stone-500 text-xs line-clamp-3 leading-relaxed">{aviso.content}</p>
                                     {aviso.attachmentUrl && (
                                       <a
@@ -2285,10 +2286,10 @@ export default function App() {
                               ))
                             }
                             {/* Eventos da Semana */}
-                            <div className="bg-white rounded-[32px] p-5 border border-stone-200 shadow-sm flex flex-col">
+                            <div className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm flex flex-col">
                               <div className="flex items-center justify-between mb-3">
                                 <h4 className="text-base font-sans text-stone-900 flex items-center gap-2">
-                                  <CalendarDays className="text-amber-500" size={18} />
+                                  <CalendarDays className="text-primary" size={18} />
                                   Próximos Eventos
                                 </h4>
                                 <span className="text-overline font-bold uppercase tracking-widest text-stone-400">
@@ -2298,18 +2299,18 @@ export default function App() {
                               
                               <div className="flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar">
                                 {relevantEvents.length === 0 ? (
-                                  <div className="h-full flex flex-col items-center justify-center text-center p-5 bg-stone-50 rounded-2xl border border-dashed border-stone-200">
+                                  <div className="h-full flex flex-col items-center justify-center text-center p-5 bg-stone-50 rounded-lg border border-dashed border-stone-200">
                                     <p className="text-stone-400 text-xs">Nenhum evento programado para esta semana.</p>
                                   </div>
                                 ) : (
                                   relevantEvents.map((event, idx) => (
-                                    <div key={event.id || idx} className="p-3 bg-stone-50 rounded-2xl border border-stone-100 hover:border-stone-300 transition-all group">
+                                    <div key={event.id || idx} className="p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 transition-all group">
                                       <div className="flex items-start justify-between gap-4">
                                         <div>
                                           <div className="flex items-center gap-2 mb-2">
                                             <span className={cn(
                                               "px-2 py-0.5 text-overline font-bold uppercase rounded-full",
-                                              event.category === 'evento' ? "bg-amber-100 text-amber-700" :
+                                              event.category === 'evento' ? "bg-terracota-100 text-primary" :
                                               event.category === 'aviso' ? "bg-rose-100 text-rose-700" :
                                               event.category === 'info' ? "bg-blue-100 text-blue-700" :
                                               "bg-stone-100 text-stone-700"
@@ -2324,11 +2325,11 @@ export default function App() {
                                               </span>
                                             )}
                                           </div>
-                                          <h5 className="font-bold text-stone-900 mb-1 group-hover:text-amber-600 transition-colors">{event.title}</h5>
+                                          <h5 className="font-bold text-stone-900 mb-1 group-hover:text-primary transition-colors">{event.title}</h5>
                                           <p className="text-stone-500 text-xs line-clamp-2">{event.content}</p>
                                         </div>
                                         <div className="text-right shrink-0">
-                                          <div className="text-h2 font-sans text-stone-300 group-hover:text-amber-200 transition-colors">
+                                          <div className="text-h2 font-sans text-stone-300 group-hover:text-white/60 transition-colors">
                                             {format(event.eventDate?.toDate ? event.eventDate.toDate() : new Date(event.eventDate + 'T00:00:00'), 'dd')}
                                           </div>
                                           <div className="text-overline font-bold uppercase text-stone-400">
@@ -2342,44 +2343,12 @@ export default function App() {
                               </div>
                             </div>
 
-                            {/* Desafios Públicos (Moved here) */}
-                            <div className="bg-stone-900 rounded-[28px] p-4 text-white shadow-xl shadow-stone-900/20 flex flex-col">
-                              <div className="flex items-center gap-2 mb-3">
-                                <Trophy className="text-amber-400" size={20} />
-                                <h4 className="text-lg font-sans">Desafios Públicos</h4>
-                              </div>
-                              
-                              <div className="flex-1 flex flex-col justify-center">
-                                {publicChallenges.length === 0 ? (
-                                  <p className="text-stone-500 text-sm text-center">Nenhum desafio público aberto no momento.</p>
-                                ) : (
-                                  <div className="space-y-3">
-                                    <div>
-                                      <p className="text-overline uppercase tracking-widest font-bold text-stone-500 mb-1">
-                                        Lançado por {allFounders.find(f => f.id === publicChallenges[0].founderId)?.name || 'Founder'}
-                                      </p>
-                                      <h5 className="text-sm font-bold leading-tight mb-1">{publicChallenges[0].title}</h5>
-                                      <p className="text-stone-400 text-xs line-clamp-2">"{publicChallenges[0].description}"</p>
-                                    </div>
-                                    <button
-                                      onClick={() => {
-                                        setView('portal');
-                                        setActiveSubTab('desafios-publicos');
-                                      }}
-                                      className="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-xl text-overline font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                                    >
-                                      clique aqui para ajuda-lo a resolver <ArrowRight size={12} />
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
                           </div>
 
                           {/* Part 2: Ranking & Score (33%) */}
                           <div className="lg:w-[33%] flex flex-col gap-4">
                             {/* Ranking Top 5 */}
-                            <div className="bg-white rounded-[32px] p-5 border border-stone-200 shadow-sm flex flex-col">
+                            <div className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm flex flex-col">
                               <div className="flex items-center gap-2 mb-4">
                                 <Trophy className="text-stone-900" size={16} />
                                 <h4 className="text-sm font-sans text-stone-900">Ranking Top 5</h4>
@@ -2390,7 +2359,7 @@ export default function App() {
                                     <div className="flex items-center gap-2">
                                       <div className={cn(
                                         "w-5 h-5 rounded-full flex items-center justify-center text-overline font-bold flex-shrink-0",
-                                        idx === 0 ? "bg-amber-100 text-amber-600" :
+                                        idx === 0 ? "bg-terracota-100 text-primary" :
                                         idx === 1 ? "bg-stone-200 text-stone-600" :
                                         idx === 2 ? "bg-orange-100 text-orange-600" :
                                         "bg-stone-50 text-stone-400"
@@ -2426,23 +2395,23 @@ export default function App() {
                             </div>
 
                             {/* User Score */}
-                            <div className="bg-amber-500 rounded-[28px] p-4 text-white shadow-xl shadow-amber-500/20 flex flex-col justify-center items-center text-center relative overflow-hidden">
+                            <div className="bg-primary rounded-xl p-4 text-white shadow-xl shadow-primary/20 flex flex-col justify-center items-center text-center relative overflow-hidden">
                               <div className="absolute -right-4 -top-4 opacity-10 rotate-12">
                                 <Trophy size={80} />
                               </div>
-                              <span className="text-overline uppercase tracking-widest font-bold text-amber-100 mb-1 relative z-10">Seu Score QDDO</span>
+                              <span className="text-overline uppercase tracking-widest font-bold text-white/80 mb-1 relative z-10">Seu Score QDDO</span>
                               <div className="text-[3rem] font-black leading-none mb-0.5 relative z-10">{userScore}</div>
-                              <span className="text-xs font-bold text-amber-100 relative z-10">pontos este mês</span>
+                              <span className="text-xs font-bold text-white/80 relative z-10">pontos este mês</span>
                               {userRankPosition > 0 && (
-                                <span className="text-overline text-amber-200 relative z-10 mt-0.5">#{userRankPosition}º no ranking</span>
+                                <span className="text-overline text-white/60 relative z-10 mt-0.5">#{userRankPosition}º no ranking</span>
                               )}
 
-                              <div className="mt-3 pt-3 border-t border-amber-400/30 w-full relative z-10">
-                                <div className="flex items-center justify-between text-overline font-bold uppercase tracking-widest text-amber-100">
+                              <div className="mt-3 pt-3 border-t border-white/20 w-full relative z-10">
+                                <div className="flex items-center justify-between text-overline font-bold uppercase tracking-widest text-white/80">
                                   <span>Check-ins</span>
                                   <span>{currentMonthCheckins}</span>
                                 </div>
-                                <div className="w-full h-1.5 bg-amber-600/30 rounded-full mt-1.5 overflow-hidden">
+                                <div className="w-full h-1.5 bg-white/10 rounded-full mt-1.5 overflow-hidden">
                                   <div
                                     className="h-full bg-white rounded-full transition-all duration-1000"
                                     style={{ width: `${Math.min((currentMonthCheckins / 20) * 100, 100)}%` }}
@@ -2451,6 +2420,39 @@ export default function App() {
                               </div>
                             </div>
                           </div>
+                        </div>
+
+                        {/* Desafios Públicos — largura total */}
+                        <div className="bg-stone-900 rounded-xl p-4 text-white shadow-xl shadow-stone-900/20 flex flex-col">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Trophy className="text-white/50" size={20} />
+                            <h4 className="text-lg font-sans">Desafios Públicos</h4>
+                          </div>
+                          <div className="flex-1 flex flex-col justify-center">
+                            {publicChallenges.length === 0 ? (
+                              <p className="text-white/50 text-sm text-center">Nenhum desafio público aberto no momento.</p>
+                            ) : (
+                              <div className="space-y-3">
+                                <div>
+                                  <p className="text-overline uppercase tracking-widest font-bold text-white/60 mb-1">
+                                    Lançado por {allFounders.find(f => f.id === publicChallenges[0].founderId)?.name || 'Founder'}
+                                  </p>
+                                  <h5 className="text-sm font-bold leading-tight mb-1">{publicChallenges[0].title}</h5>
+                                  <p className="text-white/60 text-xs line-clamp-2">"{publicChallenges[0].description}"</p>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setView('portal');
+                                    setActiveSubTab('desafios-publicos');
+                                  }}
+                                  className="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-md text-overline font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                >
+                                  clique aqui para ajuda-lo a resolver <ArrowRight size={12} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                         </div>
                       );
                     })()}
@@ -2461,9 +2463,9 @@ export default function App() {
                   {/* Founders */}
                   <div
                     onClick={() => setActiveGeneralCategory('founders')}
-                    className="bg-white p-4 lg:p-5 rounded-[20px] lg:rounded-[24px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 lg:p-5 rounded-xl lg:rounded-xl border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-md flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
                       <Users size={18} />
                     </div>
                     <h3 className="text-base font-sans mb-1">Founders</h3>
@@ -2473,9 +2475,9 @@ export default function App() {
                   {/* Avisos */}
                   <div
                     onClick={() => setActiveGeneralCategory('aviso')}
-                    className="bg-white p-4 lg:p-5 rounded-[20px] lg:rounded-[24px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 lg:p-5 rounded-xl lg:rounded-xl border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-md flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
                       <AlertTriangle size={18} />
                     </div>
                     <h3 className="text-base font-sans mb-1">Avisos</h3>
@@ -2485,9 +2487,9 @@ export default function App() {
                   {/* Eventos */}
                   <div
                     onClick={() => setActiveGeneralCategory('evento')}
-                    className="bg-white p-4 lg:p-5 rounded-[20px] lg:rounded-[24px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 lg:p-5 rounded-xl lg:rounded-xl border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-md flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
                       <CalendarDays size={18} />
                     </div>
                     <h3 className="text-base font-sans mb-1">Eventos</h3>
@@ -2497,9 +2499,9 @@ export default function App() {
                   {/* Comunicação */}
                   <div
                     onClick={() => setActiveGeneralCategory('comunicacao')}
-                    className="bg-white p-4 lg:p-5 rounded-[20px] lg:rounded-[24px] border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    className="bg-white p-4 lg:p-5 rounded-xl lg:rounded-xl border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
-                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-xl flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-md flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
                       <MessageSquare size={18} />
                     </div>
                     <h3 className="text-base font-sans mb-1">Comunicação</h3>
@@ -2516,15 +2518,15 @@ export default function App() {
                     setIndicarEmpresa('');
                     setIndicarArea('');
                   }}
-                  className="w-full bg-stone-900 text-white px-8 py-6 rounded-[40px] relative overflow-hidden hover:bg-stone-800 transition-all group"
+                  className="w-full bg-stone-900 text-white px-8 py-6 rounded-xl relative overflow-hidden hover:bg-stone-800 transition-all group"
                 >
                   <div className="relative z-10 flex items-center justify-center gap-4">
-                    <div className="bg-white/10 p-2.5 rounded-2xl group-hover:bg-white/20 transition-all shrink-0">
+                    <div className="bg-white/10 p-2.5 rounded-lg group-hover:bg-white/20 transition-all shrink-0">
                       <UserPlus size={22} className="text-white" />
                     </div>
                     <div className="text-center">
                       <h2 className="text-h3 font-sans">Indicar um Founder</h2>
-                      <p className="text-stone-400 text-sm">Conhece alguém que deveria fazer parte da nossa comunidade?</p>
+                      <p className="text-white/60 text-sm">Conhece alguém que deveria fazer parte da nossa comunidade?</p>
                     </div>
                     <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
                   </div>
@@ -2564,10 +2566,10 @@ export default function App() {
 
       {activeGeneralCategory && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-8 border-b border-stone-100 flex items-center justify-between bg-stone-50">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-stone-900 text-white rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-primary text-white rounded-lg flex items-center justify-center">
                   {activeGeneralCategory === 'founders' ? <Users size={24} /> :
                    activeGeneralCategory === 'regras' ? <ShieldCheck size={24} /> :
                    activeGeneralCategory === 'aviso' ? <AlertTriangle size={24} /> :
@@ -2591,7 +2593,7 @@ export default function App() {
                 allFounders.length > 0 ? (
                   <div className="space-y-3">
                     {allFounders.map(f => (
-                      <div key={f.id} className="flex items-center gap-4 p-4 bg-stone-50 rounded-2xl border border-stone-100 hover:border-stone-300 transition-all">
+                      <div key={f.id} className="flex items-center gap-4 p-4 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 transition-all">
                         <div className="w-11 h-11 bg-stone-200 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
                           {f.photoURL ? (
                             <img src={f.photoURL} alt={f.name} className="w-full h-full object-cover" />
@@ -2632,19 +2634,19 @@ export default function App() {
                   .filter(item => item.category === activeGeneralCategory)
                   .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
                   .map(item => (
-                    <div key={item.id} className="p-6 bg-stone-50 rounded-3xl border border-stone-100">
+                    <div key={item.id} className="p-6 bg-stone-50 rounded-xl border border-stone-100">
                       {editingRuleId === item.id ? (
                         <div className="space-y-3">
                           <input
                             value={editingRuleData.title}
                             onChange={e => setEditingRuleData(d => ({ ...d, title: e.target.value }))}
-                            className="w-full px-4 py-2 border border-stone-200 rounded-xl text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                            className="w-full px-4 py-2 border border-stone-200 rounded-md text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                           />
                           <textarea
                             rows={4}
                             value={editingRuleData.content}
                             onChange={e => setEditingRuleData(d => ({ ...d, content: e.target.value }))}
-                            className="w-full px-4 py-2 border border-stone-200 rounded-xl text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
+                            className="w-full px-4 py-2 border border-stone-200 rounded-md text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
                           />
                           <div className="flex gap-2 justify-end">
                             <button
@@ -2655,7 +2657,7 @@ export default function App() {
                             </button>
                             <button
                               onClick={handleSaveRule}
-                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-stone-900 text-white text-xs font-bold rounded-xl hover:bg-stone-700 transition"
+                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/80 transition"
                             >
                               <Check size={13} />
                               Salvar
@@ -2716,7 +2718,7 @@ export default function App() {
                                 <span>Data: {new Date(item.eventDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
                               </div>
                               {(item.startTime || item.endTime) && (
-                                <div className="flex flex-wrap items-center gap-4 text-amber-600 font-bold text-xs uppercase tracking-widest">
+                                <div className="flex flex-wrap items-center gap-4 text-primary font-bold text-xs uppercase tracking-widest">
                                   <div className="flex items-center gap-2">
                                     <Clock size={14} />
                                     <span>Início: {item.startTime || '--:--'}</span>
@@ -2761,7 +2763,7 @@ export default function App() {
                     setAdminInitialTab('news');
                     setView('admin');
                   }}
-                  className="bg-stone-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-stone-800 transition-all flex items-center gap-2"
+                  className="bg-primary text-white px-6 py-3 rounded-lg font-bold hover:bg-primary/90 transition-all flex items-center gap-2"
                 >
                   <Plus size={18} />
                   Adicionar Conteúdo
@@ -2774,7 +2776,7 @@ export default function App() {
 
       {showIndicarFounderModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowIndicarFounderModal(false)}>
-          <div className="bg-white rounded-[32px] w-full max-w-md p-8 relative shadow-2xl" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+          <div className="bg-white rounded-xl w-full max-w-md p-8 relative shadow-2xl" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <button
               onClick={() => setShowIndicarFounderModal(false)}
               className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 transition-colors"
@@ -2783,7 +2785,7 @@ export default function App() {
             </button>
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-stone-900 p-3 rounded-2xl">
+              <div className="bg-stone-900 p-3 rounded-lg">
                 <UserPlus size={22} className="text-white" />
               </div>
               <h2 className="text-h2 font-sans text-stone-900">Indicar um Founder</h2>
@@ -2791,13 +2793,13 @@ export default function App() {
 
             {indicarSuccess ? (
               <div className="text-center py-8">
-                <div className="bg-green-50 text-green-700 rounded-2xl p-6 mb-4">
+                <div className="bg-green-50 text-green-700 rounded-lg p-6 mb-4">
                   <p className="font-bold text-lg mb-1">Indicação enviada!</p>
                   <p className="text-sm text-green-600">Obrigado por fortalecer a nossa rede.</p>
                 </div>
                 <button
                   onClick={() => setShowIndicarFounderModal(false)}
-                  className="bg-stone-900 text-white px-8 py-3 rounded-2xl font-bold hover:bg-stone-700 transition-all"
+                  className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-primary/80 transition-all"
                 >
                   Fechar
                 </button>
@@ -2814,7 +2816,7 @@ export default function App() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarNome(e.target.value)}
                     placeholder="Ex: João Silva"
                     required
-                    className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                    className="w-full border border-stone-200 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                   />
                 </div>
                 <div>
@@ -2827,7 +2829,7 @@ export default function App() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarEmpresa(e.target.value)}
                     placeholder="Ex: Startup XYZ"
                     required
-                    className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                    className="w-full border border-stone-200 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                   />
                 </div>
                 <div>
@@ -2840,7 +2842,7 @@ export default function App() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarArea(e.target.value)}
                     placeholder="Ex: Fintech, Saúde, Educação..."
                     required
-                    className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                    className="w-full border border-stone-200 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                   />
                 </div>
                 <div>
@@ -2853,13 +2855,13 @@ export default function App() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarContato(e.target.value)}
                     placeholder="( ) "
                     required
-                    className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                    className="w-full border border-stone-200 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={indicarSubmitting}
-                  className="mt-2 bg-stone-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-stone-700 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="mt-2 bg-primary text-white px-8 py-4 rounded-lg font-bold hover:bg-primary/80 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   <Send size={18} />
                   {indicarSubmitting ? 'Enviando...' : 'Enviar indicação'}
@@ -2877,7 +2879,7 @@ export default function App() {
           onClick={() => setShowProfileModal(false)}
         >
           <div
-            className="bg-white rounded-[32px] w-full max-w-sm p-8 relative shadow-2xl"
+            className="bg-white rounded-xl w-full max-w-sm p-8 relative shadow-2xl"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             <button
@@ -2928,12 +2930,12 @@ export default function App() {
                   type="text"
                   value={profileName}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfileName(e.target.value)}
-                  className="w-full text-sm text-stone-900 px-4 py-3 bg-stone-50 rounded-2xl border border-transparent focus:border-stone-300 focus:outline-none transition-colors"
+                  className="w-full text-sm text-stone-900 px-4 py-3 bg-stone-50 rounded-lg border border-transparent focus:border-stone-300 focus:outline-none transition-colors"
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1">Username</label>
-                <div className="flex items-center bg-stone-50 rounded-2xl border border-transparent focus-within:border-stone-300 transition-colors px-4 py-3 gap-1">
+                <div className="flex items-center bg-stone-50 rounded-lg border border-transparent focus-within:border-stone-300 transition-colors px-4 py-3 gap-1">
                   <span className="text-stone-400 text-sm select-none">@</span>
                   <input
                     type="text"
@@ -2946,7 +2948,7 @@ export default function App() {
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1">E-mail</label>
-                <p className="text-sm text-stone-900 px-4 py-3 bg-stone-50 rounded-2xl truncate">{user.email}</p>
+                <p className="text-sm text-stone-900 px-4 py-3 bg-stone-50 rounded-lg truncate">{user.email}</p>
               </div>
             </div>
 
@@ -2958,7 +2960,7 @@ export default function App() {
                   <select
                     value={profileBirthDay}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProfileBirthDay(e.target.value)}
-                    className="w-full border border-stone-200 rounded-xl px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
+                    className="w-full border border-stone-200 rounded-md px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
                   >
                     <option value="">Dia</option>
                     {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
@@ -2970,7 +2972,7 @@ export default function App() {
                   <select
                     value={profileBirthMonth}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProfileBirthMonth(e.target.value)}
-                    className="w-full border border-stone-200 rounded-xl px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
+                    className="w-full border border-stone-200 rounded-md px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
                   >
                     <option value="">Mês</option>
                     {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m, i) => (
@@ -2982,7 +2984,7 @@ export default function App() {
                   <select
                     value={profileBirthYear}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProfileBirthYear(e.target.value)}
-                    className="w-full border border-stone-200 rounded-xl px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
+                    className="w-full border border-stone-200 rounded-md px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
                   >
                     <option value="">Ano</option>
                     {Array.from({ length: 60 }, (_, i) => new Date().getFullYear() - 18 - i).map(y => (
@@ -2999,7 +3001,7 @@ export default function App() {
             <button
               onClick={handleSaveProfile}
               disabled={profileSaving}
-              className="w-full bg-stone-900 text-white rounded-2xl py-3 text-sm font-bold uppercase tracking-widest hover:bg-stone-700 transition-colors disabled:opacity-50"
+              className="w-full bg-primary text-white rounded-lg py-3 text-sm font-bold uppercase tracking-widest hover:bg-primary/80 transition-colors disabled:opacity-50"
             >
               {profileSaving ? 'Salvando...' : 'Salvar'}
             </button>
@@ -3013,7 +3015,7 @@ export default function App() {
           onClick={() => setShowSettingsModal(false)}
         >
           <div
-            className="bg-white rounded-[32px] w-full max-w-sm p-8 relative shadow-2xl"
+            className="bg-white rounded-xl w-full max-w-sm p-8 relative shadow-2xl"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             <button
@@ -3028,7 +3030,7 @@ export default function App() {
             {/* Modo Dark */}
             <div className="mb-6">
               <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Tema</p>
-              <div className="flex items-center justify-between px-4 py-3 bg-stone-50 rounded-2xl">
+              <div className="flex items-center justify-between px-4 py-3 bg-stone-50 rounded-lg">
                 <span className="text-sm font-medium text-stone-700">Modo Dark</span>
                 <button
                   onClick={() => setDarkMode((prev: boolean) => !prev)}
@@ -3044,7 +3046,7 @@ export default function App() {
 
             <button
               onClick={() => setShowSettingsModal(false)}
-              className="w-full bg-stone-900 text-white rounded-2xl py-3 text-sm font-bold uppercase tracking-widest hover:bg-stone-700 transition-colors"
+              className="w-full bg-primary text-white rounded-lg py-3 text-sm font-bold uppercase tracking-widest hover:bg-primary/80 transition-colors"
             >
               Fechar
             </button>
@@ -3058,7 +3060,7 @@ export default function App() {
           onClick={() => setShowSocialModal(false)}
         >
           <div
-            className="bg-white rounded-[32px] w-full max-w-sm p-8 relative shadow-2xl"
+            className="bg-white rounded-xl w-full max-w-sm p-8 relative shadow-2xl"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             <button
@@ -3082,7 +3084,7 @@ export default function App() {
                   value={settingsSocialLinkedin}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettingsSocialLinkedin(e.target.value)}
                   placeholder="https://linkedin.com/in/seuperfil"
-                  className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
+                  className="w-full border border-stone-200 rounded-md px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
                 />
                 {settingsSocialLinkedin && (
                   <a href={settingsSocialLinkedin} target="_blank" rel="noopener noreferrer" className="text-xs text-stone-400 hover:text-stone-700 mt-1 inline-flex items-center gap-1 transition-colors">
@@ -3102,7 +3104,7 @@ export default function App() {
                   value={settingsSocialInstagram}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettingsSocialInstagram(e.target.value)}
                   placeholder="https://instagram.com/seuperfil"
-                  className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
+                  className="w-full border border-stone-200 rounded-md px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
                 />
                 {settingsSocialInstagram && (
                   <a href={settingsSocialInstagram} target="_blank" rel="noopener noreferrer" className="text-xs text-stone-400 hover:text-stone-700 mt-1 inline-flex items-center gap-1 transition-colors">
@@ -3122,7 +3124,7 @@ export default function App() {
                   value={settingsSocialSite}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettingsSocialSite(e.target.value)}
                   placeholder="https://seusite.com"
-                  className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
+                  className="w-full border border-stone-200 rounded-md px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
                 />
                 {settingsSocialSite && (
                   <a href={settingsSocialSite} target="_blank" rel="noopener noreferrer" className="text-xs text-stone-400 hover:text-stone-700 mt-1 inline-flex items-center gap-1 transition-colors">
@@ -3135,7 +3137,7 @@ export default function App() {
             <button
               onClick={handleSaveSocial}
               disabled={socialSaving}
-              className="w-full bg-stone-900 text-white rounded-2xl py-3 text-sm font-bold uppercase tracking-widest hover:bg-stone-700 transition-colors disabled:opacity-50"
+              className="w-full bg-primary text-white rounded-lg py-3 text-sm font-bold uppercase tracking-widest hover:bg-primary/80 transition-colors disabled:opacity-50"
             >
               {socialSaving ? 'Salvando...' : 'Salvar'}
             </button>
@@ -3150,7 +3152,7 @@ export default function App() {
           onClick={() => setSelectedFounderDetail(null)}
         >
           <div
-            className="bg-white rounded-[36px] w-full max-w-sm p-8 shadow-2xl animate-in zoom-in-95 duration-200 relative"
+            className="bg-white rounded-xl w-full max-w-sm p-8 shadow-2xl animate-in zoom-in-95 duration-200 relative"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             <button
@@ -3188,7 +3190,7 @@ export default function App() {
                   href={selectedFounderDetail.socialLinkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
+                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-200 rounded-lg hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-stone-500 group-hover:text-white shrink-0"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
                   <span className="text-sm font-bold text-stone-700 group-hover:text-white truncate flex-1">LinkedIn</span>
@@ -3200,7 +3202,7 @@ export default function App() {
                   href={selectedFounderDetail.socialInstagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
+                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-200 rounded-lg hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-500 group-hover:text-white shrink-0"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
                   <span className="text-sm font-bold text-stone-700 group-hover:text-white truncate flex-1">Instagram</span>
@@ -3212,7 +3214,7 @@ export default function App() {
                   href={selectedFounderDetail.socialSite}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
+                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-200 rounded-lg hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
                 >
                   <Globe size={16} className="text-stone-500 group-hover:text-white shrink-0" />
                   <span className="text-sm font-bold text-stone-700 group-hover:text-white truncate flex-1">Site</span>

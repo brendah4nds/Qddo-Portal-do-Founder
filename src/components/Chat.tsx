@@ -114,7 +114,7 @@ export function Chat({ user }: { user: User | null }) {
   const activeFounder = founders.find(f => f.id === activeChat);
 
   return (
-    <div className="flex h-full bg-white rounded-2xl md:rounded-[40px] border border-stone-200 overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex h-full bg-white rounded-lg md:rounded-xl border border-stone-200 overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* Sidebar: User List */}
       {/* Mobile: full width when showSidebar=true, hidden when showSidebar=false */}
@@ -134,7 +134,7 @@ export function Chat({ user }: { user: User | null }) {
               placeholder="Buscar founder..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-stone-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/5 transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 transition-all"
             />
           </div>
         </div>
@@ -143,12 +143,12 @@ export function Chat({ user }: { user: User | null }) {
           <button
             onClick={() => handleSelectChat('public')}
             className={cn(
-              "w-full flex items-center gap-3 p-3 rounded-2xl transition-all",
-              activeChat === 'public' ? "bg-stone-900 text-white shadow-lg shadow-stone-900/20" : "hover:bg-stone-100 text-stone-600"
+              "w-full flex items-center gap-3 p-3 rounded-lg transition-all",
+              activeChat === 'public' ? "bg-primary text-white shadow-lg shadow-primary/20" : "hover:bg-stone-100 text-stone-600"
             )}
           >
             <div className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center",
+              "w-10 h-10 rounded-md flex items-center justify-center",
               activeChat === 'public' ? "bg-white/20" : "bg-stone-200"
             )}>
               <Users size={20} />
@@ -168,11 +168,11 @@ export function Chat({ user }: { user: User | null }) {
               key={founder.id}
               onClick={() => handleSelectChat(founder.id)}
               className={cn(
-                "w-full flex items-center gap-3 p-3 rounded-2xl transition-all",
-                activeChat === founder.id ? "bg-stone-900 text-white shadow-lg shadow-stone-900/20" : "hover:bg-stone-100 text-stone-600"
+                "w-full flex items-center gap-3 p-3 rounded-lg transition-all",
+                activeChat === founder.id ? "bg-primary text-white shadow-lg shadow-primary/20" : "hover:bg-stone-100 text-stone-600"
               )}
             >
-              <div className="w-10 h-10 rounded-xl overflow-hidden bg-stone-200">
+              <div className="w-10 h-10 rounded-md overflow-hidden bg-stone-200">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${founder.username}`} alt="" />
               </div>
               <div className="text-left overflow-hidden">
@@ -195,7 +195,7 @@ export function Chat({ user }: { user: User | null }) {
         <div className="p-4 md:p-6 border-b border-stone-100 flex items-center gap-3">
           {/* Back button — mobile only */}
           <button
-            className="md:hidden p-2 -ml-1 rounded-xl hover:bg-stone-100 transition-colors text-stone-600"
+            className="md:hidden p-2 -ml-1 rounded-md hover:bg-stone-100 transition-colors text-stone-600"
             onClick={() => setShowSidebar(true)}
             aria-label="Voltar para contatos"
           >
@@ -203,7 +203,7 @@ export function Chat({ user }: { user: User | null }) {
           </button>
 
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-stone-900 flex items-center justify-center text-white shrink-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-md md:rounded-lg bg-stone-900 flex items-center justify-center text-white shrink-0">
               {activeChat === 'public' ? <Users size={20} /> : <UserIcon size={20} />}
             </div>
             <div className="min-w-0">
@@ -244,8 +244,8 @@ export function Chat({ user }: { user: User | null }) {
                   )}>
                     {!isMe && <p className="text-overline font-bold text-stone-400 ml-1">{msg.senderName}</p>}
                     <div className={cn(
-                      "px-4 py-3 md:px-6 rounded-3xl text-sm",
-                      isMe ? "bg-stone-900 text-white rounded-tr-none" : "bg-stone-100 text-stone-800 rounded-tl-none"
+                      "px-4 py-3 md:px-6 rounded-xl text-sm",
+                      isMe ? "bg-primary text-white rounded-tr-none" : "bg-stone-100 text-stone-800 rounded-tl-none"
                     )}>
                       {msg.text}
                     </div>
@@ -268,12 +268,12 @@ export function Chat({ user }: { user: User | null }) {
               placeholder="Digite sua mensagem..."
               value={newMessage}
               onChange={e => setNewMessage(e.target.value)}
-              className="flex-1 px-4 md:px-6 py-3 md:py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all text-sm"
+              className="flex-1 px-4 md:px-6 py-3 md:py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm"
             />
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="bg-stone-900 text-white w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/20 disabled:opacity-50 disabled:shadow-none shrink-0"
+              className="bg-primary text-white w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none shrink-0"
             >
               <Send size={18} />
             </button>

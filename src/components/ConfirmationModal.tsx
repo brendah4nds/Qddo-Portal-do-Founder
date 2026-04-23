@@ -27,7 +27,7 @@ export function ConfirmationModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-xl p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
         <h3 className="text-h2 font-sans mb-3">{title}</h3>
         <p className="text-stone-500 mb-8 leading-relaxed">{message}</p>
         <div className="flex gap-3">
@@ -44,7 +44,7 @@ export function ConfirmationModal({
             }}
             className={cn(
               "flex-1 py-3 rounded-xl font-bold text-white transition-all shadow-lg",
-              variant === "danger" ? "bg-red-500 hover:bg-red-600 shadow-red-500/20" : "bg-stone-900 hover:bg-stone-800 shadow-stone-900/20"
+              variant === "danger" ? "bg-red-500 hover:bg-red-600 shadow-red-500/20" : "bg-primary hover:bg-primary/90 shadow-primary/20"
             )}
           >
             {confirmText}

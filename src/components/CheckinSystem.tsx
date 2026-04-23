@@ -246,9 +246,9 @@ export function CheckinSystem({
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold transition-all whitespace-nowrap text-sm shrink-0",
+              "flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold transition-all whitespace-nowrap text-sm shrink-0",
               activeTab === tab.id
-                ? "bg-stone-900 text-white shadow-lg shadow-stone-900/20"
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
                 : "bg-white text-stone-400 border border-stone-200 hover:border-stone-400"
             )}
           >
@@ -260,7 +260,7 @@ export function CheckinSystem({
 
       {/* Admin User Selector */}
       {isAdmin && (
-        <div className="bg-white p-6 rounded-3xl border border-stone-200 flex items-center gap-4">
+        <div className="bg-white p-6 rounded-xl border border-stone-200 flex items-center gap-4">
           <UserIcon size={20} className="text-stone-400" />
           <select 
             value={selectedUserId}
@@ -276,7 +276,7 @@ export function CheckinSystem({
       )}
 
       {/* Tab Content */}
-      <div className="bg-white rounded-[24px] md:rounded-[40px] p-6 md:p-10 border border-stone-200 shadow-sm">
+      <div className="bg-white rounded-xl md:rounded-xl p-6 md:p-10 border border-stone-200 shadow-sm">
         {activeTab === 'checkin' && (
           <div className="max-w-md mx-auto text-center space-y-8">
             <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mx-auto">
@@ -294,7 +294,7 @@ export function CheckinSystem({
             </div>
             
             {checkinSuccess && (
-              <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100 animate-in fade-in zoom-in-95 duration-300">
+              <div className="p-6 bg-emerald-50 rounded-xl border border-emerald-100 animate-in fade-in zoom-in-95 duration-300">
                 <p className="text-emerald-700 font-bold flex items-center justify-center gap-2">
                   <CheckCircle2 size={20} />
                   {checkinSuccess}
@@ -303,7 +303,7 @@ export function CheckinSystem({
             )}
 
             {checkinError && (
-              <div className="p-6 bg-rose-50 rounded-3xl border border-rose-100 animate-in fade-in shake duration-300">
+              <div className="p-6 bg-rose-50 rounded-xl border border-rose-100 animate-in fade-in shake duration-300">
                 <p className="text-rose-700 font-bold mb-1 flex items-center justify-center gap-2">
                   Erro ao realizar o check-in
                 </p>
@@ -312,7 +312,7 @@ export function CheckinSystem({
             )}
             
             {todayCheckin ? (
-              <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
+              <div className="p-6 bg-emerald-50 rounded-xl border border-emerald-100">
                 <p className="text-emerald-700 font-bold flex items-center justify-center gap-2">
                   <CheckCircle2 size={20} />
                   Check-in realizado às {todayCheckin.checkinTime?.toDate ? format(todayCheckin.checkinTime.toDate(), 'HH:mm') : '...'}
@@ -324,10 +324,10 @@ export function CheckinSystem({
                   onClick={handleCheckin}
                   disabled={locationLoading}
                   className={cn(
-                    "w-full py-6 rounded-3xl font-bold transition-all shadow-xl flex items-center justify-center gap-3",
+                    "w-full py-6 rounded-xl font-bold transition-all shadow-xl flex items-center justify-center gap-3",
                     locationLoading 
                       ? "bg-stone-100 text-stone-400 cursor-not-allowed" 
-                      : "bg-stone-900 text-white hover:bg-stone-800 shadow-stone-900/20 active:scale-[0.98]"
+                      : "bg-primary text-white hover:bg-primary/90 shadow-primary/20 active:scale-[0.98]"
                   )}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
@@ -365,7 +365,7 @@ export function CheckinSystem({
             </div>
 
             {checkinSuccess && (
-              <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100 animate-in fade-in zoom-in-95 duration-300">
+              <div className="p-6 bg-emerald-50 rounded-xl border border-emerald-100 animate-in fade-in zoom-in-95 duration-300">
                 <p className="text-emerald-700 font-bold flex items-center justify-center gap-2">
                   <CheckCircle2 size={20} />
                   {checkinSuccess}
@@ -374,7 +374,7 @@ export function CheckinSystem({
             )}
 
             {checkinError && (
-              <div className="p-6 bg-rose-50 rounded-3xl border border-rose-100 animate-in fade-in shake duration-300">
+              <div className="p-6 bg-rose-50 rounded-xl border border-rose-100 animate-in fade-in shake duration-300">
                 <p className="text-rose-700 font-bold mb-1 flex items-center justify-center gap-2">
                   Erro ao realizar o check-out
                 </p>
@@ -383,11 +383,11 @@ export function CheckinSystem({
             )}
 
             {!todayCheckin ? (
-              <div className="p-6 bg-stone-50 rounded-3xl border border-stone-100">
+              <div className="p-6 bg-stone-50 rounded-xl border border-stone-100">
                 <p className="text-stone-500">Você ainda não realizou check-in hoje.</p>
               </div>
             ) : todayCheckin.status === 'completed' ? (
-              <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
+              <div className="p-6 bg-emerald-50 rounded-xl border border-emerald-100">
                 <p className="text-emerald-700 font-bold flex items-center justify-center gap-2">
                   <CheckCircle2 size={20} />
                   Check-out realizado às {todayCheckin.checkoutTime?.toDate ? format(todayCheckin.checkoutTime.toDate(), 'HH:mm') : '...'}
@@ -399,10 +399,10 @@ export function CheckinSystem({
                   onClick={handleCheckout}
                   disabled={locationLoading}
                   className={cn(
-                    "w-full py-6 rounded-3xl font-bold transition-all shadow-xl flex items-center justify-center gap-3",
+                    "w-full py-6 rounded-xl font-bold transition-all shadow-xl flex items-center justify-center gap-3",
                     locationLoading 
                       ? "bg-stone-100 text-stone-400 cursor-not-allowed" 
-                      : "bg-stone-900 text-white hover:bg-stone-800 shadow-stone-900/20 active:scale-[0.98]"
+                      : "bg-primary text-white hover:bg-primary/90 shadow-primary/20 active:scale-[0.98]"
                   )}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
@@ -427,7 +427,7 @@ export function CheckinSystem({
           <div className="space-y-8 md:space-y-12">
             {/* Metrics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-              <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100">
+              <div className="bg-stone-50 p-4 md:p-6 rounded-lg border border-stone-100">
                 <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Visitas este mês</span>
                 <div className="flex items-end gap-2">
                   <span className="text-h1 font-sans text-stone-900">{currentMonthCheckins}</span>
@@ -441,14 +441,14 @@ export function CheckinSystem({
                 </div>
               </div>
 
-              <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100">
+              <div className="bg-stone-50 p-4 md:p-6 rounded-lg border border-stone-100">
                 <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Média Semanal</span>
                 <span className="text-h1 font-sans text-stone-900">
                   {(currentMonthCheckins / 4).toFixed(1)}
                 </span>
               </div>
 
-              <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100">
+              <div className="bg-stone-50 p-4 md:p-6 rounded-lg border border-stone-100">
                 <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Score QDDO</span>
                 <div className="flex items-end gap-2">
                   <span className="text-h1 font-sans text-stone-900">{currentMonthCheckins * 10}</span>
@@ -456,7 +456,7 @@ export function CheckinSystem({
                 </div>
               </div>
 
-              <div className="bg-stone-50 p-4 md:p-6 rounded-2xl border border-stone-100 col-span-2 md:col-span-1">
+              <div className="bg-stone-50 p-4 md:p-6 rounded-lg border border-stone-100 col-span-2 md:col-span-1">
                 <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Status Atual</span>
                 <div className="flex items-center gap-2">
                   <div className={cn(
@@ -510,8 +510,8 @@ export function CheckinSystem({
                     <div 
                       key={day.toString()}
                       className={cn(
-                        "aspect-square rounded-2xl border flex flex-col items-center justify-center relative transition-all",
-                        isToday(day) ? "border-stone-900 bg-stone-50" : "border-stone-100",
+                        "aspect-square rounded-lg border flex flex-col items-center justify-center relative transition-all",
+                        isToday(day) ? "border-primary bg-terracota-50" : "border-stone-100",
                         checkinDay ? "bg-emerald-50 border-emerald-100" : "hover:bg-stone-50"
                       )}
                     >
@@ -536,7 +536,7 @@ export function CheckinSystem({
         {activeTab === 'score' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center max-w-2xl mx-auto">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-stone-900 text-white rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-stone-900/20">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-primary text-white rounded-lg md:rounded-xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-stone-900/20">
                 <Trophy size={32} />
               </div>
               <h3 className="text-h2 md:text-h1 font-sans mb-3">Sistema de Score QDDO</h3>
@@ -549,7 +549,7 @@ export function CheckinSystem({
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold shrink-0">01</div>
                   <h4 className="font-sans text-lg md:text-h3">Descrição</h4>
                 </div>
-                <div className="bg-stone-50 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-stone-100">
+                <div className="bg-stone-50 p-5 md:p-8 rounded-xl md:rounded-xl border border-stone-100">
                   <p className="text-stone-600 leading-relaxed text-sm">
                     O Score QDDO é uma métrica de engajamento que recompensa os Founders que utilizam o espaço físico e participam ativamente do ecossistema.
                     É a sua "moeda de presença" dentro da nossa comunidade.
@@ -562,7 +562,7 @@ export function CheckinSystem({
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold shrink-0">02</div>
                   <h4 className="font-sans text-lg md:text-h3">Regras</h4>
                 </div>
-                <div className="bg-stone-50 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-stone-100">
+                <div className="bg-stone-50 p-5 md:p-8 rounded-xl md:rounded-xl border border-stone-100">
                   <ul className="space-y-3">
                     {[
                       'Cada check-in diário vale 10 pontos.',
@@ -584,7 +584,7 @@ export function CheckinSystem({
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold shrink-0">03</div>
                   <h4 className="font-sans text-lg md:text-h3">Benefícios</h4>
                 </div>
-                <div className="bg-stone-50 p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-stone-100">
+                <div className="bg-stone-50 p-5 md:p-8 rounded-xl md:rounded-xl border border-stone-100">
                   <ul className="space-y-3">
                     {[
                       'Prioridade na reserva de salas de reunião.',
@@ -602,7 +602,7 @@ export function CheckinSystem({
               </div>
             </div>
 
-            <div className="bg-stone-900 rounded-[24px] md:rounded-[32px] p-6 md:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-stone-900 rounded-xl md:rounded-xl p-6 md:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <h4 className="text-lg md:text-h3 font-sans mb-1">Seu Score Atual</h4>
                 <p className="text-stone-400 text-sm">Continue frequentando para subir no ranking!</p>

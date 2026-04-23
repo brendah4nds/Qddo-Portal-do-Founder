@@ -6,19 +6,19 @@ export function LandingPage({ onLogin, onRegister }: { onLogin: () => void, onRe
     <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center p-6">
       <div className="max-w-md w-full">
         <div className="text-center mb-12">
-          <div className="inline-flex relative w-20 h-20 bg-black rounded-2xl items-center justify-center overflow-hidden mb-8 shadow-2xl shadow-black/20">
+          <div className="inline-flex relative w-20 h-20 bg-stone-900 rounded-lg items-center justify-center overflow-hidden mb-8 shadow-2xl shadow-black/20">
             <div className="w-12 h-12 border-[6px] border-white rounded-full"></div>
-            <div className="absolute bottom-3 right-3 w-5 h-5 bg-[#FF4500] rounded-full shadow-[0_0_15px_rgba(255,69,0,0.6)]"></div>
+            <div className="absolute bottom-3 right-3 w-5 h-5 bg-primary rounded-full shadow-[0_0_15px_rgba(255,69,0,0.6)]"></div>
           </div>
           <h1 className="font-sans font-black text-[3.75rem] tracking-tighter mb-4">qddo</h1>
           <p className="text-stone-500 text-lg">Gestão Inteligente de Espaços & Comunidade Founders</p>
         </div>
 
-        <div className="bg-white rounded-[40px] p-10 border border-stone-200 shadow-xl space-y-4">
+        <div className="bg-white rounded-xl p-10 border border-stone-200 shadow-xl space-y-4">
           <div className="space-y-4">
             <button
               onClick={onLogin}
-              className="w-full flex items-center justify-center gap-3 bg-stone-900 text-white py-5 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/20 group"
+              className="w-full flex items-center justify-center gap-3 bg-primary text-white py-5 rounded-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group"
             >
               <LogIn size={20} className="group-hover:translate-x-1 transition-transform" />
               Entrar com Google

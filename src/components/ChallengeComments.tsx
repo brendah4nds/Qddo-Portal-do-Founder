@@ -81,7 +81,7 @@ export function ChallengeComments({ challengeId, user }: { challengeId: string; 
               <div className="w-8 h-8 rounded-lg overflow-hidden bg-stone-100 flex-shrink-0">
                 <img src={comment.userPhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.userName}`} alt="" referrerPolicy="no-referrer" />
               </div>
-              <div className="flex-1 bg-stone-50 rounded-2xl p-4">
+              <div className="flex-1 bg-stone-50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-bold text-stone-900">{comment.userName}</span>
                   <span className="text-overline uppercase tracking-widest font-bold text-stone-300">
@@ -96,7 +96,7 @@ export function ChallengeComments({ challengeId, user }: { challengeId: string; 
       </div>
 
       <form onSubmit={handleSubmit} className="flex gap-3 pt-4">
-        <div className="w-10 h-10 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0">
+        <div className="w-10 h-10 rounded-md overflow-hidden bg-stone-100 flex-shrink-0">
           <img src={user?.photoURL || ''} alt="" referrerPolicy="no-referrer" />
         </div>
         <div className="flex-1 relative">
@@ -105,12 +105,12 @@ export function ChallengeComments({ challengeId, user }: { challengeId: string; 
             placeholder="Escreva um comentário ou sugestão..."
             value={newComment}
             onChange={e => setNewComment(e.target.value)}
-            className="w-full pl-6 pr-14 py-3 bg-stone-50 border border-stone-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+            className="w-full pl-6 pr-14 py-3 bg-stone-50 border border-stone-100 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
           />
           <button 
             type="submit"
             disabled={!newComment.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-stone-900 text-white rounded-xl flex items-center justify-center hover:bg-stone-800 transition-all disabled:opacity-50"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-primary text-white rounded-md flex items-center justify-center hover:bg-primary/90 transition-all disabled:opacity-50"
           >
             <Send size={16} />
           </button>

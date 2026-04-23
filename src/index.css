@@ -1,6 +1,26 @@
 @import "tailwindcss";
 
+/* ============================================================
+   DESIGN SYSTEM – Light Mode
+   Fonte: Figtree | Escala: Perfect Fourth 1.333 | base 16px
+   Paleta: OKLCH – terracota / laranja queimado (hue 36–41°)
+   Radius: xs 4px / sm 8px / md 12px / lg 16px / xl 24px
+   ============================================================ */
+
 :root {
+  /* ── Primitivos ─────────────────────────────────────────── */
+  --terracota-50:  oklch(0.9563 0.0228 41.4);
+  --terracota-100: oklch(0.9069 0.0505 41.1);
+  --terracota-200: oklch(0.8896 0.0604 40.0);
+  --terracota-300: oklch(0.8245 0.1016 39.4);
+  --terracota-400: oklch(0.7579 0.1491 38.9);
+  --terracota-500: oklch(0.7425 0.1437 39.2);
+  --terracota-600: oklch(0.6700 0.1833 38.3);
+  --terracota-700: oklch(0.6334 0.1998 36.8);
+  --terracota-800: oklch(0.6173 0.2183 34.7);
+  --terracota-900: oklch(0.5946 0.1860 24.8);
+
+  /* ── Tipografia ─────────────────────────────────────────── */
   --fs-display:  2.375rem;
   --fs-h1:       1.75rem;
   --fs-h2:       1.313rem;
@@ -13,32 +33,88 @@
   --lh-heading:  1.2;
   --lh-body:     1.6;
   --lh-label:    1.4;
+
+  /* ── Radius ─────────────────────────────────────────────── */
+  --radius-xs:   0.25rem;   /*  4px */
+  --radius-sm:   0.5rem;    /*  8px */
+  --radius-md:   0.75rem;   /* 12px */
+  --radius-lg:   1rem;      /* 16px */
+  --radius-xl:   1.5rem;    /* 24px */
+  --radius-full: 9999px;
+
+  /* ── Sombras quentes ────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px  rgba(80, 30, 10, 0.05);
+  --shadow-sm: 0 1px 3px  rgba(80, 30, 10, 0.06), 0 1px 2px rgba(80, 30, 10, 0.04);
+  --shadow-md: 0 2px 8px  rgba(80, 30, 10, 0.07), 0 1px 3px rgba(80, 30, 10, 0.04);
+  --shadow-lg: 0 4px 16px rgba(80, 30, 10, 0.08), 0 2px 6px rgba(80, 30, 10, 0.04);
 }
 
 @theme {
-  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  /* ── Fontes ─────────────────────────────────────────────── */
+  --font-sans:  "Figtree", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Figtree", ui-sans-serif, system-ui, sans-serif;
 
-  /* type scale */
-  --font-size-display: 2.375rem;   /* 38px */
-  --font-size-h1:      1.75rem;    /* 28px */
-  --font-size-h2:      1.313rem;   /* 21px */
-  --font-size-h3:      1.188rem;   /* 19px */
-  --font-size-body-lg: 1.125rem;   /* 18px */
-  --font-size-body:    1rem;       /* 16px */
-  --font-size-label:   0.875rem;   /* 14px */
-  --font-size-caption: 0.75rem;    /* 12px */
-  --font-size-overline: 0.688rem;  /* 11px */
-
-  /* line-heights */
+  /* ── Escala tipográfica ──────────────────────────────────── */
+  --font-size-display:  2.375rem;
+  --font-size-h1:       1.75rem;
+  --font-size-h2:       1.313rem;
+  --font-size-h3:       1.188rem;
+  --font-size-body-lg:  1.125rem;
+  --font-size-body:     1rem;
+  --font-size-label:    0.875rem;
+  --font-size-caption:  0.75rem;
+  --font-size-overline: 0.688rem;
   --leading-heading: 1.2;
   --leading-body:    1.6;
   --leading-label:   1.4;
+
+  /* ── Paleta semântica ───────────────────────────────────── */
+  --color-background:              #F2F2F2;
+  --color-card:                    #FFFFFF;
+  --color-foreground:              #1A1A1A;
+  --color-card-foreground:         #1A1A1A;
+  --color-primary:                 oklch(0.6334 0.1998 36.7632);
+  --color-primary-foreground:      #FFFFFF;
+  --color-secondary:               oklch(0.8896 0.0604 40.0136);
+  --color-secondary-foreground:    oklch(0.4404 0.0313 21.3036);
+  --color-muted:                   oklch(0.9700 0.0040 40.0);
+  --color-muted-foreground:        #737373;
+  --color-destructive:             oklch(0.5800 0.1600 42.0);
+  --color-destructive-foreground:  #FFFFFF;
+  --color-border:                  #DBDBDB;
+  --color-input:                   #C7C7C7;
+  --color-ring:                    oklch(0.7698 0.1414 40.8476);
+
+  /* ── Paleta terracota (escala completa) ─────────────────── */
+  --color-terracota-50:  oklch(0.9563 0.0228 41.4);
+  --color-terracota-100: oklch(0.9069 0.0505 41.1);
+  --color-terracota-200: oklch(0.8896 0.0604 40.0);
+  --color-terracota-300: oklch(0.8245 0.1016 39.4);
+  --color-terracota-400: oklch(0.7579 0.1491 38.9);
+  --color-terracota-500: oklch(0.7425 0.1437 39.2);
+  --color-terracota-600: oklch(0.6700 0.1833 38.3);
+  --color-terracota-700: oklch(0.6334 0.1998 36.8);
+  --color-terracota-800: oklch(0.6173 0.2183 34.7);
+  --color-terracota-900: oklch(0.5946 0.1860 24.8);
+
+  /* ── Radius ─────────────────────────────────────────────── */
+  --radius-xs:   0.25rem;
+  --radius-sm:   0.5rem;
+  --radius-md:   0.75rem;
+  --radius-lg:   1rem;
+  --radius-xl:   1.5rem;
+  --radius-full: 9999px;
+
+  /* ── Sombras ────────────────────────────────────────────── */
+  --shadow-xs:  0 1px 2px  rgba(80, 30, 10, 0.05);
+  --shadow-sm:  0 1px 3px  rgba(80, 30, 10, 0.06), 0 1px 2px rgba(80, 30, 10, 0.04);
+  --shadow-md:  0 2px 8px  rgba(80, 30, 10, 0.07), 0 1px 3px rgba(80, 30, 10, 0.04);
+  --shadow-lg:  0 4px 16px rgba(80, 30, 10, 0.08), 0 2px 6px rgba(80, 30, 10, 0.04);
 }
 
 @layer base {
   body {
-    @apply bg-[#F5F5F0] text-stone-900 antialiased;
+    @apply bg-background text-foreground antialiased;
     height: 100svh;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -61,20 +137,8 @@ html.dark video {
   filter: invert(1) hue-rotate(180deg);
 }
 
-/* Custom scrollbar for sidebar */
-aside::-webkit-scrollbar {
-  width: 4px;
-}
-
-aside::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-aside::-webkit-scrollbar-thumb {
-  background: #E5E5E0;
-  border-radius: 10px;
-}
-
-aside::-webkit-scrollbar-thumb:hover {
-  background: #D1D1CB;
-}
+/* Custom scrollbar */
+aside::-webkit-scrollbar { width: 4px; }
+aside::-webkit-scrollbar-track { background: transparent; }
+aside::-webkit-scrollbar-thumb { background: #E5E5E0; border-radius: 10px; }
+aside::-webkit-scrollbar-thumb:hover { background: #D1D1CB; }

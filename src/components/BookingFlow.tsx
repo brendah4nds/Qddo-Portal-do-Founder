@@ -155,7 +155,7 @@ export function BookingFlow({
 
   if (status === 'success') {
     return (
-      <div className="max-w-md mx-auto text-center py-20 bg-white rounded-3xl shadow-sm border border-stone-100 p-12">
+      <div className="max-w-md mx-auto text-center py-20 bg-white rounded-xl shadow-sm border border-stone-100 p-12">
         <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle size={32} />
         </div>
@@ -167,7 +167,7 @@ export function BookingFlow({
             setSelectedRoomId(null);
             setStep(1);
           }}
-          className="w-full bg-stone-900 text-white py-4 rounded-xl font-semibold hover:bg-stone-800 transition-all"
+          className="w-full bg-primary text-white py-4 rounded-md font-semibold hover:bg-primary/90 transition-all"
         >
           Fazer outro agendamento
         </button>
@@ -194,7 +194,7 @@ export function BookingFlow({
             <div className="flex items-center gap-2">
               <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all",
-                step >= s.id ? "bg-stone-900 text-white shadow-lg shadow-stone-200" : "bg-stone-100 text-stone-400"
+                step >= s.id ? "bg-primary text-white shadow-lg shadow-primary/10" : "bg-stone-100 text-stone-400"
               )}>
                 {s.id}
               </div>
@@ -208,7 +208,7 @@ export function BookingFlow({
             {i < 2 && (
               <div className={cn(
                 "w-8 h-[1px] transition-all",
-                step > s.id ? "bg-stone-900" : "bg-stone-100"
+                step > s.id ? "bg-primary" : "bg-stone-100"
               )} />
             )}
           </React.Fragment>
@@ -229,9 +229,9 @@ export function BookingFlow({
                     window.history.pushState({}, '', `/sala/${room.id}`);
                     setStep(2);
                   }}
-                  className="p-8 rounded-3xl border border-stone-200 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group"
+                  className="p-8 rounded-xl border border-stone-200 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center mb-6 group-hover:bg-stone-900 group-hover:text-white transition-colors">
+                  <div className="w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
                     <RoomIcon size={24} />
                   </div>
                   <h3 className="font-sans text-h3 leading-tight mb-2">{room.name}</h3>
@@ -257,7 +257,7 @@ export function BookingFlow({
               <h2 className="text-h1 font-sans">Escolha a data para {selectedRoom?.name}</h2>
             </div>
             
-            <div className="bg-white rounded-3xl p-8 border border-stone-200 shadow-sm">
+            <div className="bg-white rounded-xl p-8 border border-stone-200 shadow-sm">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="font-sans text-h3">{format(selectedDate, "MMMM yyyy", { locale: ptBR })}</h3>
                 <div className="flex gap-2">
@@ -297,8 +297,8 @@ export function BookingFlow({
                           setStep(3);
                         }}
                         className={cn(
-                          "aspect-square flex flex-col items-center justify-center rounded-2xl transition-all",
-                          isSelected ? "bg-stone-900 text-white shadow-md" : "hover:bg-stone-50",
+                          "aspect-square flex flex-col items-center justify-center rounded-lg transition-all",
+                          isSelected ? "bg-primary text-white shadow-md" : "hover:bg-stone-50",
                           isDisabled ? "opacity-20 cursor-not-allowed" : "",
                           !currentMonth ? "invisible" : ""
                         )}
@@ -330,7 +330,7 @@ export function BookingFlow({
               </div>
             </div>
 
-            <div className="bg-white rounded-3xl p-8 border border-stone-200 shadow-sm">
+            <div className="bg-white rounded-xl p-8 border border-stone-200 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <label className="text-xs uppercase tracking-widest font-bold text-stone-400 block">Selecione os Horários</label>
                 {selectedTimes.length > 0 && (
@@ -356,9 +356,9 @@ export function BookingFlow({
                       disabled={disabled}
                       onClick={() => toggleTime(time)}
                       className={cn(
-                        "py-4 rounded-2xl border text-sm font-bold transition-all flex flex-col items-center justify-center",
+                        "py-4 rounded-lg border text-sm font-bold transition-all flex flex-col items-center justify-center",
                         isSelected 
-                          ? "bg-stone-900 border-stone-900 text-white shadow-lg" 
+                          ? "bg-primary border-primary text-white shadow-lg" 
                           : disabled 
                             ? "bg-stone-50 border-stone-100 text-stone-300 cursor-not-allowed" 
                             : "border-stone-200 hover:border-stone-400"
@@ -383,7 +383,7 @@ export function BookingFlow({
                       placeholder="Seu nome"
                       value={formData.name}
                       onChange={e => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full pl-12 pr-4 py-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                      className="w-full pl-12 pr-4 py-5 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
                     />
                   </div>
                 </div>
@@ -398,7 +398,7 @@ export function BookingFlow({
                       placeholder="seu@email.com"
                       value={formData.email}
                       onChange={e => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full pl-12 pr-4 py-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                      className="w-full pl-12 pr-4 py-5 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
                     />
                   </div>
                 </div>
@@ -406,14 +406,14 @@ export function BookingFlow({
                 <button 
                   type="submit"
                   disabled={selectedTimes.length === 0 || status === 'loading'}
-                  className="w-full bg-stone-900 text-white py-5 rounded-2xl font-bold hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-8 shadow-xl shadow-stone-900/20 text-lg"
+                  className="w-full bg-primary text-white py-5 rounded-lg font-bold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-8 shadow-xl shadow-primary/20 text-lg"
                 >
                   {status === 'loading' ? 'Processando...' : `Confirmar Reserva (${selectedTimes.length} ${selectedTimes.length === 1 ? 'horário' : 'horários'})`}
                 </button>
               </form>
 
               {status === 'error' && (
-                <div className="mt-6 p-4 bg-red-50 text-red-600 rounded-2xl flex items-center gap-3 text-sm font-medium">
+                <div className="mt-6 p-4 bg-red-50 text-red-600 rounded-lg flex items-center gap-3 text-sm font-medium">
                   <AlertCircle size={20} />
                   <span>Ocorreu um erro. Verifique os dados e tente novamente.</span>
                 </div>

@@ -61,7 +61,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
           <p className="text-stone-500 font-sans text-lg">Complete seu cadastro de Founder para acessar a plataforma.</p>
         </div>
 
-        <form onSubmit={handleRegister} className="bg-white rounded-[40px] p-12 border border-stone-200 shadow-2xl space-y-8">
+        <form onSubmit={handleRegister} className="bg-white rounded-xl p-12 border border-stone-200 shadow-2xl space-y-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div className="space-y-2">
               <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Nome</label>
@@ -71,7 +71,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                 placeholder="Seu nome real"
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
               />
             </div>
             <div className="space-y-2">
@@ -82,7 +82,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                 placeholder="@username"
                 value={formData.username}
                 onChange={e => setFormData({ ...formData, username: e.target.value })}
-                className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
               />
             </div>
           </div>
@@ -96,7 +96,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                 placeholder="link do seu perfil"
                 value={formData.instagram}
                 onChange={e => setFormData({ ...formData, instagram: e.target.value })}
-                className="w-full pl-12 pr-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                className="w-full pl-12 pr-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
               />
             </div>
           </div>
@@ -108,7 +108,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
               placeholder="Conte um pouco sobre você..."
               value={formData.bio}
               onChange={e => setFormData({ ...formData, bio: e.target.value })}
-              className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all resize-none"
+              className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all resize-none"
             />
           </div>
 
@@ -125,7 +125,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                   placeholder="Nome da sua startup/negócio"
                   value={formData.companyName}
                   onChange={e => setFormData({ ...formData, companyName: e.target.value })}
-                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
                 />
               </div>
               <div className="space-y-2">
@@ -135,7 +135,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                   placeholder="00.000.000/0000-00"
                   value={formData.cnpj}
                   onChange={e => setFormData({ ...formData, cnpj: e.target.value })}
-                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all"
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
                 />
               </div>
               <div className="space-y-2">
@@ -143,7 +143,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                 <select
                   value={formData.companyTipo}
                   onChange={e => setFormData({ ...formData, companyTipo: e.target.value })}
-                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all appearance-none"
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none"
                 >
                   <option value="">Selecione a categoria...</option>
                   <option value="HealthTech">HealthTech</option>
@@ -161,7 +161,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
                   placeholder="O que sua empresa faz?"
                   value={formData.companyBio}
                   onChange={e => setFormData({ ...formData, companyBio: e.target.value })}
-                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all resize-none"
+                  className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all resize-none"
                 />
               </div>
             </div>
@@ -181,7 +181,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
           <button 
             type="submit"
             disabled={registering}
-            className="w-full bg-stone-900 text-white py-6 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-2xl shadow-stone-900/20 text-lg"
+            className="w-full bg-primary text-white py-6 rounded-lg font-bold hover:bg-primary/90 transition-all shadow-2xl shadow-primary/20 text-lg"
           >
             {registering ? 'Cadastrando...' : 'Finalizar Cadastro e Entrar'}
           </button>
