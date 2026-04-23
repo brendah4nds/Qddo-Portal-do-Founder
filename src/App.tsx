@@ -2140,7 +2140,7 @@ export default function App() {
                           )}
                         </div>
                         );
-                      }))
+                      })
                   ) : (
                     <div className="text-center py-20 bg-white rounded-xl border border-dashed border-stone-200">
                       <p className="text-stone-400">Nenhuma regra cadastrada ainda.</p>
