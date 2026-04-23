@@ -104,6 +104,7 @@ const DEFAULT_BUSINESS_HOURS = Array.from({ length: 21 }, (_, i) => {
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeGeneralCategory, setActiveGeneralCategory] = useState<string | null>(null);
+  const [selectedNewsItem, setSelectedNewsItem] = useState<any | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [editingRuleData, setEditingRuleData] = useState<{ title: string; content: string }>({ title: '', content: '' });
   const [deletingRuleId, setDeletingRuleId] = useState<string | null>(null);
@@ -1185,7 +1186,7 @@ export default function App() {
 
                             <div className="mt-3 pt-3 border-t border-stone-50 flex items-center justify-between gap-2">
                               <button
-                                onClick={() => setActiveGeneralCategory(item.category)}
+                                onClick={() => setSelectedNewsItem(item)}
                                 className="text-overline font-bold uppercase tracking-widest text-stone-900 flex items-center gap-1.5 group-hover:gap-2 transition-all"
                               >
                                 {isAviso ? 'Ver aviso' : 'Detalhes'} <ArrowRight size={12} />
@@ -2806,6 +2807,127 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {selectedNewsItem && (() => {
+        const isAviso = selectedNewsItem.category === 'aviso';
+        const date = isAviso
+          ? (selectedNewsItem.createdAt?.seconds ? new Date(selectedNewsItem.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '')
+          : (selectedNewsItem.eventDate?.toDate ? selectedNewsItem.eventDate.toDate().toLocaleDateString('pt-BR') : selectedNewsItem.eventDate ? new Date(selectedNewsItem.eventDate + 'T00:00:00').toLocaleDateString('pt-BR') : selectedNewsItem.createdAt?.seconds ? new Date(selectedNewsItem.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '');
+        return (
+          <div
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setSelectedNewsItem(null)}
+          >
+            <div
+              className="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              {/* Image */}
+              {selectedNewsItem.imageUrl && (
+                <div className="w-full h-48 bg-stone-100 overflow-hidden flex-shrink-0">
+                  <img src={selectedNewsItem.imageUrl} alt={selectedNewsItem.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+
+              {/* Header */}
+              <div className="px-6 pt-6 pb-4 border-b border-stone-100 flex items-start justify-between gap-4 flex-shrink-0">
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {isAviso ? (
+                      <span className="text-overline uppercase tracking-widest font-bold bg-rose-50 px-2 py-0.5 rounded-full text-rose-500 flex items-center gap-1">
+                        <AlertTriangle size={9} /> Aviso
+                      </span>
+                    ) : (
+                      <span className="text-overline uppercase tracking-widest font-bold bg-stone-100 px-2 py-0.5 rounded-full text-stone-500">Evento</span>
+                    )}
+                    {date && <span className="text-overline uppercase tracking-widest font-bold text-stone-400">{date}</span>}
+                  </div>
+                  <h3 className="text-base font-sans font-bold text-stone-900 uppercase tracking-tight leading-snug">{selectedNewsItem.title}</h3>
+                  {!isAviso && (selectedNewsItem.startTime || selectedNewsItem.endTime) && (
+                    <span className="text-overline uppercase tracking-widest font-bold text-primary flex items-center gap-1.5">
+                      <Clock size={10} />
+                      {selectedNewsItem.startTime || '--:--'}{selectedNewsItem.endTime && ` – ${selectedNewsItem.endTime}`}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedNewsItem(null)}
+                  className="w-9 h-9 rounded-full hover:bg-stone-100 flex items-center justify-center transition-colors shrink-0 mt-0.5"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="px-6 py-5 overflow-y-auto flex-1 space-y-4">
+                <p className="text-stone-600 text-sm leading-relaxed whitespace-pre-wrap">{selectedNewsItem.content}</p>
+
+                {(selectedNewsItem.eventDate || selectedNewsItem.attachmentUrl) && (
+                  <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-stone-100">
+                    {selectedNewsItem.eventDate && (
+                      <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs">
+                        <CalendarDays size={14} />
+                        <span>Data: {selectedNewsItem.eventDate?.toDate ? selectedNewsItem.eventDate.toDate().toLocaleDateString('pt-BR') : new Date(selectedNewsItem.eventDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                      </div>
+                    )}
+                    {selectedNewsItem.startTime && (
+                      <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest">
+                        <Clock size={14} />
+                        <span>Início: {selectedNewsItem.startTime}</span>
+                      </div>
+                    )}
+                    {selectedNewsItem.endTime && (
+                      <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest">
+                        <Clock size={14} />
+                        <span>Término: {selectedNewsItem.endTime}</span>
+                      </div>
+                    )}
+                    {selectedNewsItem.attachmentUrl && (
+                      <a
+                        href={selectedNewsItem.attachmentUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-stone-900 font-bold text-xs hover:underline decoration-stone-900/30"
+                      >
+                        <Paperclip size={14} />
+                        <span>{selectedNewsItem.attachmentName || 'Ver Arquivo'}</span>
+                        <ExternalLink size={14} />
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Admin footer */}
+              {isAdmin && (
+                <div className="px-6 py-4 bg-stone-50 border-t border-stone-100 flex justify-end gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => {
+                      setSelectedNewsItem(null);
+                      setEditingRuleId(selectedNewsItem.id);
+                      setEditingRuleData({ title: selectedNewsItem.title, content: selectedNewsItem.content });
+                      setActiveGeneralCategory(selectedNewsItem.category);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-stone-600 bg-white border border-stone-200 rounded-lg hover:bg-stone-100 transition"
+                  >
+                    <Pencil size={13} /> Editar
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedNewsItem(null);
+                      setAdminInitialTab('news');
+                      setView('admin');
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition"
+                  >
+                    <Plus size={13} /> Adicionar Conteúdo
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {showIndicarFounderModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowIndicarFounderModal(false)}>
