@@ -119,6 +119,7 @@ export default function App() {
   const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news' | 'qcoin'>('general');
   const [activeSubTab, setActiveSubTab] = useState<string>('general');
   const [adminInitialTab, setAdminInitialTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes'>('bookings');
+  const [adminInitialEditNewsItem, setAdminInitialEditNewsItem] = useState<any>(null);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
   const [bookingStatus, setBookingStatus] = useState<BookingStatus>('idle');
@@ -1109,15 +1110,17 @@ export default function App() {
         <main className={`flex-1 w-full ${view === 'chat' ? 'overflow-hidden p-2 md:p-4' : 'overflow-y-auto p-4 md:p-6'}`}>
           <div className={view === 'chat' ? 'h-full' : 'max-w-7xl mx-auto'}>
             {view === 'admin' ? (
-              <AdminPanel 
-                user={user} 
-                onLogin={handleLogin} 
-                rooms={rooms} 
-                bookings={bookings} 
+              <AdminPanel
+                user={user}
+                onLogin={handleLogin}
+                rooms={rooms}
+                bookings={bookings}
                 businessHours={businessHours}
                 isAdmin={isAdmin}
                 founders={allFounders}
                 initialTab={adminInitialTab}
+                initialEditNewsItem={adminInitialEditNewsItem}
+                onEditNewsConsumed={() => setAdminInitialEditNewsItem(null)}
               />
             ) : view === 'portal' ? (
               <FounderPortal 
@@ -2903,10 +2906,11 @@ export default function App() {
                 <div className="px-6 py-4 bg-stone-50 border-t border-stone-100 flex justify-end gap-2 flex-shrink-0">
                   <button
                     onClick={() => {
+                      const item = selectedNewsItem;
                       setSelectedNewsItem(null);
-                      setEditingRuleId(selectedNewsItem.id);
-                      setEditingRuleData({ title: selectedNewsItem.title, content: selectedNewsItem.content });
-                      setActiveGeneralCategory(selectedNewsItem.category);
+                      setAdminInitialEditNewsItem(item);
+                      setAdminInitialTab('news');
+                      setView('admin');
                     }}
                     className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-stone-600 bg-white border border-stone-200 rounded-lg hover:bg-stone-100 transition"
                   >

@@ -41,6 +41,7 @@ import { db, auth, storage, handleFirestoreError, OperationType } from '../fireb
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Room, Booking, Challenge } from '../types';
 import { ConfirmationModal } from './ConfirmationModal';
+import { ImageCropModal } from './ImageCropModal';
 import { addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -63,7 +64,9 @@ export function AdminPanel({
   businessHours,
   isAdmin,
   founders = [],
-  initialTab = 'bookings'
+  initialTab = 'bookings',
+  initialEditNewsItem = null,
+  onEditNewsConsumed
 }: {
   user: User | null;
   onLogin: () => void;
@@ -73,6 +76,8 @@ export function AdminPanel({
   isAdmin: boolean;
   founders?: any[];
   initialTab?: 'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes';
+  initialEditNewsItem?: any;
+  onEditNewsConsumed?: () => void;
 }) {
   const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes'>(initialTab);
   const [indicacoes, setIndicacoes] = useState<any[]>([]);
@@ -93,6 +98,9 @@ export function AdminPanel({
   });
   const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [pendingImageFileName, setPendingImageFileName] = useState<string>('');
   const [isAddingNews, setIsAddingNews] = useState(false);
   const [editingFounder, setEditingFounder] = useState<any | null>(null);
   const [editFounderForm, setEditFounderForm] = useState({
@@ -152,6 +160,28 @@ export function AdminPanel({
     const dateB = new Date(`${b.date}T${b.startTime}`);
     return dateB.getTime() - dateA.getTime();
   });
+
+  useEffect(() => {
+    if (!initialEditNewsItem) return;
+    setNewNews({
+      title: initialEditNewsItem.title || '',
+      content: initialEditNewsItem.content || '',
+      category: initialEditNewsItem.category || 'aviso',
+      eventDate: initialEditNewsItem.eventDate?.toDate
+        ? initialEditNewsItem.eventDate.toDate().toISOString().split('T')[0]
+        : (initialEditNewsItem.eventDate || ''),
+      startTime: initialEditNewsItem.startTime || '',
+      endTime: initialEditNewsItem.endTime || '',
+      imageUrl: initialEditNewsItem.imageUrl || '',
+      attachmentUrl: initialEditNewsItem.attachmentUrl || '',
+      attachmentName: initialEditNewsItem.attachmentName || '',
+      attachmentType: initialEditNewsItem.attachmentType || ''
+    });
+    setEditingNewsId(initialEditNewsItem.id);
+    setAdminTab('news');
+    setIsAddingNews(true);
+    onEditNewsConsumed?.();
+  }, [initialEditNewsItem]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -355,6 +385,37 @@ export function AdminPanel({
     });
     setEditingNewsId(item.id);
     setIsAddingNews(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset the input so the same file can be re-selected after cancel
+    e.target.value = '';
+    if (!file.type.startsWith('image/')) {
+      alert('Apenas imagens são permitidas.');
+      return;
+    }
+    setPendingImageFileName(file.name);
+    const objectUrl = URL.createObjectURL(file);
+    setCropImageSrc(objectUrl);
+  };
+
+  const handleCropConfirm = async (blob: Blob) => {
+    setCropImageSrc(null);
+    setIsUploadingImage(true);
+    try {
+      const fileName = pendingImageFileName || 'cover.jpg';
+      const sRef = ref(storage, `news-covers/${Date.now()}-${fileName}`);
+      const snapshot = await uploadBytes(sRef, blob);
+      const url = await getDownloadURL(snapshot.ref);
+      setNewNews(prev => ({ ...prev, imageUrl: url }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Erro ao enviar imagem.');
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -780,16 +841,36 @@ export function AdminPanel({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Imagem de Capa (URL)</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={newNews.imageUrl}
-                    onChange={e => setNewNews({ ...newNews, imageUrl: e.target.value })}
-                    className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:border-primary transition-all"
-                  />
+                  <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Imagem de Capa</label>
+                  <div className="flex items-center gap-4">
+                    <label className={cn(
+                      "flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-stone-50 border border-dashed border-stone-200 rounded-lg cursor-pointer hover:bg-stone-100 transition-all",
+                      isUploadingImage && "opacity-50 cursor-not-allowed"
+                    )}>
+                      <Newspaper size={20} className="text-stone-400" />
+                      <span className="text-sm font-medium text-stone-500">
+                        {isUploadingImage ? 'Enviando...' : newNews.imageUrl ? 'Alterar imagem' : 'Selecionar imagem'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={isUploadingImage}
+                        className="hidden"
+                      />
+                    </label>
+                    {newNews.imageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setNewNews({ ...newNews, imageUrl: '' })}
+                        className="p-2 hover:bg-stone-100 rounded-lg transition-colors text-stone-400 hover:text-stone-700"
+                      >
+                        <XCircle size={18} />
+                      </button>
+                    )}
+                  </div>
                   {newNews.imageUrl && (
-                    <img src={newNews.imageUrl} alt="preview" className="w-full h-32 object-cover rounded-lg border border-stone-100 mt-1" onError={e => (e.currentTarget.style.display = 'none')} />
+                    <img src={newNews.imageUrl} alt="preview" className="w-full h-32 object-cover rounded-lg border border-stone-100 mt-1" />
                   )}
                 </div>
 
@@ -1122,6 +1203,17 @@ export function AdminPanel({
         confirmText={modalConfig.confirmText}
         variant={modalConfig.variant}
       />
+
+      {cropImageSrc && (
+        <ImageCropModal
+          imageSrc={cropImageSrc}
+          onConfirm={handleCropConfirm}
+          onClose={() => {
+            URL.revokeObjectURL(cropImageSrc);
+            setCropImageSrc(null);
+          }}
+        />
+      )}
 
       {/* Modal de Edição de Founder */}
       {editingFounder && (
