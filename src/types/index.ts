@@ -34,6 +34,7 @@ export interface Founder {
   };
   registeredAt: any;
   role?: 'user' | 'admin';
+  totalPoints?: number;
 }
 
 export interface Challenge {

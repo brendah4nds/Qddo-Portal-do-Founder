@@ -7,6 +7,8 @@ import {
   doc,
   addDoc,
   updateDoc,
+  setDoc,
+  increment,
   serverTimestamp,
   orderBy,
   Timestamp,
@@ -34,6 +36,7 @@ import {
   eachDayOfInterval,
   addMonths,
   subMonths,
+  subDays,
   isToday,
   parseISO,
   isWithinInterval
@@ -90,6 +93,7 @@ export function CheckinSystem({
   const [locationLoading, setLocationLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [todayFoundersCount, setTodayFoundersCount] = useState<number | null>(null);
+  const [selectedFounderPoints, setSelectedFounderPoints] = useState<number>(0);
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
@@ -106,6 +110,15 @@ export function CheckinSystem({
       setCheckins(data);
       setLoading(false);
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'checkins'));
+    return () => unsubscribe();
+  }, [selectedUserId]);
+
+  // Listen to selected founder's total points
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      doc(db, 'founders', selectedUserId),
+      (snap) => setSelectedFounderPoints(snap.data()?.totalPoints ?? 0)
+    );
     return () => unsubscribe();
   }, [selectedUserId]);
 
@@ -158,7 +171,28 @@ export function CheckinSystem({
               checkinTime: serverTimestamp(),
               status: 'active'
             });
-            setActionMessage({ type: 'success', text: 'Check-in realizado com sucesso!' });
+
+            // Calculate streak (existing check-ins + today just added)
+            const checkinDatesSet = new Set(checkins.map(c => c.date));
+            checkinDatesSet.add(todayStr);
+            let streak = 0;
+            let d = new Date();
+            while (checkinDatesSet.has(format(d, 'yyyy-MM-dd'))) {
+              streak++;
+              d = subDays(d, 1);
+            }
+
+            const bonusPoints = streak % 5 === 0 ? 30 : 0;
+            const pointsEarned = 10 + bonusPoints;
+
+            await setDoc(doc(db, 'founders', user.uid), {
+              totalPoints: increment(pointsEarned)
+            }, { merge: true });
+
+            const successMsg = bonusPoints > 0
+              ? `Check-in realizado! +${pointsEarned} pts (bônus streak ${streak} dias)`
+              : `Check-in realizado! +10 pts`;
+            setActionMessage({ type: 'success', text: successMsg });
           } else {
             if (todayCheckin) {
               await updateDoc(doc(db, 'checkins', todayCheckin.id), {
@@ -302,7 +336,7 @@ export function CheckinSystem({
                 Score QDDO
               </span>
               <div className="flex items-baseline gap-0.5">
-                <span className="text-xl font-bold text-stone-900">{currentMonthCheckins * 10}</span>
+                <span className="text-xl font-bold text-stone-900">{selectedFounderPoints}</span>
                 <span className="text-[10px] font-bold text-stone-400">pts</span>
               </div>
               <div className="flex items-center gap-0.5">
