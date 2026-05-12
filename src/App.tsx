@@ -71,7 +71,8 @@ import {
   Settings,
   TrendingUp,
   Award,
-  Crown
+  Crown,
+  Cake
 } from 'lucide-react';
 import { db, auth, storage, handleFirestoreError, OperationType } from './firebase';
 import { Room, Booking, BookingStatus, Challenge } from './types';
@@ -2292,11 +2293,65 @@ export default function App() {
                       const ranking = fullRanking.slice(0, 5);
                       const userRankPosition = fullRanking.findIndex(r => r.userId === user?.uid) + 1;
 
+                      const today = new Date();
+                      const sunday = new Date(today);
+                      sunday.setDate(today.getDate() - today.getDay()); // recua até o domingo
+                      const weekDates = Array.from({ length: 7 }, (_, i) => {
+                        const d = new Date(sunday);
+                        d.setDate(sunday.getDate() + i);
+                        return { day: String(d.getDate()).padStart(2, '0'), month: String(d.getMonth() + 1).padStart(2, '0') };
+                      });
+                      const saturday = weekDates[6];
+                      const birthdayFounders = allFounders.filter(f =>
+                        f.birthDay && f.birthMonth &&
+                        weekDates.some(wd => wd.day === f.birthDay && wd.month === f.birthMonth)
+                      );
+
                       return (
                         <div className="flex flex-col gap-4">
                         <div className="flex flex-col lg:flex-row gap-4">
                           {/* Part 1: Eventos & Desafios (66%) */}
                           <div className="lg:w-[66%] flex flex-col gap-4">
+                            {/* Aniversariantes do Dia */}
+                            {birthdayFounders.length > 0 && (
+                              <div className="bg-white rounded-xl p-5 border border-amber-200 shadow-sm">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <Cake className="text-amber-500 shrink-0" size={18} />
+                                  <h4 className="text-base font-sans text-stone-900">Aniversariantes da Semana</h4>
+                                  <span className="ml-auto text-overline font-bold uppercase tracking-widest text-amber-400">
+                                    {(() => {
+                                      const sat = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + 6);
+                                      const monthName = sat.toLocaleDateString('pt-BR', { month: 'long' });
+                                      if (sunday.getMonth() === sat.getMonth()) {
+                                        return `${String(sunday.getDate()).padStart(2, '0')} a ${String(sat.getDate()).padStart(2, '0')} de ${monthName}`;
+                                      }
+                                      const sundayMonth = sunday.toLocaleDateString('pt-BR', { month: 'long' });
+                                      return `${String(sunday.getDate()).padStart(2, '0')} de ${sundayMonth} a ${String(sat.getDate()).padStart(2, '0')} de ${monthName}`;
+                                    })()}
+                                  </span>
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                  {birthdayFounders.map(founder => (
+                                    <div key={founder.id} className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-lg border border-amber-100">
+                                      {founder.photoURL ? (
+                                        <img src={founder.photoURL} alt={founder.name} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                                      ) : (
+                                        <div className="w-7 h-7 rounded-full bg-amber-200 flex items-center justify-center shrink-0">
+                                          <span className="text-amber-700 text-xs font-bold">{(founder.name || 'F')[0].toUpperCase()}</span>
+                                        </div>
+                                      )}
+                                      <div>
+                                        <p className="text-sm font-bold text-stone-800 leading-tight">{founder.name || 'Founder'}</p>
+                                        <p className="text-overline font-bold text-amber-500 uppercase tracking-widest">
+                                          {founder.birthDay}/{founder.birthMonth}
+                                          {founder.birthDay === String(today.getDate()).padStart(2, '0') && founder.birthMonth === String(today.getMonth() + 1).padStart(2, '0') && ' · Hoje!'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                             {/* Avisos */}
                             {newsItems
                               .filter(item => item.category === 'aviso')

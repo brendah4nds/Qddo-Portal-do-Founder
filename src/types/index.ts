@@ -26,6 +26,10 @@ export interface Founder {
   username: string;
   instagram?: string;
   bio?: string;
+  photoURL?: string;
+  birthDay?: string;
+  birthMonth?: string;
+  birthYear?: string;
   company?: {
     name: string;
     bio: string;
