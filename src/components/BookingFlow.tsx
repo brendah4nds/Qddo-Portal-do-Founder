@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  collection, 
-  addDoc, 
-  serverTimestamp 
-} from 'firebase/firestore';
+import { api } from '../api';
 import { 
   format, 
   addDays, 
@@ -31,7 +27,6 @@ import {
   ChevronRight,
   DoorOpen as RoomIcon
 } from 'lucide-react';
-import { db } from '../firebase';
 import { Room, Booking, BookingStatus } from '../types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -130,14 +125,13 @@ export function BookingFlow({
         const start = parse(time, 'HH:mm', new Date());
         const end = addMinutes(start, 30);
         
-        return addDoc(collection(db, 'bookings'), {
+        return api.post('/api/bookings', {
           roomId: selectedRoomId,
           date: format(selectedDate, 'yyyy-MM-dd'),
           startTime: time,
           endTime: format(end, 'HH:mm'),
           userName: formData.name,
           userEmail: formData.email,
-          createdAt: serverTimestamp()
         });
       });
 

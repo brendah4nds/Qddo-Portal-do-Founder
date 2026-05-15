@@ -1,16 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  collection,
-  query,
-  onSnapshot,
-  addDoc,
-  serverTimestamp,
-  where,
-  limit
-} from 'firebase/firestore';
-import { User } from 'firebase/auth';
 import { Send, User as UserIcon, Users, MessageSquare, Search, ArrowLeft } from 'lucide-react';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { api } from '../api';
+import { getSocket } from '../socket';
 import { ChatMessage, Founder } from '../types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -19,81 +10,91 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function Chat({ user }: { user: User | null }) {
+export function Chat({ user }: { user: any | null }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [founders, setFounders] = useState<Founder[]>([]);
   const [activeChat, setActiveChat] = useState<'public' | string>('public');
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  // Controls mobile view: true = show contacts list, false = show chat
   const [showSidebar, setShowSidebar] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Load founders list once
+  useEffect(() => {
+    if (!user) return;
+    api.get('/api/founders')
+      .then(r => {
+        const list = r.data
+          .map((f: any) => ({ ...f, id: f._id || f.id }))
+          .filter((f: any) => f.id !== user._id);
+        setFounders(list);
+      })
+      .catch(console.error);
+
+    const socket = getSocket();
+    const onNew = (f: any) => {
+      const norm = { ...f, id: f._id || f.id };
+      if (norm.id !== user._id) setFounders(prev => [...prev, norm]);
+    };
+    const onUpdate = (f: any) => {
+      const norm = { ...f, id: f._id || f.id };
+      setFounders(prev => prev.map(x => x.id === norm.id ? norm : x));
+    };
+    const onDelete = ({ id }: any) => setFounders(prev => prev.filter(x => x.id !== id));
+    socket.on('founder:new', onNew);
+    socket.on('founder:update', onUpdate);
+    socket.on('founder:delete', onDelete);
+    return () => {
+      socket.off('founder:new', onNew);
+      socket.off('founder:update', onUpdate);
+      socket.off('founder:delete', onDelete);
+    };
+  }, [user]);
+
+  // Load messages when active chat changes
   useEffect(() => {
     if (!user) return;
 
-    // Fetch founders for user list
-    const foundersUnsubscribe = onSnapshot(collection(db, 'founders'), (snapshot) => {
-      const foundersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Founder));
-      setFounders(foundersData.filter(f => f.id !== user.uid));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'founders'));
+    const chatId = activeChat === 'public'
+      ? 'public'
+      : [user._id, activeChat].sort().join('_');
 
-    // Fetch messages
-    let messagesQuery;
-    if (activeChat === 'public') {
-      messagesQuery = query(
-        collection(db, 'messages'),
-        where('chatId', '==', 'public'),
-        limit(100)
-      );
-    } else {
-      const chatId = [user.uid, activeChat].sort().join('_');
-      messagesQuery = query(
-        collection(db, 'messages'),
-        where('chatId', '==', chatId),
-        limit(100)
-      );
-    }
+    api.get('/api/messages', { params: { chatId } })
+      .then(r => {
+        const msgs = r.data
+          .map((m: any) => ({ ...m, id: m._id || m.id }))
+          .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        setMessages(msgs);
+        setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      })
+      .catch(console.error);
 
-    const messagesUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChatMessage));
-      const sortedMsgs = msgs.sort((a, b) =>
-        (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0)
-      );
-      setMessages(sortedMsgs);
-      setTimeout(() => {
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'messages'));
-
-    return () => {
-      foundersUnsubscribe();
-      messagesUnsubscribe();
+    const socket = getSocket();
+    const onMessage = (msg: any) => {
+      const norm = { ...msg, id: msg._id || msg.id };
+      if (norm.chatId === chatId) {
+        setMessages(prev => [...prev, norm]);
+        setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      }
     };
+    socket.on('message:new', onMessage);
+    return () => { socket.off('message:new', onMessage); };
   }, [user, activeChat]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !newMessage.trim()) return;
 
-    const msgData: any = {
-      senderId: user.uid,
-      senderName: user.displayName || 'Usuário',
-      senderPhoto: user.photoURL,
-      text: newMessage,
-      createdAt: serverTimestamp(),
-    };
-
-    if (activeChat !== 'public') {
-      msgData.receiverId = activeChat;
-      msgData.chatId = [user.uid, activeChat].sort().join('_');
-    } else {
-      msgData.receiverId = null;
-      msgData.chatId = 'public';
-    }
+    const chatId = activeChat === 'public'
+      ? 'public'
+      : [user._id, activeChat].sort().join('_');
 
     try {
-      await addDoc(collection(db, 'messages'), msgData);
+      await api.post('/api/messages/send', {
+        chatId,
+        text: newMessage,
+        receiverId: activeChat !== 'public' ? activeChat : null,
+      });
       setNewMessage('');
     } catch (error) {
       console.error(error);
@@ -102,7 +103,6 @@ export function Chat({ user }: { user: User | null }) {
 
   const handleSelectChat = (chatId: 'public' | string) => {
     setActiveChat(chatId);
-    // On mobile, switch from sidebar to chat view
     setShowSidebar(false);
   };
 
@@ -117,8 +117,6 @@ export function Chat({ user }: { user: User | null }) {
     <div className="flex h-full bg-white rounded-lg md:rounded-xl border border-stone-200 overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* Sidebar: User List */}
-      {/* Mobile: full width when showSidebar=true, hidden when showSidebar=false */}
-      {/* Desktop: always visible at fixed width */}
       <div className={cn(
         "border-r border-stone-100 flex-col bg-stone-50/50 transition-all duration-300",
         showSidebar
@@ -185,15 +183,12 @@ export function Chat({ user }: { user: User | null }) {
       </div>
 
       {/* Main Chat Area */}
-      {/* Mobile: hidden when showSidebar=true, visible when showSidebar=false */}
-      {/* Desktop: always visible */}
       <div className={cn(
         "flex-col bg-white",
         showSidebar ? "hidden md:flex md:flex-1" : "flex flex-1"
       )}>
         {/* Chat Header */}
         <div className="p-4 md:p-6 border-b border-stone-100 flex items-center gap-3">
-          {/* Back button — mobile only */}
           <button
             className="md:hidden p-2 -ml-1 rounded-md hover:bg-stone-100 transition-colors text-stone-600"
             onClick={() => setShowSidebar(true)}
@@ -226,7 +221,7 @@ export function Chat({ user }: { user: User | null }) {
             </div>
           ) : (
             messages.map((msg) => {
-              const isMe = msg.senderId === user?.uid;
+              const isMe = msg.senderId === user?._id;
               return (
                 <div
                   key={msg.id}
@@ -250,7 +245,7 @@ export function Chat({ user }: { user: User | null }) {
                       {msg.text}
                     </div>
                     <p className="text-overline text-stone-300 font-bold uppercase tracking-widest">
-                      {msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                      {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
                     </p>
                   </div>
                 </div>

@@ -5,26 +5,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  collection,
-  onSnapshot,
-  doc,
-  setDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-  query,
-  where
-} from 'firebase/firestore';
-import {
   signInWithPopup,
   GoogleAuthProvider,
   onAuthStateChanged,
   signOut,
-  updateProfile,
-  User
 } from 'firebase/auth';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import axios from 'axios';
 import { 
   startOfToday,
   startOfDay,
@@ -74,7 +60,9 @@ import {
   Crown,
   Cake
 } from 'lucide-react';
-import { db, auth, storage, handleFirestoreError, OperationType } from './firebase';
+import { auth } from './firebase';
+import { api, API_BASE } from './api';
+import { getSocket, disconnectSocket } from './socket';
 import { Room, Booking, BookingStatus, Challenge } from './types';
 import { BookingFlow } from './components/BookingFlow';
 import { AdminPanel } from './components/AdminPanel';
@@ -103,7 +91,7 @@ const DEFAULT_BUSINESS_HOURS = Array.from({ length: 21 }, (_, i) => {
 });
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [activeGeneralCategory, setActiveGeneralCategory] = useState<string | null>(null);
   const [selectedNewsItem, setSelectedNewsItem] = useState<any | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
@@ -306,18 +294,23 @@ export default function App() {
   const handleAcceptTerms = async () => {
     if (!user) return;
     try {
-      await updateDoc(doc(db, 'founders', user.uid), {
-        termsAccepted: true,
-        termsAcceptedAt: serverTimestamp()
-      });
+      await api.put(`/api/founders/${user._id}`, { termsAccepted: true, termsAcceptedAt: new Date().toISOString() });
       setIsTermsModalOpen(false);
     } catch (error) {
       console.error("Error accepting terms:", error);
     }
   };
 
+  const toDate = (v: any): Date | null => {
+    if (!v) return null;
+    if (v?.seconds) return new Date(v.seconds * 1000);
+    if (v?.toDate) return v.toDate();
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
   const getEventDayLabel = (eventDate: any): string => {
-    const d = eventDate?.toDate ? eventDate.toDate() : new Date(eventDate + 'T00:00:00');
+    const d = toDate(eventDate) || new Date();
     const today = new Date();
     const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     if (d.getFullYear() === tomorrow.getFullYear() && d.getMonth() === tomorrow.getMonth() && d.getDate() === tomorrow.getDate()) {
@@ -366,11 +359,11 @@ export default function App() {
     if (!user) return;
     setSocialSaving(true);
     try {
-      await setDoc(doc(db, 'founders', user.uid), {
+      await api.put(`/api/founders/${user._id}`, {
         socialLinkedin: settingsSocialLinkedin.trim(),
         socialInstagram: settingsSocialInstagram.trim(),
         socialSite: settingsSocialSite.trim(),
-      }, { merge: true });
+      });
       setShowSocialModal(false);
     } catch (err) {
       console.error('Erro ao salvar redes sociais:', err);
@@ -395,13 +388,12 @@ export default function App() {
     if (!file || !user) return;
     setProfilePhotoUploading(true);
     try {
-      const fileRef = storageRef(storage, `profile-photos/${user.uid}`);
-      await uploadBytes(fileRef, file);
-      const downloadURL = await getDownloadURL(fileRef);
-      await updateProfile(user, { photoURL: downloadURL });
-      await user.reload();
-      setUser(auth.currentUser);
-      await updateDoc(doc(db, 'founders', user.uid), { photoURL: downloadURL });
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.put(`/api/founders/${user._id}`, { photoURL: data.url });
+      setUser((u: any) => ({ ...u, photoURL: data.url }));
+      setFounderData((f: any) => ({ ...f, photoURL: data.url }));
     } catch (err) {
       console.error('Erro ao atualizar foto:', err);
     } finally {
@@ -419,13 +411,13 @@ export default function App() {
     setProfileSaving(true);
     setProfileSaveError('');
     try {
-      await setDoc(doc(db, 'founders', user.uid), {
+      await api.put(`/api/founders/${user._id}`, {
         name: profileName.trim(),
         username: profileUsername.trim().toLowerCase().replace(/\s+/g, '').replace(/@/g, ''),
         birthDay: profileBirthDay,
         birthMonth: profileBirthMonth,
         birthYear: profileBirthYear,
-      }, { merge: true });
+      });
       setShowProfileModal(false);
     } catch (err) {
       console.error('Erro ao salvar perfil:', err);
@@ -440,14 +432,13 @@ export default function App() {
     if (!indicarNome.trim() || !indicarEmpresa.trim() || !indicarArea.trim() || !indicarContato.trim()) return;
     setIndicarSubmitting(true);
     try {
-      await setDoc(doc(collection(db, 'indicacoes')), {
+      await api.post('/api/indicacoes', {
         nomeIndicado: indicarNome.trim(),
         empresa: indicarEmpresa.trim(),
         area: indicarArea.trim(),
         contato: indicarContato.trim(),
-        indicadoPor: user?.uid || null,
         indicadoPorEmail: user?.email || null,
-        criadoEm: serverTimestamp(),
+        criadoEm: new Date().toISOString(),
       });
       setIndicarSuccess(true);
       setIndicarNome('');
@@ -478,127 +469,73 @@ export default function App() {
     }
   }, []);
 
-  // Auth listener
+  // Auth listener — Google sign-in → exchange Firebase token for JWT
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      if (!u) {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
         setFounderData(null);
         setCheckingFounder(false);
-      } else if (u.photoURL) {
-        // Sync Google/auth photoURL to Firestore so it's visible to all users
-        try {
-          await updateDoc(doc(db, 'founders', u.uid), { photoURL: u.photoURL });
-        } catch {
-          // Document may not exist yet (e.g. pending approval) — ignore silently
-        }
+        localStorage.removeItem('jwt');
+        disconnectSocket();
+        setLoading(false);
+        return;
       }
+      try {
+        const idToken = await firebaseUser.getIdToken();
+        const { data } = await axios.post(`${API_BASE}/api/auth/google`, { idToken });
+        localStorage.setItem('jwt', data.token);
+        const apiUser = {
+          ...data.user,
+          uid: data.user._firebaseId || firebaseUser.uid,
+          email: data.user.email || firebaseUser.email,
+          displayName: data.user.name || firebaseUser.displayName,
+          photoURL: data.user.photoURL || firebaseUser.photoURL,
+        };
+        setUser(apiUser);
+        setFounderData(apiUser);
+        getSocket(data.token);
+      } catch (err) {
+        console.error('Auth exchange failed:', err);
+        setUser(null);
+      }
+      setCheckingFounder(false);
       setLoading(false);
     });
     return unsubscribe;
   }, []);
 
-  // Founder data listener
+  // Sync founder data from API whenever user changes
   useEffect(() => {
-    if (!user) {
-      setCheckingFounder(false);
-      return;
-    }
+    if (!user?._id) return;
+    api.get(`/api/founders/${user._id}`)
+      .then(r => { setFounderData(r.data); setUser((u: any) => ({ ...u, ...r.data, uid: u.uid })); })
+      .catch(() => {});
+  }, [user?._id]);
 
-    setCheckingFounder(true);
-    const unsubscribe = onSnapshot(doc(db, 'founders', user.uid), (snapshot) => {
-      if (snapshot.exists()) {
-        setFounderData(snapshot.data());
-      } else {
-        setFounderData(null);
-      }
-      setCheckingFounder(false);
-    }, (err) => {
-      handleFirestoreError(err, OperationType.GET, `founders/${user.uid}`);
-      setCheckingFounder(false);
-    });
-
-    return unsubscribe;
-  }, [user]);
-
-  // Firestore listeners
+  // Load initial data via REST API + keep updated via Socket.io
   useEffect(() => {
-    const roomsUnsubscribe = onSnapshot(collection(db, 'rooms'), (snapshot) => {
-      const roomsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
-      setRooms(roomsData);
-      
-      // Auto-seed if empty (for first run)
-      if (roomsData.length === 0 && user?.email === ADMIN_EMAIL) {
-        seedRooms();
+    if (!user) return;
+
+    const parseRows = (raw: any): string[][] => {
+      if (typeof raw === 'string') { try { return JSON.parse(raw); } catch { return []; } }
+      if (Array.isArray(raw) && raw.every(r => Array.isArray(r))) return raw;
+      if (Array.isArray(raw)) {
+        return raw.map((row: any) => {
+          if (Array.isArray(row)) return row;
+          const keys = Object.keys(row);
+          if (keys.every(k => /^col\d+$/.test(k)))
+            return keys.sort((a, b) => Number(a.replace('col', '')) - Number(b.replace('col', ''))).map(k => String(row[k] ?? ''));
+          const estagiosOrder = ['estagio', 'threshold', 'beneficios', 'requisitos', 'status'];
+          if (keys.some(k => estagiosOrder.includes(k))) return estagiosOrder.map(k => String(row[k] ?? ''));
+          return Object.values(row).map(String);
+        });
       }
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'rooms'));
-
-    const bookingsUnsubscribe = onSnapshot(collection(db, 'bookings'), (snapshot) => {
-      const bookingsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking));
-      setBookings(bookingsData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'bookings'));
-
-    const settingsUnsubscribe = onSnapshot(doc(db, 'settings', 'global'), (snapshot) => {
-      if (snapshot.exists()) {
-        setBusinessHours(snapshot.data().businessHours || DEFAULT_BUSINESS_HOURS);
-      } else if (user?.email === ADMIN_EMAIL) {
-        setDoc(doc(db, 'settings', 'global'), { businessHours: DEFAULT_BUSINESS_HOURS });
-      }
-    }, (err) => handleFirestoreError(err, OperationType.GET, 'settings/global'));
-
-    const foundersUnsubscribe = onSnapshot(collection(db, 'founders'), (snapshot) => {
-      const foundersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setAllFounders(foundersData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'founders'));
-
-    const challengesUnsubscribe = onSnapshot(collection(db, 'challenges'), (snapshot) => {
-      const challengesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
-      setAllChallenges(challengesData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'challenges'));
-
-    const newsUnsubscribe = onSnapshot(collection(db, 'news'), (snapshot) => {
-      const newsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setNewsItems(newsData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'news'));
-
-    const qcoinSectionsUnsubscribe = onSnapshot(collection(db, 'qcoin_sections'), (snapshot) => {
-      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      setQcoinSections(data);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'qcoin_sections'));
-
-    const qcoinTablesUnsubscribe = onSnapshot(doc(db, 'settings', 'qcoin_tables'), (snapshot) => {
-      if (!snapshot.exists()) return;
-      const data = snapshot.data();
-      // Desserializa tableRows: novo formato é JSON string, formatos antigos são array ou objeto
-      const parseRows = (raw: any): string[][] => {
-        // Novo formato: JSON string serializado no save
-        if (typeof raw === 'string') {
-          try { return JSON.parse(raw); } catch { return []; }
-        }
-        // Formato intermediário: array de arrays (correto)
-        if (Array.isArray(raw) && raw.every(r => Array.isArray(r))) return raw;
-        // Formato antigo: array de objetos - mapeia chaves para colunas na ordem correta
-        if (Array.isArray(raw)) {
-          return raw.map((row: any) => {
-            if (Array.isArray(row)) return row;
-            const keys = Object.keys(row);
-            // col0/col1/... → ordena numericamente
-            if (keys.every(k => /^col\d+$/.test(k))) {
-              return keys
-                .sort((a, b) => Number(a.replace('col', '')) - Number(b.replace('col', '')))
-                .map(k => String(row[k] ?? ''));
-            }
-            // estagio/threshold/... → ordem semântica conhecida
-            const estagiosOrder = ['estagio', 'threshold', 'beneficios', 'requisitos', 'status'];
-            if (keys.some(k => estagiosOrder.includes(k))) {
-              return estagiosOrder.map(k => String(row[k] ?? ''));
-            }
-            return Object.values(row).map(String);
-          });
-        }
-        return [];
-      };
+      return [];
+    };
+    const hydrateQcoinTables = (data: any) => {
       const hydrate = (sectionId: string, s: any) => {
+        if (!s) return;
         if (sectionId === 'pontuacao') {
           if (s.tableRows) setPontuacaoRows(parseRows(s.tableRows));
           if (s.tableCols) setPontuacaoCols(s.tableCols);
@@ -621,42 +558,93 @@ export default function App() {
           if (s.tableColWidths) setConsequenciasColWidths(s.tableColWidths);
         }
       };
-      for (const sectionId of ['pontuacao', 'estagios', 'ranking', 'premiacoes', 'consequencias']) {
-        if (data[sectionId]) hydrate(sectionId, data[sectionId]);
-      }
-    }, (err) => console.error('Error loading qcoin tables:', err));
+      for (const id of ['pontuacao', 'estagios', 'ranking', 'premiacoes', 'consequencias']) hydrate(id, data[id]);
+    };
 
-    let checkinsUnsubscribe = () => {};
-    if (user) {
-      const q = collection(db, 'checkins');
-      checkinsUnsubscribe = onSnapshot(q, (snapshot) => {
-        const checkinsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAllCheckins(checkinsData);
-        setUserCheckins(checkinsData.filter((c: any) => c.userId === user.uid));
-      }, (err) => handleFirestoreError(err, OperationType.LIST, 'checkins'));
-    }
+    // Initial load
+    Promise.all([
+      api.get('/api/rooms').catch(() => ({ data: [] })),
+      api.get('/api/bookings').catch(() => ({ data: [] })),
+      api.get('/api/settings/global').catch(() => ({ data: null })),
+      api.get('/api/founders').catch(() => ({ data: [] })),
+      api.get('/api/challenges').catch(() => ({ data: [] })),
+      api.get('/api/news').catch(() => ({ data: [] })),
+      api.get('/api/qcoin-sections').catch(() => ({ data: {} })),
+      api.get('/api/settings/qcoin_tables').catch(() => ({ data: null })),
+      api.get('/api/checkins').catch(() => ({ data: [] })),
+    ]).then(([rooms, bookings, settings, founders, challenges, news, qcoinSections, qcoinTables, checkins]) => {
+      setRooms(rooms.data.map((r: any) => ({ ...r, id: r._id || r.id })));
+      setBookings(bookings.data.map((b: any) => ({ ...b, id: b._id || b.id })));
+      if (settings.data?.businessHours) setBusinessHours(settings.data.businessHours);
+      setAllFounders(founders.data.map((f: any) => ({ ...f, id: f._id || f.id })));
+      setAllChallenges(challenges.data.map((c: any) => ({ ...c, id: c._id || c.id })));
+      setNewsItems(news.data.map((n: any) => ({ ...n, id: n._id || n.id })));
+      if (qcoinSections.data) {
+        const sections = Object.entries(qcoinSections.data).map(([id, d]: [string, any]) => ({ id, ...d }));
+        setQcoinSections(sections);
+      }
+      if (qcoinTables.data) hydrateQcoinTables(qcoinTables.data);
+      const checkinsData = checkins.data.map((c: any) => ({ ...c, id: c._id || c.id }));
+      setAllCheckins(checkinsData);
+      setUserCheckins(checkinsData.filter((c: any) => c.userId === user._id || c.userId === user.uid));
+    });
+
+    // Socket.io real-time updates
+    const socket = getSocket();
+    socket.on('founder:new',    (f: any) => setAllFounders(prev => [{ ...f, id: f._id }, ...prev.filter(x => x.id !== f._id)]));
+    socket.on('founder:update', (f: any) => {
+      const updated = { ...f, id: f._id || f.id };
+      setAllFounders(prev => prev.map(x => x.id === updated.id ? updated : x));
+      if (user._id && updated.id === user._id) { setFounderData(updated); setUser((u: any) => ({ ...u, ...updated, uid: u.uid })); }
+    });
+    socket.on('founder:delete', ({ id }: any) => setAllFounders(prev => prev.filter(x => x.id !== id)));
+    socket.on('challenge:new',    (c: any) => setAllChallenges(prev => [{ ...c, id: c._id }, ...prev]));
+    socket.on('challenge:update', (c: any) => setAllChallenges(prev => prev.map(x => x.id === (c._id || c.id) ? { ...c, id: c._id || c.id } : x)));
+    socket.on('challenge:delete', ({ id }: any) => setAllChallenges(prev => prev.filter(x => x.id !== id)));
+    socket.on('news:new',    (n: any) => setNewsItems(prev => [{ ...n, id: n._id }, ...prev]));
+    socket.on('news:update', (n: any) => setNewsItems(prev => prev.map(x => x.id === (n._id || n.id) ? { ...n, id: n._id || n.id } : x)));
+    socket.on('news:delete', ({ id }: any) => setNewsItems(prev => prev.filter(x => x.id !== id)));
+    socket.on('booking:new',    (b: any) => setBookings(prev => [{ ...b, id: b._id }, ...prev]));
+    socket.on('booking:delete', ({ id }: any) => setBookings(prev => prev.filter(x => x.id !== id)));
+    socket.on('checkin:new',    (c: any) => {
+      const ci = { ...c, id: c._id };
+      setAllCheckins(prev => [ci, ...prev]);
+      if (ci.userId === user._id || ci.userId === user.uid) setUserCheckins(prev => [ci, ...prev]);
+    });
+    socket.on('checkin:update', (c: any) => {
+      const ci = { ...c, id: c._id || c.id };
+      setAllCheckins(prev => prev.map(x => x.id === ci.id ? ci : x));
+      if (ci.userId === user._id || ci.userId === user.uid) setUserCheckins(prev => prev.map(x => x.id === ci.id ? ci : x));
+    });
+    socket.on('settings:update', ({ key, data }: any) => {
+      if (key === 'global' && data?.businessHours) setBusinessHours(data.businessHours);
+      if (key === 'qcoin_tables' && data) hydrateQcoinTables(data);
+    });
+    socket.on('qcoin_sections:update', ({ id, data }: any) => {
+      setQcoinSections(prev => {
+        const filtered = prev.filter((s: any) => s.id !== id);
+        return [...filtered, { id, ...data }];
+      });
+    });
 
     return () => {
-      roomsUnsubscribe();
-      bookingsUnsubscribe();
-      settingsUnsubscribe();
-      foundersUnsubscribe();
-      challengesUnsubscribe();
-      newsUnsubscribe();
-      qcoinSectionsUnsubscribe();
-      qcoinTablesUnsubscribe();
-      checkinsUnsubscribe();
+      socket.off('founder:new'); socket.off('founder:update'); socket.off('founder:delete');
+      socket.off('challenge:new'); socket.off('challenge:update'); socket.off('challenge:delete');
+      socket.off('news:new'); socket.off('news:update'); socket.off('news:delete');
+      socket.off('booking:new'); socket.off('booking:delete');
+      socket.off('checkin:new'); socket.off('checkin:update');
+      socket.off('settings:update'); socket.off('qcoin_sections:update');
     };
-  }, [user, founderData]);
+  }, [user?._id]);
 
   const seedRooms = async () => {
     const initialRooms = [
-      { id: '1', name: 'Sala de Reunião 1', description: 'Sala individual' },
-      { id: '2', name: 'Sala de Reunião 2', description: 'Sala para 2 a 4 pessoas' },
-      { id: '3', name: 'Sala de Reunião 3', description: 'Sala de reunião para 6 a 8 pessoas' },
+      { name: 'Sala de Reunião 1', description: 'Sala individual' },
+      { name: 'Sala de Reunião 2', description: 'Sala para 2 a 4 pessoas' },
+      { name: 'Sala de Reunião 3', description: 'Sala de reunião para 6 a 8 pessoas' },
     ];
     for (const room of initialRooms) {
-      await setDoc(doc(db, 'rooms', room.id), { name: room.name, description: room.description });
+      await api.post('/api/rooms', room).catch(() => {});
     }
   };
 
@@ -674,42 +662,31 @@ export default function App() {
     await handleLogin();
   };
 
-  const handleLogout = () => signOut(auth);
+  const handleLogout = () => { signOut(auth); disconnectSocket(); localStorage.removeItem('jwt'); };
 
   const handleSaveRule = async () => {
     if (!editingRuleId) return;
-    await updateDoc(doc(db, 'news', editingRuleId), {
-      title: editingRuleData.title,
-      content: editingRuleData.content,
-    });
+    await api.put(`/api/news/${editingRuleId}`, { title: editingRuleData.title, content: editingRuleData.content });
     setEditingRuleId(null);
   };
 
   const handleAddRegra = async () => {
     if (!newRegraTitle.trim()) return;
-    await addDoc(collection(db, 'news'), {
-      title: newRegraTitle.trim(),
-      content: newRegraContent.trim(),
-      category: 'regras',
-      createdAt: serverTimestamp(),
-    });
+    await api.post('/api/news', { title: newRegraTitle.trim(), content: newRegraContent.trim(), category: 'regras' });
     setNewRegraTitle('');
     setNewRegraContent('');
     setShowAddRegra(false);
   };
 
   const handleDeleteRule = async (id: string) => {
-    await deleteDoc(doc(db, 'news', id));
+    await api.delete(`/api/news/${id}`);
     setDeletingRuleId(null);
   };
 
   const handleSaveQcoinSection = async (sectionId: string) => {
     setSavingQcoinSection(true);
     try {
-      await setDoc(doc(db, 'qcoin_sections', sectionId), {
-        content: qcoinEditContent,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
+      await api.put(`/api/qcoin-sections/${sectionId}`, { content: qcoinEditContent, updatedAt: new Date().toISOString() });
       setEditingQcoinSection(null);
     } catch (error) {
       console.error('Error saving QCoin section:', error);
@@ -723,18 +700,14 @@ export default function App() {
     setQcoinTableSaveStatus(null);
     try {
       let tableData: any = {};
-      if (sectionId === 'pontuacao') {
-        tableData = { tableRows: JSON.stringify(pontuacaoRows), tableCols: pontuacaoCols, tableColWidths: pontuacaoColWidths };
-      } else if (sectionId === 'estagios') {
-        tableData = { tableRows: JSON.stringify(estagiosRows), tableCols: estagiosCols, tableColWidths: estagiosColWidths };
-      } else if (sectionId === 'ranking') {
-        tableData = { tableRows: JSON.stringify(rankingRows), tableCols: rankingCols, tableColWidths: rankingColWidths };
-      } else if (sectionId === 'premiacoes') {
-        tableData = { tableRows: JSON.stringify(premiacoesRows), tableCols: premiacoesCols, tableColWidths: premiacoesColWidths };
-      } else if (sectionId === 'consequencias') {
-        tableData = { tableRows: JSON.stringify(consequenciasRows), tableCols: consequenciasCols, tableColWidths: consequenciasColWidths };
-      }
-      await setDoc(doc(db, 'settings', 'qcoin_tables'), { [sectionId]: tableData }, { merge: true });
+      if (sectionId === 'pontuacao') tableData = { tableRows: JSON.stringify(pontuacaoRows), tableCols: pontuacaoCols, tableColWidths: pontuacaoColWidths };
+      else if (sectionId === 'estagios') tableData = { tableRows: JSON.stringify(estagiosRows), tableCols: estagiosCols, tableColWidths: estagiosColWidths };
+      else if (sectionId === 'ranking') tableData = { tableRows: JSON.stringify(rankingRows), tableCols: rankingCols, tableColWidths: rankingColWidths };
+      else if (sectionId === 'premiacoes') tableData = { tableRows: JSON.stringify(premiacoesRows), tableCols: premiacoesCols, tableColWidths: premiacoesColWidths };
+      else if (sectionId === 'consequencias') tableData = { tableRows: JSON.stringify(consequenciasRows), tableCols: consequenciasCols, tableColWidths: consequenciasColWidths };
+
+      const existing = await api.get('/api/settings/qcoin_tables').then(r => r.data || {}).catch(() => ({}));
+      await api.put('/api/settings/qcoin_tables', { ...existing, [sectionId]: tableData });
       setQcoinTableSaveStatus('success');
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -747,7 +720,7 @@ export default function App() {
     }
   };
 
-  const isAdmin = user?.email === ADMIN_EMAIL || founderData?.role === 'admin';
+  const isAdmin = user?.email === ADMIN_EMAIL || user?.role === 'admin' || founderData?.role === 'admin';
 
   if (loading || (user && checkingFounder)) {
     return (
@@ -1140,8 +1113,8 @@ export default function App() {
                   {newsItems
                     .filter(item => item.category === 'evento' || item.category === 'aviso')
                     .sort((a, b) => {
-                      const secA = a.createdAt?.seconds ?? 0;
-                      const secB = b.createdAt?.seconds ?? 0;
+                      const secA = toDate(a.createdAt)?.getTime() ?? 0;
+                      const secB = toDate(b.createdAt)?.getTime() ?? 0;
                       return secB - secA;
                     })
                     .map((item, i) => {
@@ -1174,8 +1147,8 @@ export default function App() {
                               )}
                               <span className="text-overline uppercase tracking-widest font-bold text-stone-400">
                                 {isAviso
-                                  ? (item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '')
-                                  : (item.eventDate?.toDate ? item.eventDate.toDate().toLocaleDateString('pt-BR') : item.eventDate ? new Date(item.eventDate + 'T00:00:00').toLocaleDateString('pt-BR') : item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '')}
+                                  ? (toDate(item.createdAt)?.toLocaleDateString('pt-BR') || '')
+                                  : (toDate(item.eventDate)?.toLocaleDateString('pt-BR') || toDate(item.createdAt)?.toLocaleDateString('pt-BR') || '')}
                               </span>
                             </div>
 
@@ -1563,8 +1536,8 @@ export default function App() {
                             const monthLabel = format(now, 'MMMM yyyy', { locale: ptBR });
 
                             const monthCheckins = allCheckins.filter((c: any) => {
-                              const d = c.checkinTime?.toDate ? c.checkinTime.toDate() : (c.checkinTime?.seconds ? new Date(c.checkinTime.seconds * 1000) : new Date(c.checkinTime));
-                              return isWithinInterval(d, { start: monthStart, end: monthEnd });
+                              const d = toDate(c.checkinTime);
+                              return d && isWithinInterval(d, { start: monthStart, end: monthEnd });
                             });
 
                             const scoresMap: Record<string, number> = {};
@@ -2070,7 +2043,7 @@ export default function App() {
                   {newsItems.filter(item => item.category === 'regras').length > 0 ? (
                     newsItems
                       .filter(item => item.category === 'regras')
-                      .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0))
+                      .sort((a, b) => (toDate(a.createdAt)?.getTime() || 0) - (toDate(b.createdAt)?.getTime() || 0))
                       .map((item, index) => {
                         const RuleIcon = RULE_ICONS[index % RULE_ICONS.length];
                         return (
@@ -2244,31 +2217,31 @@ export default function App() {
                         .filter(item => item.category === 'evento')
                         .filter(item => {
                           if (!item.eventDate) return false;
-                          const eventDate = item.eventDate?.toDate ? item.eventDate.toDate() : new Date(item.eventDate + 'T00:00:00');
+                          const eventDate = toDate(item.eventDate) || new Date();
                           return eventDate >= todayStart;
                         })
                         .sort((a, b) => {
-                          const dateA = a.eventDate?.toDate ? a.eventDate.toDate() : new Date(a.eventDate + 'T00:00:00');
-                          const dateB = b.eventDate?.toDate ? b.eventDate.toDate() : new Date(b.eventDate + 'T00:00:00');
+                          const dateA = toDate(a.eventDate) || new Date();
+                          const dateB = toDate(b.eventDate) || new Date();
                           return dateA.getTime() - dateB.getTime();
                         });
 
                       const publicChallenges = allChallenges
                         .filter(c => c.type === 'public' && c.status === 'open')
-                        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+                        .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
                         .slice(0, 3);
 
                       const currentMonthStart = startOfMonth(now);
                       const currentMonthEnd = endOfMonth(now);
                       const currentMonthCheckins = userCheckins.filter(c => {
-                        const d = c.checkinTime?.toDate ? c.checkinTime.toDate() : (c.checkinTime?.seconds ? new Date(c.checkinTime.seconds * 1000) : new Date(c.checkinTime));
+                        const d = toDate(c.checkinTime) || new Date();
                         return isWithinInterval(d, { start: currentMonthStart, end: currentMonthEnd });
                       }).length;
                       const userScore = currentMonthCheckins * 10;
 
                       // Ranking Top 5 calculation
                       const allCurrentMonthCheckins = allCheckins.filter(c => {
-                        const d = c.checkinTime?.toDate ? c.checkinTime.toDate() : (c.checkinTime?.seconds ? new Date(c.checkinTime.seconds * 1000) : new Date(c.checkinTime));
+                        const d = toDate(c.checkinTime) || new Date();
                         return isWithinInterval(d, { start: currentMonthStart, end: currentMonthEnd });
                       });
 
@@ -2355,14 +2328,14 @@ export default function App() {
                             {/* Avisos */}
                             {newsItems
                               .filter(item => item.category === 'aviso')
-                              .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+                              .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
                               .map((aviso, idx) => (
                                 <div key={aviso.id || idx} className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm hover:shadow-md transition-all group">
                                   <div className="flex items-center gap-2 mb-3">
                                     <AlertTriangle className="text-primary shrink-0" size={18} />
                                     <h4 className="text-base font-sans text-stone-900">Aviso</h4>
                                     <span className="ml-auto text-overline font-bold uppercase tracking-widest text-stone-400">
-                                      {aviso.createdAt?.seconds ? new Date(aviso.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : ''}
+                                      {toDate(aviso.createdAt)?.toLocaleDateString('pt-BR') || ''}
                                     </span>
                                   </div>
                                   <div className="p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 transition-all">
@@ -2402,7 +2375,7 @@ export default function App() {
                                   </div>
                                 ) : (
                                   relevantEvents.map((event, idx) => (
-                                    <div key={event.id || idx} className="p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 transition-all group">
+                                    <div key={event.id || idx} className="p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 hover:bg-white transition-all group cursor-pointer" onClick={() => setSelectedNewsItem(event)}>
                                       <div className="flex items-start justify-between gap-4">
                                         <div>
                                           <div className="flex items-center gap-2 mb-2">
@@ -2428,10 +2401,10 @@ export default function App() {
                                         </div>
                                         <div className="text-right shrink-0">
                                           <div className="text-h2 font-sans text-stone-300 group-hover:text-white/60 transition-colors">
-                                            {format(event.eventDate?.toDate ? event.eventDate.toDate() : new Date(event.eventDate + 'T00:00:00'), 'dd')}
+                                            {format(toDate(event.eventDate) || new Date(), 'dd')}
                                           </div>
                                           <div className="text-overline font-bold uppercase text-stone-400">
-                                            {format(event.eventDate?.toDate ? event.eventDate.toDate() : new Date(event.eventDate + 'T00:00:00'), 'MMM', { locale: ptBR })}
+                                            {format(toDate(event.eventDate) || new Date(), 'MMM', { locale: ptBR })}
                                           </div>
                                         </div>
                                       </div>
@@ -2759,7 +2732,7 @@ export default function App() {
               ) : newsItems.filter(item => item.category === activeGeneralCategory).length > 0 ? (
                 newsItems
                   .filter(item => item.category === activeGeneralCategory)
-                  .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+                  .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
                   .map(item => (
                     <div key={item.id} className="p-6 bg-stone-50 rounded-xl border border-stone-100">
                       {editingRuleId === item.id ? (
@@ -2797,7 +2770,7 @@ export default function App() {
                             <h4 className="font-bold text-stone-900">{item.title}</h4>
                             <div className="flex items-center gap-1 ml-2 shrink-0">
                               <span className="text-overline text-stone-400 font-bold">
-                                {item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : ''}
+                                {toDate(item.createdAt)?.toLocaleDateString('pt-BR') || ''}
                               </span>
                               {isAdmin && (
                                 <>
@@ -2904,8 +2877,8 @@ export default function App() {
       {selectedNewsItem && (() => {
         const isAviso = selectedNewsItem.category === 'aviso';
         const date = isAviso
-          ? (selectedNewsItem.createdAt?.seconds ? new Date(selectedNewsItem.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '')
-          : (selectedNewsItem.eventDate?.toDate ? selectedNewsItem.eventDate.toDate().toLocaleDateString('pt-BR') : selectedNewsItem.eventDate ? new Date(selectedNewsItem.eventDate + 'T00:00:00').toLocaleDateString('pt-BR') : selectedNewsItem.createdAt?.seconds ? new Date(selectedNewsItem.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '');
+          ? (toDate(selectedNewsItem.createdAt)?.toLocaleDateString('pt-BR') || '')
+          : (toDate(selectedNewsItem.eventDate)?.toLocaleDateString('pt-BR') || toDate(selectedNewsItem.createdAt)?.toLocaleDateString('pt-BR') || '');
         return (
           <div
             className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300"
@@ -2960,7 +2933,7 @@ export default function App() {
                     {selectedNewsItem.eventDate && (
                       <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs">
                         <CalendarDays size={14} />
-                        <span>Data: {selectedNewsItem.eventDate?.toDate ? selectedNewsItem.eventDate.toDate().toLocaleDateString('pt-BR') : new Date(selectedNewsItem.eventDate + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                        <span>Data: {toDate(selectedNewsItem.eventDate)?.toLocaleDateString('pt-BR') || ''}</span>
                       </div>
                     )}
                     {selectedNewsItem.startTime && (

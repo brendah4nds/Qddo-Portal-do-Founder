@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  collection, 
-  query, 
-  onSnapshot, 
-  addDoc, 
-  serverTimestamp, 
-  orderBy, 
-  where 
-} from 'firebase/firestore';
-import { User } from 'firebase/auth';
 import { Send, MessageCircle } from 'lucide-react';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { api } from '../api';
+import { getSocket } from '../socket';
 import { Comment } from '../types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -19,7 +10,7 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function ChallengeComments({ challengeId, user }: { challengeId: string; user: User | null }) {
+export function ChallengeComments({ challengeId, user }: { challengeId: string; user: any | null }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
@@ -27,36 +18,32 @@ export function ChallengeComments({ challengeId, user }: { challengeId: string; 
   useEffect(() => {
     if (!challengeId) return;
 
-    const q = query(
-      collection(db, 'comments'),
-      where('challengeId', '==', challengeId)
-    );
+    api.get('/api/comments', { params: { challengeId } })
+      .then(r => {
+        const sorted = r.data.map((c: any) => ({ ...c, id: c._id || c.id }))
+          .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        setComments(sorted);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const commentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comment));
-      const sortedComments = commentsData.sort((a, b) => 
-        (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0)
-      );
-      setComments(sortedComments);
-      setLoading(false);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, `comments/${challengeId}`));
-
-    return unsubscribe;
+    const socket = getSocket();
+    const onNew = (c: any) => {
+      if ((c.challengeId === challengeId || c.challengeId?._id === challengeId || c.challengeId?.toString() === challengeId)) {
+        setComments(prev => [...prev, { ...c, id: c._id || c.id }]);
+      }
+    };
+    const onDelete = ({ id }: any) => setComments(prev => prev.filter(x => x.id !== id));
+    socket.on('comment:new', onNew);
+    socket.on('comment:delete', onDelete);
+    return () => { socket.off('comment:new', onNew); socket.off('comment:delete', onDelete); };
   }, [challengeId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !newComment.trim()) return;
-
     try {
-      await addDoc(collection(db, 'comments'), {
-        challengeId,
-        userId: user.uid,
-        userName: user.displayName || 'Usuário',
-        userPhoto: user.photoURL,
-        text: newComment,
-        createdAt: serverTimestamp()
-      });
+      await api.post('/api/comments', { challengeId, text: newComment });
       setNewComment('');
     } catch (error) {
       console.error(error);
@@ -85,7 +72,7 @@ export function ChallengeComments({ challengeId, user }: { challengeId: string; 
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-bold text-stone-900">{comment.userName}</span>
                   <span className="text-overline uppercase tracking-widest font-bold text-stone-300">
-                    {comment.createdAt?.seconds ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : '...'}
+                    {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString('pt-BR') : '...'}
                   </span>
                 </div>
                 <p className="text-sm text-stone-600 leading-relaxed">{comment.text}</p>
@@ -100,14 +87,14 @@ export function ChallengeComments({ challengeId, user }: { challengeId: string; 
           <img src={user?.photoURL || ''} alt="" referrerPolicy="no-referrer" />
         </div>
         <div className="flex-1 relative">
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Escreva um comentário ou sugestão..."
             value={newComment}
             onChange={e => setNewComment(e.target.value)}
             className="w-full pl-6 pr-14 py-3 bg-stone-50 border border-stone-100 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
           />
-          <button 
+          <button
             type="submit"
             disabled={!newComment.trim()}
             className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-primary text-white rounded-md flex items-center justify-center hover:bg-primary/90 transition-all disabled:opacity-50"
