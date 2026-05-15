@@ -1,5 +1,3 @@
-import { User } from 'firebase/auth';
-
 export interface Room {
   id: string;
   name: string;

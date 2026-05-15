@@ -1,19 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  doc,
-  addDoc,
-  updateDoc,
-  setDoc,
-  increment,
-  serverTimestamp,
-  orderBy,
-  Timestamp,
-} from 'firebase/firestore';
-import { User } from 'firebase/auth';
+import { api } from '../api';
+import { getSocket } from '../socket';
 import {
   CheckCircle2,
   ChevronLeft,
@@ -28,7 +15,6 @@ import {
   Shield,
   MapPin,
 } from 'lucide-react';
-import { db, handleFirestoreError, OperationType } from '../firebase';
 import {
   format,
   startOfMonth,
@@ -52,16 +38,16 @@ function cn(...inputs: ClassValue[]) {
 interface Checkin {
   id: string;
   userId: string;
-  date: string; // YYYY-MM-DD
-  checkinTime: Timestamp;
-  checkoutTime?: Timestamp;
+  date: string;
+  checkinTime: any;
+  checkoutTime?: any;
   status: 'active' | 'completed';
 }
 
 const ULYSSES_LOCATION = {
   lat: -15.789209930873332,
   lng: -47.90071054840695,
-  radius: 300 // metros de tolerância
+  radius: 300
 };
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -82,13 +68,13 @@ export function CheckinSystem({
   isAdmin,
   founders = []
 }: {
-  user: User;
+  user: any;
   isAdmin: boolean;
   founders?: any[];
 }) {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedUserId, setSelectedUserId] = useState<string>(user.uid);
+  const [selectedUserId, setSelectedUserId] = useState<string>(user._id);
   const [loading, setLoading] = useState(true);
   const [locationLoading, setLocationLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -97,44 +83,62 @@ export function CheckinSystem({
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
-  // Fetch checkins for the selected user
+  // Load checkins for selected user + real-time updates
   useEffect(() => {
     setLoading(true);
-    const q = query(
-      collection(db, 'checkins'),
-      where('userId', '==', selectedUserId),
-      orderBy('checkinTime', 'desc')
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Checkin));
-      setCheckins(data);
-      setLoading(false);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'checkins'));
-    return () => unsubscribe();
+    api.get('/api/checkins', { params: { userId: selectedUserId } })
+      .then(r => {
+        const data = r.data.map((c: any) => ({ ...c, id: c._id || c.id }));
+        setCheckins(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+
+    const socket = getSocket();
+    const onNew = (c: any) => {
+      const norm = { ...c, id: c._id || c.id };
+      if (norm.userId === selectedUserId || norm.userId?._id === selectedUserId || norm.userId?.toString() === selectedUserId) {
+        setCheckins(prev => [...prev, norm]);
+      }
+      if (norm.date === todayStr) {
+        setTodayFoundersCount(prev => (prev ?? 0) + 1);
+      }
+    };
+    const onUpdate = (c: any) => {
+      const norm = { ...c, id: c._id || c.id };
+      setCheckins(prev => prev.map(x => x.id === norm.id ? norm : x));
+    };
+    socket.on('checkin:new', onNew);
+    socket.on('checkin:update', onUpdate);
+    return () => {
+      socket.off('checkin:new', onNew);
+      socket.off('checkin:update', onUpdate);
+    };
   }, [selectedUserId]);
 
-  // Listen to selected founder's total points
+  // Load selected founder's points + real-time updates
   useEffect(() => {
-    const unsubscribe = onSnapshot(
-      doc(db, 'founders', selectedUserId),
-      (snap) => setSelectedFounderPoints(snap.data()?.totalPoints ?? 0)
-    );
-    return () => unsubscribe();
+    api.get(`/api/founders/${selectedUserId}`)
+      .then(r => setSelectedFounderPoints(r.data?.totalPoints ?? 0))
+      .catch(() => {});
+
+    const socket = getSocket();
+    const onUpdate = (f: any) => {
+      const fId = f._id || f.id;
+      if (fId === selectedUserId) setSelectedFounderPoints(f.totalPoints ?? 0);
+    };
+    socket.on('founder:update', onUpdate);
+    return () => { socket.off('founder:update', onUpdate); };
   }, [selectedUserId]);
 
-  // Fetch count of unique founders present today
+  // Load today's founders count
   useEffect(() => {
-    const q = query(
-      collection(db, 'checkins'),
-      where('date', '==', todayStr)
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const uniqueUsers = new Set(snapshot.docs.map(d => d.data().userId));
-      setTodayFoundersCount(uniqueUsers.size);
-    }, () => {
-      setTodayFoundersCount(null);
-    });
-    return () => unsubscribe();
+    api.get('/api/checkins', { params: { date: todayStr } })
+      .then(r => {
+        const uniqueUsers = new Set(r.data.map((c: any) => c.userId?.toString?.() || c.userId));
+        setTodayFoundersCount(uniqueUsers.size);
+      })
+      .catch(() => setTodayFoundersCount(null));
   }, [todayStr]);
 
   const todayCheckin = checkins.find(c => c.date === todayStr);
@@ -165,14 +169,8 @@ export function CheckinSystem({
 
         try {
           if (isCheckin) {
-            await addDoc(collection(db, 'checkins'), {
-              userId: user.uid,
-              date: todayStr,
-              checkinTime: serverTimestamp(),
-              status: 'active'
-            });
+            await api.post('/api/checkins', { date: todayStr });
 
-            // Calculate streak (existing check-ins + today just added)
             const checkinDatesSet = new Set(checkins.map(c => c.date));
             checkinDatesSet.add(todayStr);
             let streak = 0;
@@ -185,9 +183,7 @@ export function CheckinSystem({
             const bonusPoints = streak % 5 === 0 ? 30 : 0;
             const pointsEarned = 10 + bonusPoints;
 
-            await setDoc(doc(db, 'founders', user.uid), {
-              totalPoints: increment(pointsEarned)
-            }, { merge: true });
+            await api.put(`/api/founders/${user._id}`, { totalPoints: selectedFounderPoints + pointsEarned });
 
             const successMsg = bonusPoints > 0
               ? `Check-in realizado! +${pointsEarned} pts (bônus streak ${streak} dias)`
@@ -195,10 +191,7 @@ export function CheckinSystem({
             setActionMessage({ type: 'success', text: successMsg });
           } else {
             if (todayCheckin) {
-              await updateDoc(doc(db, 'checkins', todayCheckin.id), {
-                checkoutTime: serverTimestamp(),
-                status: 'completed'
-              });
+              await api.put(`/api/checkins/${todayCheckin.id}`, { status: 'completed' });
               setActionMessage({ type: 'success', text: 'Check-out realizado com sucesso!' });
             }
           }
@@ -221,7 +214,6 @@ export function CheckinSystem({
     );
   };
 
-  // Calendar logic
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -263,9 +255,9 @@ export function CheckinSystem({
             onChange={(e) => setSelectedUserId(e.target.value)}
             className="bg-transparent border-none focus:ring-0 font-bold text-stone-900 flex-1 text-sm"
           >
-            <option value={user.uid}>Meu Calendário ({user.displayName || 'Eu'})</option>
+            <option value={user._id}>Meu Calendário ({user.name || user.displayName || 'Eu'})</option>
             {founders.map(f => (
-              <option key={f.id} value={f.id}>{f.name} (@{f.username})</option>
+              <option key={f._id || f.id} value={f._id || f.id}>{f.name} (@{f.username})</option>
             ))}
           </select>
         </div>
@@ -298,10 +290,9 @@ export function CheckinSystem({
         {/* ── LEFT: Dashboard ── */}
         <div className="space-y-3">
 
-          {/* Metrics grid — 3 colunas, 2 linhas */}
+          {/* Metrics grid */}
           <div className="grid grid-cols-3 gap-2">
 
-            {/* Visitas este mês */}
             <div className="bg-white px-3 py-2 rounded-xl border border-stone-200 shadow-sm">
               <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">
                 Visitas este mês
@@ -319,7 +310,6 @@ export function CheckinSystem({
               <span className="text-[9px] text-stone-400 leading-none">vs. mês anterior</span>
             </div>
 
-            {/* Média semanal */}
             <div className="bg-white px-3 py-2 rounded-xl border border-stone-200 shadow-sm">
               <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">
                 Média Semanal
@@ -330,7 +320,6 @@ export function CheckinSystem({
               <span className="text-[9px] text-stone-400 leading-none">visitas / semana</span>
             </div>
 
-            {/* Score QDDO */}
             <div className="bg-white px-3 py-2 rounded-xl border border-stone-200 shadow-sm">
               <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">
                 Score QDDO
@@ -345,7 +334,6 @@ export function CheckinSystem({
               </div>
             </div>
 
-            {/* Founders no QDDO hoje */}
             <div className="bg-white px-3 py-2 rounded-xl border border-stone-200 shadow-sm">
               <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">
                 No QDDO hoje
@@ -359,7 +347,6 @@ export function CheckinSystem({
               </div>
             </div>
 
-            {/* Nível de acesso */}
             <div className="bg-white px-3 py-2 rounded-xl border border-stone-200 shadow-sm">
               <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">
                 Nível de Acesso
@@ -372,7 +359,6 @@ export function CheckinSystem({
               </div>
             </div>
 
-            {/* Status atual */}
             <div className="bg-white px-3 py-2 rounded-xl border border-stone-200 shadow-sm">
               <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">
                 Status Atual
@@ -390,9 +376,9 @@ export function CheckinSystem({
                   {checkinStatus === 'present' ? 'Presente' : checkinStatus === 'completed' ? 'Saiu' : 'Ausente'}
                 </span>
               </div>
-              {todayCheckin?.checkinTime?.toDate && (
+              {todayCheckin?.checkinTime && (
                 <span className="text-[9px] text-stone-400 leading-none">
-                  Entrada {format(todayCheckin.checkinTime.toDate(), 'HH:mm')}
+                  Entrada {format(new Date(todayCheckin.checkinTime), 'HH:mm')}
                 </span>
               )}
             </div>
@@ -474,8 +460,8 @@ export function CheckinSystem({
               <div className="w-full px-3 py-2.5 bg-emerald-50 rounded-lg border border-emerald-100">
                 <p className="text-emerald-700 font-bold flex items-center justify-center gap-1.5 text-xs">
                   <CheckCircle2 size={14} />
-                  Chegou às {todayCheckin.checkinTime?.toDate
-                    ? format(todayCheckin.checkinTime.toDate(), 'HH:mm')
+                  Chegou às {todayCheckin.checkinTime
+                    ? format(new Date(todayCheckin.checkinTime), 'HH:mm')
                     : '...'}
                 </p>
               </div>
@@ -530,8 +516,8 @@ export function CheckinSystem({
               <div className="w-full px-3 py-2.5 bg-emerald-50 rounded-lg border border-emerald-100">
                 <p className="text-emerald-700 font-bold flex items-center justify-center gap-1.5 text-xs">
                   <CheckCircle2 size={14} />
-                  Saiu às {todayCheckin.checkoutTime?.toDate
-                    ? format(todayCheckin.checkoutTime.toDate(), 'HH:mm')
+                  Saiu às {todayCheckin.checkoutTime
+                    ? format(new Date(todayCheckin.checkoutTime), 'HH:mm')
                     : '...'}
                 </p>
               </div>

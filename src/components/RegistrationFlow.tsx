@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { User } from 'firebase/auth';
 import { Instagram, Building2 } from 'lucide-react';
-import { db } from '../firebase';
+import { api } from '../api';
 
-export function RegistrationFlow({ user, onComplete }: { user: User; onComplete: () => void }) {
+export function RegistrationFlow({ user, onComplete }: { user: any; onComplete: () => void }) {
   const [registering, setRegistering] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -29,7 +27,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
 
     setRegistering(true);
     try {
-      await setDoc(doc(db, 'founders', user.uid), {
+      await api.post('/api/founders', {
         name: formData.name,
         username: formData.username.replace(/@/g, '').trim().toLowerCase(),
         instagram: formData.instagram,
@@ -40,9 +38,6 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
           cnpj: formData.cnpj,
           tipo: formData.companyTipo
         },
-        registeredAt: serverTimestamp(),
-        termsAccepted: true,
-        termsAcceptedAt: serverTimestamp(),
         role: 'user'
       });
       onComplete();
@@ -65,9 +60,9 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div className="space-y-2">
               <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Nome</label>
-              <input 
+              <input
                 required
-                type="text" 
+                type="text"
                 placeholder="Seu nome real"
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -76,9 +71,9 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
             </div>
             <div className="space-y-2">
               <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Nome de Usuário</label>
-              <input 
+              <input
                 required
-                type="text" 
+                type="text"
                 placeholder="@username"
                 value={formData.username}
                 onChange={e => setFormData({ ...formData, username: e.target.value.replace(/@/g, '') })}
@@ -91,8 +86,8 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
             <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Instagram</label>
             <div className="relative">
               <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={20} />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="link do seu perfil"
                 value={formData.instagram}
                 onChange={e => setFormData({ ...formData, instagram: e.target.value })}
@@ -103,7 +98,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
 
           <div className="space-y-2">
             <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Bio</label>
-            <textarea 
+            <textarea
               rows={3}
               placeholder="Conte um pouco sobre você..."
               value={formData.bio}
@@ -120,8 +115,8 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Nome da Empresa</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Nome da sua startup/negócio"
                   value={formData.companyName}
                   onChange={e => setFormData({ ...formData, companyName: e.target.value })}
@@ -130,8 +125,8 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
               </div>
               <div className="space-y-2">
                 <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">CNPJ</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="00.000.000/0000-00"
                   value={formData.cnpj}
                   onChange={e => setFormData({ ...formData, cnpj: e.target.value })}
@@ -178,7 +173,7 @@ export function RegistrationFlow({ user, onComplete }: { user: User; onComplete:
             </label>
           </div>
 
-          <button 
+          <button
             type="submit"
             disabled={registering}
             className="w-full bg-primary text-white py-6 rounded-lg font-bold hover:bg-primary/90 transition-all shadow-2xl shadow-primary/20 text-lg"
