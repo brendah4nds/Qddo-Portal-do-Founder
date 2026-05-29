@@ -189,6 +189,7 @@ export default function App() {
   const [showIndicarFounderModal, setShowIndicarFounderModal] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const emailRef = useRef<HTMLDivElement>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileName, setProfileName] = useState('');
   const [profileUsername, setProfileUsername] = useState('');
@@ -280,11 +281,17 @@ export default function App() {
   const [indicarContato, setIndicarContato] = useState('');
   const [indicarSubmitting, setIndicarSubmitting] = useState(false);
   const [indicarSuccess, setIndicarSuccess] = useState(false);
+  const [showEmailCopy, setShowEmailCopy] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
         setProfileMenuOpen(false);
+      }
+      if (emailRef.current && !emailRef.current.contains(e.target as Node)) {
+        setShowEmailCopy(false);
+        setEmailCopied(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -1073,9 +1080,41 @@ export default function App() {
             </div>
             <div className="px-6 pb-3">
               <p className="text-overline uppercase tracking-widest font-bold text-stone-400 mb-2">Contato</p>
-              <div className="flex items-center gap-2 text-xs text-stone-500">
+              <div ref={emailRef} className="relative flex items-center gap-2 text-xs text-stone-500">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-400 flex-shrink-0"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                <span className="font-medium">qddocentral.hub@h4ndslab.com</span>
+                <button
+                  onClick={() => setShowEmailCopy(prev => !prev)}
+                  className="font-medium hover:text-stone-700 transition-colors cursor-pointer text-left"
+                >
+                  qddocentral.hub@h4ndslab.com
+                </button>
+                {showEmailCopy && (
+                  <div className="absolute bottom-6 left-0 bg-white border border-stone-200 rounded-lg shadow-lg py-1 z-50 min-w-max">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText('qddocentral.hub@h4ndslab.com');
+                        setEmailCopied(true);
+                        setTimeout(() => {
+                          setEmailCopied(false);
+                          setShowEmailCopy(false);
+                        }, 1500);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 text-xs text-stone-700 hover:bg-stone-50 w-full text-left transition-colors"
+                    >
+                      {emailCopied ? (
+                        <>
+                          <Check size={12} className="text-green-500" />
+                          <span className="text-green-600">Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                          Copiar e-mail
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
