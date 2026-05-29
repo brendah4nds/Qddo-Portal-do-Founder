@@ -20,7 +20,13 @@ import {
   FileText,
   UserPlus,
   CheckCircle2,
-  X
+  X,
+  Eye,
+  LayoutGrid,
+  Calendar,
+  CheckSquare,
+  Building2,
+  Trophy
 } from 'lucide-react';
 import { api } from '../api';
 import { getSocket } from '../socket';
@@ -57,7 +63,9 @@ export function AdminPanel({
   founders = [],
   initialTab = 'bookings',
   initialEditNewsItem = null,
-  onEditNewsConsumed
+  onEditNewsConsumed,
+  hiddenMenuItems = [],
+  onRestoreMenuItem
 }: {
   user: any | null;
   onLogin: () => void;
@@ -66,11 +74,13 @@ export function AdminPanel({
   businessHours: string[];
   isAdmin: boolean;
   founders?: any[];
-  initialTab?: 'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes';
+  initialTab?: 'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes' | 'hidden-items';
   initialEditNewsItem?: any;
   onEditNewsConsumed?: () => void;
+  hiddenMenuItems?: string[];
+  onRestoreMenuItem?: (key: string) => void;
 }) {
-  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes'>(initialTab);
+  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes' | 'hidden-items'>(initialTab);
   const [indicacoes, setIndicacoes] = useState<any[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [newsItems, setNewsItems] = useState<any[]>([]);
@@ -546,6 +556,20 @@ export function AdminPanel({
           {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length > 0 && (
             <span className="bg-primary text-white text-overline font-bold rounded-full w-5 h-5 flex items-center justify-center">
               {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setAdminTab('hidden-items')}
+          className={cn(
+            "pb-4 text-xs md:text-sm font-bold uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap shrink-0",
+            adminTab === 'hidden-items' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          Itens Ocultados
+          {hiddenMenuItems.length > 0 && (
+            <span className="bg-stone-400 text-white text-overline font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {hiddenMenuItems.length}
             </span>
           )}
         </button>
@@ -1224,6 +1248,63 @@ export function AdminPanel({
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {adminTab === 'hidden-items' && (
+        <section className="animate-in fade-in duration-500">
+          {hiddenMenuItems.length === 0 ? (
+            <div className="bg-white rounded-xl border border-stone-200 shadow-sm px-8 py-20 text-center">
+              <div className="w-14 h-14 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Eye size={24} className="text-stone-400" />
+              </div>
+              <p className="text-stone-500 font-medium">Nenhum item oculto no momento.</p>
+              <p className="text-xs text-stone-400 mt-1">Passe o mouse sobre um tópico no menu lateral para ocultar.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+              <div className="px-8 py-5 border-b border-stone-100 bg-stone-50">
+                <p className="text-overline uppercase tracking-widest font-bold text-stone-400">
+                  {hiddenMenuItems.length} {hiddenMenuItems.length === 1 ? 'item oculto' : 'itens ocultos'}
+                </p>
+              </div>
+              {(() => {
+                const MENU_LABELS: Record<string, { label: string; Icon: React.ElementType }> = {
+                  geral:       { label: 'Geral',       Icon: LayoutGrid },
+                  agendamento: { label: 'Agendamento', Icon: Calendar },
+                  checkin:     { label: 'Check-in',    Icon: CheckSquare },
+                  empresa:     { label: 'Empresa',     Icon: Building2 },
+                  desafios:    { label: 'Desafios',    Icon: Globe },
+                  noticias:    { label: 'Notícias',    Icon: Newspaper },
+                  qcoin:       { label: 'QCoin',       Icon: Trophy },
+                  'bate-papo': { label: 'Bate-papo',  Icon: MessageSquare },
+                  regras:      { label: 'Regras',      Icon: ShieldCheck },
+                };
+                return hiddenMenuItems.map(key => {
+                  const meta = MENU_LABELS[key];
+                  if (!meta) return null;
+                  const { label, Icon } = meta;
+                  return (
+                    <div key={key} className="flex items-center justify-between px-8 py-5 border-b border-stone-50 last:border-0 hover:bg-stone-50/50 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-9 h-9 rounded-lg bg-stone-100 flex items-center justify-center">
+                          <Icon size={18} className="text-stone-400" />
+                        </div>
+                        <span className="font-semibold text-stone-700">{label}</span>
+                      </div>
+                      <button
+                        onClick={() => onRestoreMenuItem?.(key)}
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-stone-700 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-all"
+                      >
+                        <Eye size={14} />
+                        Restaurar
+                      </button>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           )}
         </section>
