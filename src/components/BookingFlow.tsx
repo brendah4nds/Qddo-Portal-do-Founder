@@ -213,8 +213,8 @@ export function BookingFlow({
         {/* Step 1: Room Selection */}
         {step === 1 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 className="text-h1 font-sans mb-8 text-center">Qual sala você deseja reservar?</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <h2 className="text-base sm:text-h1 font-sans mb-4 sm:mb-8 text-center">Qual sala você deseja reservar?</h2>
+            <div className="flex flex-col gap-3 sm:grid sm:grid-cols-3 sm:gap-6">
               {rooms.map(room => (
                 <button
                   key={room.id}
@@ -223,23 +223,25 @@ export function BookingFlow({
                     window.history.pushState({}, '', `/sala/${room.id}`);
                     setStep(2);
                   }}
-                  className="rounded-xl border border-stone-200 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group overflow-hidden flex flex-col"
+                  className="rounded-xl border border-stone-200 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group overflow-hidden flex flex-row sm:flex-col"
                 >
-                  <div className="w-full h-44 bg-stone-100 overflow-hidden flex-shrink-0">
+                  <div className="w-24 h-20 flex-shrink-0 sm:w-full sm:h-44 bg-stone-100 overflow-hidden">
                     {room.imageUrl ? (
                       <img src={room.imageUrl} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <RoomIcon size={40} className="text-stone-300" />
+                        <RoomIcon size={28} className="text-stone-300 sm:hidden" />
+                        <RoomIcon size={40} className="text-stone-300 hidden sm:block" />
                       </div>
                     )}
                   </div>
-                  <div className="p-6 flex flex-col flex-1">
-                    <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                      <RoomIcon size={20} />
+                  <div className="p-3 sm:p-6 flex flex-col flex-1 justify-center">
+                    <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-stone-100 flex items-center justify-center mb-2 sm:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                      <RoomIcon size={14} className="sm:hidden" />
+                      <RoomIcon size={20} className="hidden sm:block" />
                     </div>
-                    <h3 className="font-sans text-h3 leading-tight mb-2">{room.name}</h3>
-                    <p className="text-sm text-stone-400">{room.description}</p>
+                    <h3 className="font-sans text-sm sm:text-h3 leading-tight mb-1 sm:mb-2">{room.name}</h3>
+                    <p className="text-xs text-stone-400 line-clamp-2 sm:line-clamp-none">{room.description}</p>
                   </div>
                 </button>
               ))}
