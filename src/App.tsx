@@ -58,7 +58,8 @@ import {
   TrendingUp,
   Award,
   Crown,
-  Cake
+  Cake,
+  EyeOff
 } from 'lucide-react';
 import { auth } from './firebase';
 import { api, API_BASE } from './api';
@@ -105,6 +106,7 @@ export default function App() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [businessHours, setBusinessHours] = useState<string[]>(DEFAULT_BUSINESS_HOURS);
+  const [hiddenMenuItems, setHiddenMenuItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news' | 'qcoin'>('general');
   const [activeSubTab, setActiveSubTab] = useState<string>('general');
@@ -189,6 +191,7 @@ export default function App() {
   const [showIndicarFounderModal, setShowIndicarFounderModal] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const emailRef = useRef<HTMLDivElement>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileName, setProfileName] = useState('');
   const [profileUsername, setProfileUsername] = useState('');
@@ -280,11 +283,17 @@ export default function App() {
   const [indicarContato, setIndicarContato] = useState('');
   const [indicarSubmitting, setIndicarSubmitting] = useState(false);
   const [indicarSuccess, setIndicarSuccess] = useState(false);
+  const [showEmailCopy, setShowEmailCopy] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
         setProfileMenuOpen(false);
+      }
+      if (emailRef.current && !emailRef.current.contains(e.target as Node)) {
+        setShowEmailCopy(false);
+        setEmailCopied(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -576,6 +585,7 @@ export default function App() {
       setRooms(rooms.data.map((r: any) => ({ ...r, id: r._id || r.id })));
       setBookings(bookings.data.map((b: any) => ({ ...b, id: b._id || b.id })));
       if (settings.data?.businessHours) setBusinessHours(settings.data.businessHours);
+      if (settings.data?.hiddenMenuItems) setHiddenMenuItems(settings.data.hiddenMenuItems);
       setAllFounders(founders.data.map((f: any) => ({ ...f, id: f._id || f.id })));
       setAllChallenges(challenges.data.map((c: any) => ({ ...c, id: c._id || c.id })));
       setNewsItems(news.data.map((n: any) => ({ ...n, id: n._id || n.id })));
@@ -618,6 +628,7 @@ export default function App() {
     });
     socket.on('settings:update', ({ key, data }: any) => {
       if (key === 'global' && data?.businessHours) setBusinessHours(data.businessHours);
+      if (key === 'global' && data?.hiddenMenuItems !== undefined) setHiddenMenuItems(data.hiddenMenuItems || []);
       if (key === 'qcoin_tables' && data) hydrateQcoinTables(data);
     });
     socket.on('qcoin_sections:update', ({ id, data }: any) => {
@@ -718,6 +729,14 @@ export default function App() {
       setSavingQcoinSection(false);
       setTimeout(() => { setQcoinTableSaveStatus(null); setQcoinTableSaveError(''); }, 3000);
     }
+  };
+
+  const toggleHideMenuItem = async (key: string) => {
+    const updated = hiddenMenuItems.includes(key)
+      ? hiddenMenuItems.filter((k: string) => k !== key)
+      : [...hiddenMenuItems, key];
+    setHiddenMenuItems(updated);
+    await api.put('/api/settings/global', { hiddenMenuItems: updated });
   };
 
   const isAdmin = user?.email === ADMIN_EMAIL || user?.role === 'admin' || founderData?.role === 'admin';
@@ -852,199 +871,274 @@ export default function App() {
         )}>
           <div className="p-6 space-y-8">
             {/* Geral Section */}
-            <div>
-              <button 
-                onClick={() => {
-                  setView('general');
-                  setActiveSubTab('general');
-                }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
-                  view === 'general' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'general' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
-                  }`}>
-                    <LayoutGrid size={18} />
-                  </div>
-                  <span className={`text-lg ${view === 'general' ? 'text-white font-semibold' : 'text-stone-900'}`}>Geral</span>
+            {!hiddenMenuItems.includes('geral') && (
+              <div className="group/item">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => { setView('general'); setActiveSubTab('general'); }}
+                    className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
+                      view === 'general' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      view === 'general' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+                    }`}>
+                      <LayoutGrid size={18} />
+                    </div>
+                    <span className={`text-lg ${view === 'general' ? 'text-white font-semibold' : 'text-stone-900'}`}>Geral</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => toggleHideMenuItem('geral')}
+                      title="Ocultar do menu"
+                      className="opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-md ml-1 shrink-0"
+                    >
+                      <EyeOff size={13} />
+                    </button>
+                  )}
                 </div>
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Agendamento Section */}
-            <div>
-              <button 
-                onClick={() => {
-                  setView('booking');
-                  setActiveSubTab('escolha-sala');
-                }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
-                  view === 'booking' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'booking' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
-                  }`}>
-                    <Calendar size={18} />
-                  </div>
-                  <span className={`text-lg ${view === 'booking' ? 'text-white font-semibold' : 'text-stone-900'}`}>Agendamento</span>
+            {!hiddenMenuItems.includes('agendamento') && (
+              <div className="group/item">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => { setView('booking'); setActiveSubTab('escolha-sala'); }}
+                    className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
+                      view === 'booking' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      view === 'booking' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+                    }`}>
+                      <Calendar size={18} />
+                    </div>
+                    <span className={`text-lg ${view === 'booking' ? 'text-white font-semibold' : 'text-stone-900'}`}>Agendamento</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => toggleHideMenuItem('agendamento')}
+                      title="Ocultar do menu"
+                      className="opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-md ml-1 shrink-0"
+                    >
+                      <EyeOff size={13} />
+                    </button>
+                  )}
                 </div>
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Check-in Section */}
-            <div>
-              <button 
-                onClick={() => {
-                  setView('portal');
-                  setActiveSubTab('checkin');
-                }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
-                  view === 'portal' && activeSubTab === 'checkin' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'portal' && activeSubTab === 'checkin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
-                  }`}>
-                    <CheckSquare size={18} />
-                  </div>
-                  <span className={`text-lg ${view === 'portal' && activeSubTab === 'checkin' ? 'text-white font-semibold' : 'text-stone-900'}`}>Check-in</span>
+            {!hiddenMenuItems.includes('checkin') && (
+              <div className="group/item">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => { setView('portal'); setActiveSubTab('checkin'); }}
+                    className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
+                      view === 'portal' && activeSubTab === 'checkin' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      view === 'portal' && activeSubTab === 'checkin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+                    }`}>
+                      <CheckSquare size={18} />
+                    </div>
+                    <span className={`text-lg ${view === 'portal' && activeSubTab === 'checkin' ? 'text-white font-semibold' : 'text-stone-900'}`}>Check-in</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => toggleHideMenuItem('checkin')}
+                      title="Ocultar do menu"
+                      className="opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-md ml-1 shrink-0"
+                    >
+                      <EyeOff size={13} />
+                    </button>
+                  )}
                 </div>
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Empresa Section */}
-            <div>
-              <button 
-                onClick={() => {
-                  setView('portal');
-                  setActiveSubTab('empresa');
-                }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
-                  view === 'portal' && activeSubTab === 'empresa' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'portal' && activeSubTab === 'empresa' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
-                  }`}>
-                    <Building2 size={18} />
-                  </div>
-                  <span className={`text-lg ${view === 'portal' && activeSubTab === 'empresa' ? 'text-white font-semibold' : 'text-stone-900'}`}>Empresa</span>
+            {!hiddenMenuItems.includes('empresa') && (
+              <div className="group/item">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => { setView('portal'); setActiveSubTab('empresa'); }}
+                    className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
+                      view === 'portal' && activeSubTab === 'empresa' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      view === 'portal' && activeSubTab === 'empresa' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+                    }`}>
+                      <Building2 size={18} />
+                    </div>
+                    <span className={`text-lg ${view === 'portal' && activeSubTab === 'empresa' ? 'text-white font-semibold' : 'text-stone-900'}`}>Empresa</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => toggleHideMenuItem('empresa')}
+                      title="Ocultar do menu"
+                      className="opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-md ml-1 shrink-0"
+                    >
+                      <EyeOff size={13} />
+                    </button>
+                  )}
                 </div>
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Desafios Section */}
-            <div>
-              <button 
-                onClick={() => {
-                  setView('portal');
-                  setActiveSubTab('desafios-publicos');
-                }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
-                  view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
-                  }`}>
-                    <Globe size={18} />
-                  </div>
-                  <span className={`text-lg ${view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'text-white font-semibold' : 'text-stone-900'}`}>Desafios</span>
+            {!hiddenMenuItems.includes('desafios') && (
+              <div className="group/item">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => { setView('portal'); setActiveSubTab('desafios-publicos'); }}
+                    className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
+                      view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+                    }`}>
+                      <Globe size={18} />
+                    </div>
+                    <span className={`text-lg ${view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'text-white font-semibold' : 'text-stone-900'}`}>Desafios</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => toggleHideMenuItem('desafios')}
+                      title="Ocultar do menu"
+                      className="opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-md ml-1 shrink-0"
+                    >
+                      <EyeOff size={13} />
+                    </button>
+                  )}
                 </div>
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Notícias Section */}
-            <div>
-              <button 
-                onClick={() => {
-                  setView('news');
-                  setActiveSubTab('news');
-                }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
-                  view === 'news' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'news' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
-                  }`}>
-                    <Newspaper size={18} />
-                  </div>
-                  <span className={`text-lg ${view === 'news' ? 'text-white font-semibold' : 'text-stone-900'}`}>Notícias</span>
+            {!hiddenMenuItems.includes('noticias') && (
+              <div className="group/item">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => { setView('news'); setActiveSubTab('news'); }}
+                    className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
+                      view === 'news' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      view === 'news' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+                    }`}>
+                      <Newspaper size={18} />
+                    </div>
+                    <span className={`text-lg ${view === 'news' ? 'text-white font-semibold' : 'text-stone-900'}`}>Notícias</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => toggleHideMenuItem('noticias')}
+                      title="Ocultar do menu"
+                      className="opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-md ml-1 shrink-0"
+                    >
+                      <EyeOff size={13} />
+                    </button>
+                  )}
                 </div>
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* QCoin Section */}
-            <div>
-              <button
-                onClick={() => {
-                  setView('qcoin');
-                  setActiveSubTab('qcoin');
-                }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
-                  view === 'qcoin' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'qcoin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
-                  }`}>
-                    <Trophy size={18} />
-                  </div>
-                  <span className={`text-lg ${view === 'qcoin' ? 'text-white font-semibold' : 'text-stone-900'}`}>QCoin</span>
+            {!hiddenMenuItems.includes('qcoin') && (
+              <div className="group/item">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => { setView('qcoin'); setActiveSubTab('qcoin'); }}
+                    className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
+                      view === 'qcoin' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      view === 'qcoin' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+                    }`}>
+                      <Trophy size={18} />
+                    </div>
+                    <span className={`text-lg ${view === 'qcoin' ? 'text-white font-semibold' : 'text-stone-900'}`}>QCoin</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => toggleHideMenuItem('qcoin')}
+                      title="Ocultar do menu"
+                      className="opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-md ml-1 shrink-0"
+                    >
+                      <EyeOff size={13} />
+                    </button>
+                  )}
                 </div>
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Bate-papo Section */}
-            <div>
-              <button
-                onClick={() => {
-                  setView('chat');
-                  setActiveSubTab('bate-papo');
-                }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
-                  view === 'chat' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'chat' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
-                  }`}>
-                    <MessageSquare size={18} />
-                  </div>
-                  <span className={`text-lg ${view === 'chat' ? 'text-white font-semibold' : 'text-stone-900'}`}>Bate-papo</span>
+            {!hiddenMenuItems.includes('bate-papo') && (
+              <div className="group/item">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => { setView('chat'); setActiveSubTab('bate-papo'); }}
+                    className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
+                      view === 'chat' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      view === 'chat' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+                    }`}>
+                      <MessageSquare size={18} />
+                    </div>
+                    <span className={`text-lg ${view === 'chat' ? 'text-white font-semibold' : 'text-stone-900'}`}>Bate-papo</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => toggleHideMenuItem('bate-papo')}
+                      title="Ocultar do menu"
+                      className="opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-md ml-1 shrink-0"
+                    >
+                      <EyeOff size={13} />
+                    </button>
+                  )}
                 </div>
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Regras Section */}
-            <div>
-              <button
-                onClick={() => { setView('regras'); setActiveSubTab('regras'); }}
-                className={`flex items-center justify-between w-full text-left group transition-all p-2 rounded-md ${
-                  view === 'regras' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'regras' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
-                  }`}>
-                    <ShieldCheck size={18} />
-                  </div>
-                  <span className={`text-lg ${view === 'regras' ? 'text-white font-semibold' : 'text-stone-900'}`}>Regras</span>
+            {!hiddenMenuItems.includes('regras') && (
+              <div className="group/item">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => { setView('regras'); setActiveSubTab('regras'); }}
+                    className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
+                      view === 'regras' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      view === 'regras' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+                    }`}>
+                      <ShieldCheck size={18} />
+                    </div>
+                    <span className={`text-lg ${view === 'regras' ? 'text-white font-semibold' : 'text-stone-900'}`}>Regras</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => toggleHideMenuItem('regras')}
+                      title="Ocultar do menu"
+                      className="opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded-md ml-1 shrink-0"
+                    >
+                      <EyeOff size={13} />
+                    </button>
+                  )}
                 </div>
-              </button>
-            </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-auto">
@@ -1073,9 +1167,41 @@ export default function App() {
             </div>
             <div className="px-6 pb-3">
               <p className="text-overline uppercase tracking-widest font-bold text-stone-400 mb-2">Contato</p>
-              <div className="flex items-center gap-2 text-xs text-stone-500">
+              <div ref={emailRef} className="relative flex items-center gap-2 text-xs text-stone-500">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-400 flex-shrink-0"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                <span className="font-medium">qddocentral.hub@h4ndslab.com</span>
+                <button
+                  onClick={() => setShowEmailCopy(prev => !prev)}
+                  className="font-medium hover:text-stone-700 transition-colors cursor-pointer text-left"
+                >
+                  qddocentral.hub@h4ndslab.com
+                </button>
+                {showEmailCopy && (
+                  <div className="absolute bottom-6 left-0 bg-white border border-stone-200 rounded-lg shadow-lg py-1 z-50 min-w-max">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText('qddocentral.hub@h4ndslab.com');
+                        setEmailCopied(true);
+                        setTimeout(() => {
+                          setEmailCopied(false);
+                          setShowEmailCopy(false);
+                        }, 1500);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 text-xs text-stone-700 hover:bg-stone-50 w-full text-left transition-colors"
+                    >
+                      {emailCopied ? (
+                        <>
+                          <Check size={12} className="text-green-500" />
+                          <span className="text-green-600">Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                          Copiar e-mail
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1096,6 +1222,8 @@ export default function App() {
                 initialTab={adminInitialTab}
                 initialEditNewsItem={adminInitialEditNewsItem}
                 onEditNewsConsumed={() => setAdminInitialEditNewsItem(null)}
+                hiddenMenuItems={hiddenMenuItems}
+                onRestoreMenuItem={toggleHideMenuItem}
               />
             ) : view === 'portal' ? (
               <FounderPortal 
