@@ -3054,7 +3054,7 @@ export default function App() {
 
               {/* Body */}
               <div className="px-6 py-5 overflow-y-auto flex-1 space-y-4">
-                <p className="text-stone-600 text-sm leading-relaxed whitespace-pre-wrap">{selectedNewsItem.content}</p>
+                <div className="text-stone-600 text-sm leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: selectedNewsItem.content }} />
 
                 {(selectedNewsItem.eventDate || selectedNewsItem.attachmentUrl) && (
                   <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-stone-100">

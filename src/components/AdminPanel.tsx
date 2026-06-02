@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import {
@@ -123,6 +123,23 @@ export function AdminPanel({
     message: '',
     onConfirm: () => {},
   });
+
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isAddingNews) return;
+    if (contentRef.current) {
+      contentRef.current.innerHTML = newNews.content || '';
+    }
+  }, [isAddingNews, editingNewsId]);
+
+  const applyFormat = (command: string) => {
+    contentRef.current?.focus();
+    document.execCommand(command, false);
+    if (contentRef.current) {
+      setNewNews(prev => ({ ...prev, content: contentRef.current?.innerHTML ?? '' }));
+    }
+  };
 
   if (!user) {
     return (
@@ -889,13 +906,39 @@ export function AdminPanel({
 
                 <div className="space-y-2">
                   <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Conteúdo</label>
-                  <textarea
-                    required
-                    rows={4}
-                    value={newNews.content}
-                    onChange={e => setNewNews({ ...newNews, content: e.target.value })}
-                    className="w-full px-6 py-4 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:border-primary transition-all resize-none"
-                  />
+                  <div className="border border-stone-100 rounded-lg overflow-hidden focus-within:border-primary transition-all">
+                    <div className="flex items-center gap-1 px-3 py-2 bg-stone-100 border-b border-stone-100">
+                      <button
+                        type="button"
+                        onMouseDown={(e: React.MouseEvent) => { e.preventDefault(); applyFormat('bold'); }}
+                        className="w-7 h-7 flex items-center justify-center rounded font-bold text-sm text-stone-600 hover:bg-stone-200 transition-colors"
+                        title="Negrito"
+                      >B</button>
+                      <button
+                        type="button"
+                        onMouseDown={(e: React.MouseEvent) => { e.preventDefault(); applyFormat('italic'); }}
+                        className="w-7 h-7 flex items-center justify-center rounded italic text-sm text-stone-600 hover:bg-stone-200 transition-colors"
+                        title="Itálico"
+                      >I</button>
+                      <button
+                        type="button"
+                        onMouseDown={(e: React.MouseEvent) => { e.preventDefault(); applyFormat('underline'); }}
+                        className="w-7 h-7 flex items-center justify-center rounded underline text-sm text-stone-600 hover:bg-stone-200 transition-colors"
+                        title="Sublinhado"
+                      >U</button>
+                    </div>
+                    <div
+                      ref={contentRef}
+                      contentEditable
+                      suppressContentEditableWarning
+                      onInput={() => {
+                        const html = contentRef.current?.innerHTML ?? '';
+                        setNewNews({ ...newNews, content: html });
+                      }}
+                      className="w-full px-6 py-4 bg-stone-50 min-h-[100px] focus:outline-none text-sm leading-relaxed empty:before:content-[attr(data-placeholder)] empty:before:text-stone-400"
+                      data-placeholder="Digite o conteúdo aqui..."
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
