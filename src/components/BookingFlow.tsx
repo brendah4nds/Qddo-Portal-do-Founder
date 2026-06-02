@@ -18,14 +18,16 @@ import {
   isSameMonth
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { 
-  User as UserIcon, 
-  Mail, 
-  CheckCircle, 
-  AlertCircle, 
-  ChevronLeft, 
+import {
+  User as UserIcon,
+  Mail,
+  CheckCircle,
+  AlertCircle,
+  ChevronLeft,
   ChevronRight,
-  DoorOpen as RoomIcon
+  DoorOpen as RoomIcon,
+  Calendar as CalendarIcon,
+  Clock
 } from 'lucide-react';
 import { Room, Booking, BookingStatus } from '../types';
 import { clsx, type ClassValue } from 'clsx';
@@ -63,7 +65,8 @@ export function BookingFlow({
 }) {
   const [step, setStep] = useState(1);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
-  const [formData, setFormData] = useState({ name: '', email: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', linkGoogleCalendar: false });
+  const [showAllBookings, setShowAllBookings] = useState(false);
 
   // Sync internal step with external activeSubTab
   useEffect(() => {
@@ -138,7 +141,7 @@ export function BookingFlow({
       await Promise.all(bookingPromises);
       
       setStatus('success');
-      setFormData({ name: '', email: '' });
+      setFormData({ name: '', email: '', linkGoogleCalendar: false });
       setSelectedTimes([]);
       setStep(1);
     } catch (error) {
@@ -246,6 +249,61 @@ export function BookingFlow({
                 </button>
               ))}
             </div>
+
+            {(() => {
+              const today = startOfToday();
+              const thisMonthBookings = [...bookings]
+                .filter(b => isSameMonth(parse(b.date, 'yyyy-MM-dd', new Date()), today))
+                .sort((a, b) => {
+                  const dtA = `${a.date} ${a.startTime}`;
+                  const dtB = `${b.date} ${b.startTime}`;
+                  return dtB.localeCompare(dtA);
+                });
+
+              if (thisMonthBookings.length === 0) return null;
+
+              const LIMIT = 5;
+              const visible = showAllBookings ? thisMonthBookings : thisMonthBookings.slice(0, LIMIT);
+              const hasMore = thisMonthBookings.length > LIMIT;
+
+              return (
+                <div className="mt-10">
+                  <h3 className="text-xs uppercase tracking-widest font-bold text-stone-400 mb-4">Agendamentos do Mês</h3>
+                  <div className="bg-white rounded-xl border border-stone-200 shadow-sm divide-y divide-stone-100 overflow-hidden">
+                    {visible.map(booking => {
+                      const room = rooms.find(r => r.id === booking.roomId);
+                      return (
+                        <div key={booking.id} className="flex items-center gap-4 p-4">
+                          <div className="w-10 h-10 rounded-lg bg-stone-50 flex items-center justify-center flex-shrink-0">
+                            <CalendarIcon size={18} className="text-stone-300" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-sans text-sm font-bold text-stone-800 truncate">{room?.name || 'Sala'}</p>
+                            <p className="text-xs text-stone-400 truncate">
+                              {format(parse(booking.date, 'yyyy-MM-dd', new Date()), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                            </p>
+                            <p className="text-xs text-stone-400">{booking.userName}</p>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs font-medium text-stone-500 flex-shrink-0">
+                            <Clock size={12} className="text-stone-300" />
+                            {booking.startTime} – {booking.endTime}
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {hasMore && (
+                      <button
+                        onClick={() => setShowAllBookings(prev => !prev)}
+                        className="w-full py-3 text-xs font-bold uppercase tracking-widest text-primary hover:bg-primary/5 transition-colors"
+                      >
+                        {showAllBookings ? 'Ver menos' : `Ver mais (${thisMonthBookings.length - LIMIT} restantes)`}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -397,9 +455,9 @@ export function BookingFlow({
                   <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">E-mail Corporativo</label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={20} />
-                    <input 
+                    <input
                       required
-                      type="email" 
+                      type="email"
                       placeholder="seu@email.com"
                       value={formData.email}
                       onChange={e => setFormData({ ...formData, email: e.target.value })}
@@ -407,6 +465,28 @@ export function BookingFlow({
                     />
                   </div>
                 </div>
+
+                <label className="flex items-center gap-3 cursor-pointer select-none group">
+                  <div className={cn(
+                    "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                    formData.linkGoogleCalendar
+                      ? "bg-primary border-primary"
+                      : "border-stone-200 bg-white group-hover:border-stone-400"
+                  )}>
+                    {formData.linkGoogleCalendar && (
+                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={formData.linkGoogleCalendar}
+                      onChange={e => setFormData({ ...formData, linkGoogleCalendar: e.target.checked })}
+                    />
+                  </div>
+                  <span className="text-sm text-stone-600">Deseja vincular ao Google Agenda?</span>
+                </label>
 
                 <button 
                   type="submit"
