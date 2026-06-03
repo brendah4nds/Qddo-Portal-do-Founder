@@ -59,7 +59,8 @@ import {
   Award,
   Crown,
   Cake,
-  EyeOff
+  EyeOff,
+  Eye
 } from 'lucide-react';
 import { auth } from './firebase';
 import { api, API_BASE } from './api';
@@ -107,6 +108,7 @@ export default function App() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [businessHours, setBusinessHours] = useState<string[]>(DEFAULT_BUSINESS_HOURS);
   const [hiddenMenuItems, setHiddenMenuItems] = useState<string[]>([]);
+  const [hiddenNewsIds, setHiddenNewsIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news' | 'qcoin'>('general');
   const [activeSubTab, setActiveSubTab] = useState<string>('general');
@@ -586,6 +588,7 @@ export default function App() {
       setBookings(bookings.data.map((b: any) => ({ ...b, id: b._id || b.id })));
       if (settings.data?.businessHours) setBusinessHours(settings.data.businessHours);
       if (settings.data?.hiddenMenuItems) setHiddenMenuItems(settings.data.hiddenMenuItems);
+      if (settings.data?.hiddenNewsIds) setHiddenNewsIds(settings.data.hiddenNewsIds);
       setAllFounders(founders.data.map((f: any) => ({ ...f, id: f._id || f.id })));
       setAllChallenges(challenges.data.map((c: any) => ({ ...c, id: c._id || c.id })));
       setNewsItems(news.data.map((n: any) => ({ ...n, id: n._id || n.id })));
@@ -629,6 +632,7 @@ export default function App() {
     socket.on('settings:update', ({ key, data }: any) => {
       if (key === 'global' && data?.businessHours) setBusinessHours(data.businessHours);
       if (key === 'global' && data?.hiddenMenuItems !== undefined) setHiddenMenuItems(data.hiddenMenuItems || []);
+      if (key === 'global' && data?.hiddenNewsIds !== undefined) setHiddenNewsIds(data.hiddenNewsIds || []);
       if (key === 'qcoin_tables' && data) hydrateQcoinTables(data);
     });
     socket.on('qcoin_sections:update', ({ id, data }: any) => {
@@ -740,6 +744,19 @@ export default function App() {
   };
 
   const isAdmin = user?.email === ADMIN_EMAIL || user?.role === 'admin' || founderData?.role === 'admin';
+
+  const toggleAvisoFromNews = async (avisoId: string) => {
+    const isHidden = hiddenNewsIds.includes(avisoId);
+    const updated = isHidden
+      ? hiddenNewsIds.filter(id => id !== avisoId)
+      : [...hiddenNewsIds, avisoId];
+    setHiddenNewsIds(updated);
+    try {
+      await api.put('/api/settings/global', { hiddenNewsIds: updated });
+    } catch {
+      setHiddenNewsIds(hiddenNewsIds);
+    }
+  };
 
   if (loading || (user && checkingFounder)) {
     return (
@@ -1239,7 +1256,16 @@ export default function App() {
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {newsItems
-                    .filter(item => item.category === 'evento' || item.category === 'aviso')
+                    .filter(item => {
+                      if (item.category === 'evento') return true;
+                      if (item.category === 'aviso') {
+                        if (hiddenNewsIds.includes(item.id)) return false;
+                        const date = toDate(item.createdAt);
+                        if (!date) return true;
+                        return date >= subDays(startOfToday(), 7);
+                      }
+                      return false;
+                    })
                     .sort((a, b) => {
                       const secA = toDate(a.createdAt)?.getTime() ?? 0;
                       const secB = toDate(b.createdAt)?.getTime() ?? 0;
@@ -1307,7 +1333,16 @@ export default function App() {
                         </div>
                       );
                     })}
-                  {newsItems.filter(item => item.category === 'evento' || item.category === 'aviso').length === 0 && (
+                  {newsItems.filter(item => {
+                    if (item.category === 'evento') return true;
+                    if (item.category === 'aviso') {
+                      if (hiddenNewsIds.includes(item.id)) return false;
+                      const date = toDate(item.createdAt);
+                      if (!date) return true;
+                      return date >= subDays(startOfToday(), 7);
+                    }
+                    return false;
+                  }).length === 0 && (
                     <div className="col-span-4 text-center py-20 bg-white rounded-xl border border-dashed border-stone-200">
                       <p className="text-stone-400">Nenhum aviso ou evento publicado no momento.</p>
                     </div>
@@ -2457,14 +2492,33 @@ export default function App() {
                             {newsItems
                               .filter(item => item.category === 'aviso')
                               .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
-                              .map((aviso, idx) => (
-                                <div key={aviso.id || idx} className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm hover:shadow-md transition-all group">
+                              .map((aviso, idx) => {
+                                const isHiddenFromNews = hiddenNewsIds.includes(aviso.id);
+                                return (
+                                <div key={aviso.id || idx} className={cn("bg-white rounded-xl p-5 border shadow-sm hover:shadow-md transition-all group", isHiddenFromNews ? "border-stone-100 opacity-60" : "border-stone-200")}>
                                   <div className="flex items-center gap-2 mb-3">
                                     <AlertTriangle className="text-primary shrink-0" size={18} />
                                     <h4 className="text-base font-sans text-stone-900">Aviso</h4>
+                                    {isAdmin && isHiddenFromNews && (
+                                      <span className="text-overline font-bold uppercase tracking-widest text-stone-300 text-xs">Oculto da News</span>
+                                    )}
                                     <span className="ml-auto text-overline font-bold uppercase tracking-widest text-stone-400">
                                       {toDate(aviso.createdAt)?.toLocaleDateString('pt-BR') || ''}
                                     </span>
+                                    {isAdmin && (
+                                      <button
+                                        onClick={() => toggleAvisoFromNews(aviso.id)}
+                                        title={isHiddenFromNews ? 'Mostrar na página News' : 'Remover da página News'}
+                                        className={cn(
+                                          "w-6 h-6 rounded-md flex items-center justify-center transition-colors flex-shrink-0",
+                                          isHiddenFromNews
+                                            ? "text-stone-300 hover:text-emerald-500 hover:bg-emerald-50"
+                                            : "text-stone-400 hover:text-red-500 hover:bg-red-50"
+                                        )}
+                                      >
+                                        {isHiddenFromNews ? <Eye size={14} /> : <EyeOff size={14} />}
+                                      </button>
+                                    )}
                                   </div>
                                   <div className="p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 transition-all">
                                     <h5 className="font-bold text-stone-900 text-sm mb-1 group-hover:text-primary transition-colors">{aviso.title}</h5>
@@ -2482,7 +2536,8 @@ export default function App() {
                                     )}
                                   </div>
                                 </div>
-                              ))
+                                );
+                              })
                             }
                             {/* Eventos da Semana */}
                             <div className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm flex flex-col">
