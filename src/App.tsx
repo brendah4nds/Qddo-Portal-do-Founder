@@ -1288,7 +1288,7 @@ export default function App() {
                             )}
 
                             <h3 className="text-sm font-sans font-bold mb-1 group-hover:text-stone-600 transition-colors line-clamp-2 uppercase tracking-tight">{item.title}</h3>
-                            <p className="text-stone-500 text-xs leading-relaxed line-clamp-3 flex-1">{item.content}</p>
+                            <p className="text-stone-500 text-xs leading-relaxed line-clamp-3 flex-1" dangerouslySetInnerHTML={{ __html: item.content }} />
 
                             <div className="mt-3 pt-3 border-t border-stone-50 flex items-center justify-between gap-2">
                               <button
@@ -2468,7 +2468,7 @@ export default function App() {
                                   </div>
                                   <div className="p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 transition-all">
                                     <h5 className="font-bold text-stone-900 text-sm mb-1 group-hover:text-primary transition-colors">{aviso.title}</h5>
-                                    <p className="text-stone-500 text-xs line-clamp-3 leading-relaxed">{aviso.content}</p>
+                                    <p className="text-stone-500 text-xs line-clamp-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: aviso.content }} />
                                     {aviso.attachmentUrl && (
                                       <a
                                         href={aviso.attachmentUrl}
