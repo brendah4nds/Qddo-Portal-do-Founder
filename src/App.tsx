@@ -2495,7 +2495,11 @@ export default function App() {
                               .map((aviso, idx) => {
                                 const isHiddenFromNews = hiddenNewsIds.includes(aviso.id);
                                 return (
-                                <div key={aviso.id || idx} className={cn("bg-white rounded-xl p-5 border shadow-sm hover:shadow-md transition-all group", isHiddenFromNews ? "border-stone-100 opacity-60" : "border-stone-200")}>
+                                <div
+                                  key={aviso.id || idx}
+                                  onClick={() => setSelectedNewsItem(aviso)}
+                                  className={cn("bg-white rounded-xl p-5 border shadow-sm hover:shadow-md transition-all group cursor-pointer", isHiddenFromNews ? "border-stone-100 opacity-60" : "border-stone-200")}
+                                >
                                   <div className="flex items-center gap-2 mb-3">
                                     <AlertTriangle className="text-primary shrink-0" size={18} />
                                     <h4 className="text-base font-sans text-stone-900">Aviso</h4>
@@ -2507,7 +2511,7 @@ export default function App() {
                                     </span>
                                     {isAdmin && (
                                       <button
-                                        onClick={() => toggleAvisoFromNews(aviso.id)}
+                                        onClick={e => { e.stopPropagation(); toggleAvisoFromNews(aviso.id); }}
                                         title={isHiddenFromNews ? 'Mostrar na página News' : 'Remover da página News'}
                                         className={cn(
                                           "w-6 h-6 rounded-md flex items-center justify-center transition-colors flex-shrink-0",
@@ -2520,7 +2524,7 @@ export default function App() {
                                       </button>
                                     )}
                                   </div>
-                                  <div className="p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 transition-all">
+                                  <div className="p-3 bg-stone-50 rounded-lg border border-stone-100 group-hover:border-stone-300 transition-all">
                                     <h5 className="font-bold text-stone-900 text-sm mb-1 group-hover:text-primary transition-colors">{aviso.title}</h5>
                                     <p className="text-stone-500 text-xs line-clamp-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: aviso.content }} />
                                     {aviso.attachmentUrl && (
@@ -2528,6 +2532,7 @@ export default function App() {
                                         href={aviso.attachmentUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        onClick={e => e.stopPropagation()}
                                         className="mt-2 inline-flex items-center gap-1.5 text-overline font-bold text-stone-500 hover:text-stone-700 transition-colors"
                                       >
                                         <Paperclip size={11} />
