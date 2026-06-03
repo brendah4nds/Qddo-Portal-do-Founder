@@ -27,7 +27,8 @@ import {
   ChevronRight,
   DoorOpen as RoomIcon,
   Calendar as CalendarIcon,
-  Clock
+  Clock,
+  Download
 } from 'lucide-react';
 import { Room, Booking, BookingStatus } from '../types';
 import { clsx, type ClassValue } from 'clsx';
@@ -67,6 +68,12 @@ export function BookingFlow({
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
   const [formData, setFormData] = useState({ name: '', email: '', linkGoogleCalendar: false });
   const [showAllBookings, setShowAllBookings] = useState(false);
+  const [bookingConfirmation, setBookingConfirmation] = useState<{
+    roomName: string;
+    date: Date;
+    times: string[];
+    addToCalendar: boolean;
+  } | null>(null);
 
   // Sync internal step with external activeSubTab
   useEffect(() => {
@@ -91,6 +98,47 @@ export function BookingFlow({
   }, [selectedRoomId]);
 
   const selectedRoom = rooms.find(r => r.id === selectedRoomId);
+
+  const buildGoogleCalendarUrl = (roomName: string, date: Date, sortedTimes: string[]) => {
+    const startDate = parse(sortedTimes[0], 'HH:mm', date);
+    const endDate = addMinutes(parse(sortedTimes[sortedTimes.length - 1], 'HH:mm', date), 30);
+    const fmt = (d: Date) => format(d, "yyyyMMdd'T'HHmmss");
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: `Reserva - ${roomName}`,
+      dates: `${fmt(startDate)}/${fmt(endDate)}`,
+      details: `Reserva confirmada no Portal do Founder\nSala: ${roomName}\nHorário: ${sortedTimes[0]} – ${format(endDate, 'HH:mm')}`,
+      location: 'Portal do Founder',
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  };
+
+  const downloadICS = (roomName: string, date: Date, sortedTimes: string[]) => {
+    const startDate = parse(sortedTimes[0], 'HH:mm', date);
+    const endDate = addMinutes(parse(sortedTimes[sortedTimes.length - 1], 'HH:mm', date), 30);
+    const fmt = (d: Date) => format(d, "yyyyMMdd'T'HHmmss");
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Portal do Founder//Reserva de Sala//PT',
+      'BEGIN:VEVENT',
+      `DTSTART:${fmt(startDate)}`,
+      `DTEND:${fmt(endDate)}`,
+      `SUMMARY:Reserva - ${roomName}`,
+      `DESCRIPTION:Reserva confirmada no Portal do Founder\\nSala: ${roomName}\\nHorário: ${sortedTimes[0]} – ${format(endDate, 'HH:mm')}`,
+      'LOCATION:Portal do Founder',
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reserva-${roomName.toLowerCase().replace(/\s+/g, '-')}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const roomBookings = useMemo(() => {
     return bookings.filter(b => b.roomId === selectedRoomId && b.date === format(selectedDate, 'yyyy-MM-dd'));
@@ -139,7 +187,13 @@ export function BookingFlow({
       });
 
       await Promise.all(bookingPromises);
-      
+
+      setBookingConfirmation({
+        roomName: selectedRoom?.name || 'Sala',
+        date: selectedDate,
+        times: [...selectedTimes],
+        addToCalendar: formData.linkGoogleCalendar,
+      });
       setStatus('success');
       setFormData({ name: '', email: '', linkGoogleCalendar: false });
       setSelectedTimes([]);
@@ -150,19 +204,49 @@ export function BookingFlow({
     }
   };
 
-  if (status === 'success') {
+  if (status === 'success' && bookingConfirmation) {
+    const { roomName, date, times, addToCalendar } = bookingConfirmation;
+    const sortedTimes = [...times].sort();
+    const endTime = format(addMinutes(parse(sortedTimes[sortedTimes.length - 1], 'HH:mm', date), 30), 'HH:mm');
+
     return (
-      <div className="max-w-md mx-auto text-center py-20 bg-white rounded-xl shadow-sm border border-stone-100 p-12">
+      <div className="max-w-md mx-auto text-center py-12 bg-white rounded-xl shadow-sm border border-stone-100 p-12">
         <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle size={32} />
         </div>
         <h2 className="text-h2 font-sans mb-2">Agendamento Confirmado!</h2>
-        <p className="text-stone-500 mb-8">Sua reserva para a {selectedRoom?.name} foi realizada com sucesso.</p>
-        <button 
+        <p className="text-stone-500 mb-1">Sua reserva para a <strong>{roomName}</strong> foi realizada com sucesso.</p>
+        <p className="text-stone-400 text-sm mb-8">
+          {format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} &bull; {sortedTimes[0]} – {endTime}
+        </p>
+
+        {addToCalendar && (
+          <div className="space-y-3 mb-6">
+            <a
+              href={buildGoogleCalendarUrl(roomName, date, sortedTimes)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-3 w-full bg-[#4285F4] text-white py-4 rounded-md font-semibold hover:bg-[#3b78e7] transition-all"
+            >
+              <CalendarIcon size={20} />
+              Adicionar ao Google Agenda
+            </a>
+            <button
+              onClick={() => downloadICS(roomName, date, sortedTimes)}
+              className="flex items-center justify-center gap-3 w-full bg-stone-100 text-stone-700 py-4 rounded-md font-semibold hover:bg-stone-200 transition-all"
+            >
+              <Download size={20} />
+              Baixar arquivo .ics (outros calendários)
+            </button>
+          </div>
+        )}
+
+        <button
           onClick={() => {
             setStatus('idle');
             setSelectedRoomId(null);
             setStep(1);
+            setBookingConfirmation(null);
           }}
           className="w-full bg-primary text-white py-4 rounded-md font-semibold hover:bg-primary/90 transition-all"
         >
@@ -467,8 +551,14 @@ export function BookingFlow({
                 </div>
 
                 <label className="flex items-center gap-3 cursor-pointer select-none group">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={formData.linkGoogleCalendar}
+                    onChange={e => setFormData({ ...formData, linkGoogleCalendar: e.target.checked })}
+                  />
                   <div className={cn(
-                    "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                    "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all pointer-events-none",
                     formData.linkGoogleCalendar
                       ? "bg-primary border-primary"
                       : "border-stone-200 bg-white group-hover:border-stone-400"
@@ -478,12 +568,6 @@ export function BookingFlow({
                         <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      checked={formData.linkGoogleCalendar}
-                      onChange={e => setFormData({ ...formData, linkGoogleCalendar: e.target.checked })}
-                    />
                   </div>
                   <span className="text-sm text-stone-600">Deseja vincular ao Google Agenda?</span>
                 </label>
