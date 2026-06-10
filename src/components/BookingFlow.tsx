@@ -66,13 +66,12 @@ export function BookingFlow({
 }) {
   const [step, setStep] = useState(1);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
-  const [formData, setFormData] = useState({ name: '', email: '', linkGoogleCalendar: false });
+  const [formData, setFormData] = useState({ name: '', email: '' });
   const [showAllBookings, setShowAllBookings] = useState(false);
   const [bookingConfirmation, setBookingConfirmation] = useState<{
     roomName: string;
     date: Date;
     times: string[];
-    addToCalendar: boolean;
   } | null>(null);
 
   // Sync internal step with external activeSubTab
@@ -191,19 +190,13 @@ export function BookingFlow({
       const roomName = selectedRoom?.name || 'Sala';
       const sortedTimes = [...selectedTimes].sort();
 
-      if (formData.linkGoogleCalendar) {
-        const gcalUrl = buildGoogleCalendarUrl(roomName, selectedDate, sortedTimes);
-        window.open(gcalUrl, '_blank', 'noopener,noreferrer');
-      }
-
       setBookingConfirmation({
         roomName,
         date: selectedDate,
         times: [...selectedTimes],
-        addToCalendar: formData.linkGoogleCalendar,
       });
       setStatus('success');
-      setFormData({ name: '', email: '', linkGoogleCalendar: false });
+      setFormData({ name: '', email: '' });
       setSelectedTimes([]);
       setStep(1);
     } catch (error) {
@@ -213,7 +206,7 @@ export function BookingFlow({
   };
 
   if (status === 'success' && bookingConfirmation) {
-    const { roomName, date, times, addToCalendar } = bookingConfirmation;
+    const { roomName, date, times } = bookingConfirmation;
     const sortedTimes = [...times].sort();
     const endTime = format(addMinutes(parse(sortedTimes[sortedTimes.length - 1], 'HH:mm', date), 30), 'HH:mm');
 
@@ -228,26 +221,24 @@ export function BookingFlow({
           {format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} &bull; {sortedTimes[0]} – {endTime}
         </p>
 
-        {addToCalendar && (
-          <div className="space-y-3 mb-6">
-            <a
-              href={buildGoogleCalendarUrl(roomName, date, sortedTimes)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 w-full bg-[#4285F4] text-white py-4 rounded-md font-semibold hover:bg-[#3b78e7] transition-all"
-            >
-              <CalendarIcon size={20} />
-              Adicionar ao Google Agenda
-            </a>
-            <button
-              onClick={() => downloadICS(roomName, date, sortedTimes)}
-              className="flex items-center justify-center gap-3 w-full bg-stone-100 text-stone-700 py-4 rounded-md font-semibold hover:bg-stone-200 transition-all"
-            >
-              <Download size={20} />
-              Baixar arquivo .ics (outros calendários)
-            </button>
-          </div>
-        )}
+        <div className="space-y-3 mb-6">
+          <a
+            href={buildGoogleCalendarUrl(roomName, date, sortedTimes)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-3 w-full bg-[#4285F4] text-white py-4 rounded-md font-semibold hover:bg-[#3b78e7] transition-all"
+          >
+            <CalendarIcon size={20} />
+            Adicionar ao Google Agenda
+          </a>
+          <button
+            onClick={() => downloadICS(roomName, date, sortedTimes)}
+            className="flex items-center justify-center gap-3 w-full bg-stone-100 text-stone-700 py-4 rounded-md font-semibold hover:bg-stone-200 transition-all"
+          >
+            <Download size={20} />
+            Baixar arquivo .ics (outros calendários)
+          </button>
+        </div>
 
         <button
           onClick={() => {
@@ -558,29 +549,7 @@ export function BookingFlow({
                   </div>
                 </div>
 
-                <label className="flex items-center gap-3 cursor-pointer select-none group">
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={formData.linkGoogleCalendar}
-                    onChange={e => setFormData({ ...formData, linkGoogleCalendar: e.target.checked })}
-                  />
-                  <div className={cn(
-                    "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all pointer-events-none",
-                    formData.linkGoogleCalendar
-                      ? "bg-primary border-primary"
-                      : "border-stone-200 bg-white group-hover:border-stone-400"
-                  )}>
-                    {formData.linkGoogleCalendar && (
-                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </div>
-                  <span className="text-sm text-stone-600">Deseja vincular ao Google Agenda?</span>
-                </label>
-
-                <button 
+                <button
                   type="submit"
                   disabled={selectedTimes.length === 0 || status === 'loading'}
                   className="w-full bg-primary text-white py-5 rounded-lg font-bold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-8 shadow-xl shadow-primary/20 text-lg"
