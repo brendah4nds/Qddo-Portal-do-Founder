@@ -188,8 +188,16 @@ export function BookingFlow({
 
       await Promise.all(bookingPromises);
 
+      const roomName = selectedRoom?.name || 'Sala';
+      const sortedTimes = [...selectedTimes].sort();
+
+      if (formData.linkGoogleCalendar) {
+        const gcalUrl = buildGoogleCalendarUrl(roomName, selectedDate, sortedTimes);
+        window.open(gcalUrl, '_blank', 'noopener,noreferrer');
+      }
+
       setBookingConfirmation({
-        roomName: selectedRoom?.name || 'Sala',
+        roomName,
         date: selectedDate,
         times: [...selectedTimes],
         addToCalendar: formData.linkGoogleCalendar,
