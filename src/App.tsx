@@ -470,15 +470,39 @@ export default function App() {
     );
   };
 
-  // URL handling for specific rooms
-  useEffect(() => {
-    const path = window.location.pathname;
-    const match = path.match(/\/sala\/([^\/]+)/);
-    if (match) {
-      setSelectedRoomId(match[1]);
-    } else if (path === '/admin') {
-      setView('admin');
+  // URL → state mapping
+  const applyPath = (path: string) => {
+    const salaMatch = path.match(/\/sala\/([^\/]+)/);
+    if (salaMatch) { setSelectedRoomId(salaMatch[1]); return; }
+
+    const qcoinMatch = path.match(/^\/qcoin\/(.+)$/);
+    if (qcoinMatch) {
+      setView('qcoin'); setActiveSubTab('qcoin');
+      setExpandedQcoinCard(qcoinMatch[1]);
+      return;
     }
+
+    const routes: Record<string, () => void> = {
+      '/agendamento':       () => { setView('booking'); setActiveSubTab('escolha-sala'); },
+      '/checkin':           () => { setView('portal');  setActiveSubTab('checkin'); },
+      '/empresa':           () => { setView('portal');  setActiveSubTab('empresa'); },
+      '/desafios':          () => { setView('portal');  setActiveSubTab('desafios-publicos'); },
+      '/desafios/privados': () => { setView('portal');  setActiveSubTab('desafios-privados'); },
+      '/noticias':          () => { setView('news');    setActiveSubTab('news'); },
+      '/qcoin':             () => { setView('qcoin');   setActiveSubTab('qcoin'); setExpandedQcoinCard(null); },
+      '/bate-papo':         () => { setView('chat');    setActiveSubTab('bate-papo'); },
+      '/regras':            () => { setView('regras');  setActiveSubTab('regras'); },
+      '/admin':             () => { setView('admin'); },
+    };
+    (routes[path] ?? (() => { setView('general'); setActiveSubTab('general'); }))();
+  };
+
+  // URL handling — initial load + browser back/forward
+  useEffect(() => {
+    applyPath(window.location.pathname);
+    const onPop = () => applyPath(window.location.pathname);
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
   // Auth listener — Google sign-in → exchange Firebase token for JWT
@@ -893,7 +917,7 @@ export default function App() {
               <div className="group/item">
                 <div className="flex items-center">
                   <button
-                    onClick={() => { setView('general'); setActiveSubTab('general'); }}
+                    onClick={() => { window.history.pushState({}, '', '/'); setView('general'); setActiveSubTab('general'); }}
                     className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
                       view === 'general' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                     }`}
@@ -923,7 +947,7 @@ export default function App() {
               <div className="group/item">
                 <div className="flex items-center">
                   <button
-                    onClick={() => { setView('booking'); setActiveSubTab('escolha-sala'); }}
+                    onClick={() => { window.history.pushState({}, '', '/agendamento'); setView('booking'); setActiveSubTab('escolha-sala'); }}
                     className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
                       view === 'booking' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                     }`}
@@ -953,7 +977,7 @@ export default function App() {
               <div className="group/item">
                 <div className="flex items-center">
                   <button
-                    onClick={() => { setView('portal'); setActiveSubTab('checkin'); }}
+                    onClick={() => { window.history.pushState({}, '', '/checkin'); setView('portal'); setActiveSubTab('checkin'); }}
                     className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
                       view === 'portal' && activeSubTab === 'checkin' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                     }`}
@@ -983,7 +1007,7 @@ export default function App() {
               <div className="group/item">
                 <div className="flex items-center">
                   <button
-                    onClick={() => { setView('portal'); setActiveSubTab('empresa'); }}
+                    onClick={() => { window.history.pushState({}, '', '/empresa'); setView('portal'); setActiveSubTab('empresa'); }}
                     className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
                       view === 'portal' && activeSubTab === 'empresa' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                     }`}
@@ -1013,7 +1037,7 @@ export default function App() {
               <div className="group/item">
                 <div className="flex items-center">
                   <button
-                    onClick={() => { setView('portal'); setActiveSubTab('desafios-publicos'); }}
+                    onClick={() => { window.history.pushState({}, '', '/desafios'); setView('portal'); setActiveSubTab('desafios-publicos'); }}
                     className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
                       view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                     }`}
@@ -1043,7 +1067,7 @@ export default function App() {
               <div className="group/item">
                 <div className="flex items-center">
                   <button
-                    onClick={() => { setView('news'); setActiveSubTab('news'); }}
+                    onClick={() => { window.history.pushState({}, '', '/noticias'); setView('news'); setActiveSubTab('news'); }}
                     className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
                       view === 'news' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                     }`}
@@ -1073,7 +1097,7 @@ export default function App() {
               <div className="group/item">
                 <div className="flex items-center">
                   <button
-                    onClick={() => { setView('qcoin'); setActiveSubTab('qcoin'); }}
+                    onClick={() => { window.history.pushState({}, '', '/qcoin'); setView('qcoin'); setActiveSubTab('qcoin'); }}
                     className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
                       view === 'qcoin' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                     }`}
@@ -1103,7 +1127,7 @@ export default function App() {
               <div className="group/item">
                 <div className="flex items-center">
                   <button
-                    onClick={() => { setView('chat'); setActiveSubTab('bate-papo'); }}
+                    onClick={() => { window.history.pushState({}, '', '/bate-papo'); setView('chat'); setActiveSubTab('bate-papo'); }}
                     className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
                       view === 'chat' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                     }`}
@@ -1133,7 +1157,7 @@ export default function App() {
               <div className="group/item">
                 <div className="flex items-center">
                   <button
-                    onClick={() => { setView('regras'); setActiveSubTab('regras'); }}
+                    onClick={() => { window.history.pushState({}, '', '/regras'); setView('regras'); setActiveSubTab('regras'); }}
                     className={`flex items-center gap-3 flex-1 text-left group transition-all p-2 rounded-md ${
                       view === 'regras' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
                     }`}
@@ -1244,10 +1268,17 @@ export default function App() {
                 onRestoreMenuItem={toggleHideMenuItem}
               />
             ) : view === 'portal' ? (
-              <FounderPortal 
-                user={user} 
+              <FounderPortal
+                user={user}
                 activeSubTab={activeSubTab}
-                setActiveSubTab={setActiveSubTab}
+                setActiveSubTab={(tab: string) => {
+                  const urlMap: Record<string, string> = {
+                    'desafios-publicos': '/desafios',
+                    'desafios-privados': '/desafios/privados',
+                  };
+                  if (urlMap[tab]) window.history.pushState({}, '', urlMap[tab]);
+                  setActiveSubTab(tab);
+                }}
                 isAdmin={isAdmin}
                 founders={allFounders}
               />
@@ -1355,7 +1386,7 @@ export default function App() {
                 {expandedQcoinCard ? (
                   <div className="bg-white rounded-xl p-10 md:p-12 border border-stone-100 shadow-sm animate-in fade-in zoom-in-95 duration-300">
                     <button
-                      onClick={() => { setExpandedQcoinCard(null); setEditingQcoinSection(null); }}
+                      onClick={() => { window.history.pushState({}, '', '/qcoin'); setExpandedQcoinCard(null); setEditingQcoinSection(null); }}
                       className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 mb-8 flex items-center gap-2 transition-colors"
                     >
                       <ArrowRight size={16} className="rotate-180" />
@@ -2115,7 +2146,7 @@ export default function App() {
                       return (
                         <div
                           key={section.id}
-                          onClick={() => setExpandedQcoinCard(section.id)}
+                          onClick={() => { window.history.pushState({}, '', `/qcoin/${section.id}`); setExpandedQcoinCard(section.id); }}
                           className="bg-white rounded-xl border border-stone-100 shadow-sm hover:shadow-md hover:border-stone-300 transition-all cursor-pointer group"
                         >
                           <div className="p-6">
