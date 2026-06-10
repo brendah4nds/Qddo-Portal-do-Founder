@@ -14,6 +14,7 @@ import axios from 'axios';
 import { 
   startOfToday,
   startOfDay,
+  startOfWeek,
   subHours,
   subDays,
   isWithinInterval,
@@ -1262,7 +1263,7 @@ export default function App() {
                         if (hiddenNewsIds.includes(item.id)) return false;
                         const date = toDate(item.createdAt);
                         if (!date) return true;
-                        return date >= subDays(startOfToday(), 7);
+                        return date >= startOfWeek(new Date(), { weekStartsOn: 0 });
                       }
                       return false;
                     })
@@ -1339,7 +1340,7 @@ export default function App() {
                       if (hiddenNewsIds.includes(item.id)) return false;
                       const date = toDate(item.createdAt);
                       if (!date) return true;
-                      return date >= subDays(startOfToday(), 7);
+                      return date >= startOfWeek(new Date(), { weekStartsOn: 0 });
                     }
                     return false;
                   }).length === 0 && (
@@ -2490,7 +2491,12 @@ export default function App() {
                             )}
                             {/* Avisos */}
                             {newsItems
-                              .filter(item => item.category === 'aviso')
+                              .filter(item => {
+                                if (item.category !== 'aviso') return false;
+                                const date = toDate(item.createdAt);
+                                if (!date) return true;
+                                return date >= startOfWeek(new Date(), { weekStartsOn: 0 });
+                              })
                               .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
                               .map((aviso, idx) => {
                                 const isHiddenFromNews = hiddenNewsIds.includes(aviso.id);
