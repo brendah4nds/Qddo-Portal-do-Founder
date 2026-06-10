@@ -2368,7 +2368,7 @@ export default function App() {
                     <Bell size={20} className="text-white" />
                     <h3 className="text-white font-sans text-h3">News</h3>
                   </div>
-                  <div className="p-8 space-y-6">
+                  <div className="px-3 py-5 space-y-4">
                     {/* Filtered News Items */}
                     {(() => {
                       const now = new Date();
@@ -2450,7 +2450,7 @@ export default function App() {
                           <div className="lg:w-[66%] flex flex-col gap-4">
                             {/* Aniversariantes do Dia */}
                             {birthdayFounders.length > 0 && (
-                              <div className="bg-white rounded-xl p-5 border border-amber-200 shadow-sm">
+                              <div className="bg-white rounded-xl px-3 py-4 border border-amber-200 shadow-sm">
                                 <div className="flex items-center gap-2 mb-3">
                                   <Cake className="text-amber-500 shrink-0" size={18} />
                                   <h4 className="text-base font-sans text-stone-900">Aniversariantes da Semana</h4>
@@ -2498,7 +2498,7 @@ export default function App() {
                                 <div
                                   key={aviso.id || idx}
                                   onClick={() => setSelectedNewsItem(aviso)}
-                                  className={cn("bg-white rounded-xl p-5 border shadow-sm hover:shadow-md transition-all group cursor-pointer", isHiddenFromNews ? "border-stone-100 opacity-60" : "border-stone-200")}
+                                  className={cn("bg-white rounded-xl px-3 py-4 border shadow-sm hover:shadow-md transition-all group cursor-pointer", isHiddenFromNews ? "border-stone-100 opacity-60" : "border-stone-100")}
                                 >
                                   <div className="flex items-center gap-2 mb-3">
                                     <AlertTriangle className="text-primary shrink-0" size={18} />
@@ -2545,7 +2545,7 @@ export default function App() {
                               })
                             }
                             {/* Eventos da Semana */}
-                            <div className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm flex flex-col">
+                            <div className="bg-white rounded-xl px-3 py-4 border border-stone-100 shadow-sm flex flex-col">
                               <div className="flex items-center justify-between mb-3">
                                 <h4 className="text-base font-sans text-stone-900 flex items-center gap-2">
                                   <CalendarDays className="text-primary" size={18} />
@@ -2607,7 +2607,7 @@ export default function App() {
                           {/* Part 2: Ranking & Score (33%) */}
                           <div className="lg:w-[33%] flex flex-col gap-4">
                             {/* Ranking Top 5 */}
-                            <div className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm flex flex-col">
+                            <div className="bg-white rounded-xl px-3 py-4 border border-stone-100 shadow-sm flex flex-col">
                               <div className="flex items-center gap-2 mb-4">
                                 <Trophy className="text-stone-900" size={16} />
                                 <h4 className="text-sm font-sans text-stone-900">Ranking Top 5</h4>

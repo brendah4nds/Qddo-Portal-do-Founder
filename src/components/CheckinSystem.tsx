@@ -191,7 +191,7 @@ export function CheckinSystem({
             setActionMessage({ type: 'success', text: successMsg });
           } else {
             if (todayCheckin) {
-              await api.put(`/api/checkins/${todayCheckin.id}`, { status: 'completed' });
+              await api.put(`/api/checkins/${todayCheckin.id}/checkout`);
               setActionMessage({ type: 'success', text: 'Check-out realizado com sucesso!' });
             }
           }
