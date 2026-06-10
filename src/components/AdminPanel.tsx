@@ -532,11 +532,11 @@ export function AdminPanel({
           <p className="text-stone-500 text-sm md:text-base">Gerencie todos os agendamentos e salas do sistema.</p>
         </div>
         <div className="flex gap-3 shrink-0">
-          <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-lg border border-stone-200 shadow-sm flex flex-col">
+          <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-lg border border-stone-100 shadow-sm flex flex-col">
             <span className="text-overline uppercase tracking-widest font-bold text-stone-400">Total Reservas</span>
             <span className="text-h3 md:text-h2 font-sans">{bookings.length}</span>
           </div>
-          <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-lg border border-stone-200 shadow-sm flex flex-col">
+          <div className="bg-white px-4 py-2.5 md:px-6 md:py-3 rounded-lg border border-stone-100 shadow-sm flex flex-col">
             <span className="text-overline uppercase tracking-widest font-bold text-stone-400">Salas Ativas</span>
             <span className="text-h3 md:text-h2 font-sans">{rooms.length}</span>
           </div>
@@ -593,7 +593,7 @@ export function AdminPanel({
       </div>
 
       {adminTab === 'bookings' && (
-        <section className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+        <section className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden animate-in fade-in duration-500">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -644,7 +644,7 @@ export function AdminPanel({
       )}
 
       {adminTab === 'founders' && (
-        <section className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+        <section className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden animate-in fade-in duration-500">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -677,7 +677,7 @@ export function AdminPanel({
                               company: { ...founder.company, tipo: novoTipo }
                             });
                           }}
-                          className="px-3 py-2 bg-stone-50 border border-stone-200 rounded-md text-xs font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all appearance-none cursor-pointer"
+                          className="px-3 py-2 bg-stone-50 border border-stone-100 rounded-md text-xs font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all appearance-none cursor-pointer"
                         >
                           <option value="">Sem categoria</option>
                           <option value="HealthTech">HealthTech</option>
@@ -747,7 +747,7 @@ export function AdminPanel({
       )}
 
       {adminTab === 'challenges' && (
-        <section className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+        <section className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden animate-in fade-in duration-500">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -826,7 +826,7 @@ export function AdminPanel({
           </div>
 
           {isAddingNews && (
-            <div className="bg-white rounded-xl md:rounded-xl p-6 md:p-10 border border-stone-200 shadow-sm animate-in zoom-in-95 duration-300">
+            <div className="bg-white rounded-xl md:rounded-xl p-6 md:p-10 border border-stone-100 shadow-sm animate-in zoom-in-95 duration-300">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-h2 font-sans">{editingNewsId ? 'Editar Notícia' : 'Nova Notícia'}</h3>
                 {editingNewsId && (
@@ -1017,7 +1017,7 @@ export function AdminPanel({
                   <button
                     type="button"
                     onClick={() => setIsAddingNews(false)}
-                    className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-lg font-bold hover:bg-stone-50 transition-all"
+                    className="flex-1 border border-stone-100 text-stone-600 py-4 rounded-lg font-bold hover:bg-stone-50 transition-all"
                   >
                     Cancelar
                   </button>
@@ -1033,7 +1033,7 @@ export function AdminPanel({
             </div>
           )}
 
-          <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -1109,7 +1109,7 @@ export function AdminPanel({
 
       {adminTab === 'settings' && (
         <section className="space-y-8 animate-in fade-in duration-500">
-          <div className="bg-white rounded-xl p-8 border border-stone-200 shadow-sm">
+          <div className="bg-white rounded-xl p-8 border border-stone-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h4 className="font-sans text-lg">Horários Disponíveis</h4>
               <button
@@ -1150,7 +1150,7 @@ export function AdminPanel({
                 placeholder="HH:mm"
                 value={newHour}
                 onChange={e => setNewHour(e.target.value)}
-                className="flex-1 px-4 py-3 bg-stone-50 border border-stone-200 rounded-md focus:outline-none focus:border-primary"
+                className="flex-1 px-4 py-3 bg-stone-50 border border-stone-100 rounded-md focus:outline-none focus:border-primary"
               />
               <button
                 onClick={handleAddHour}
@@ -1176,7 +1176,7 @@ export function AdminPanel({
                         navigator.clipboard.writeText(link);
                         alert('Link copiado!');
                       }}
-                      className="text-xs bg-white border border-stone-200 px-3 py-1.5 rounded-lg hover:bg-stone-100 transition-colors font-bold"
+                      className="text-xs bg-white border border-stone-100 px-3 py-1.5 rounded-lg hover:bg-stone-100 transition-colors font-bold"
                     >
                       Copiar
                     </button>
@@ -1212,14 +1212,14 @@ export function AdminPanel({
           </div>
 
           {indicacoes.length === 0 ? (
-            <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-12 md:p-20 text-center">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-12 md:p-20 text-center">
               <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserPlus size={28} className="text-stone-400" />
               </div>
               <p className="text-stone-400">Nenhuma indicação recebida ainda.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -1299,7 +1299,7 @@ export function AdminPanel({
       {adminTab === 'hidden-items' && (
         <section className="animate-in fade-in duration-500">
           {hiddenMenuItems.length === 0 ? (
-            <div className="bg-white rounded-xl border border-stone-200 shadow-sm px-8 py-20 text-center">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm px-8 py-20 text-center">
               <div className="w-14 h-14 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Eye size={24} className="text-stone-400" />
               </div>
@@ -1307,7 +1307,7 @@ export function AdminPanel({
               <p className="text-xs text-stone-400 mt-1">Passe o mouse sobre um tópico no menu lateral para ocultar.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
               <div className="px-8 py-5 border-b border-stone-100 bg-stone-50">
                 <p className="text-overline uppercase tracking-widest font-bold text-stone-400">
                   {hiddenMenuItems.length} {hiddenMenuItems.length === 1 ? 'item oculto' : 'itens ocultos'}
@@ -1394,7 +1394,7 @@ export function AdminPanel({
                   type="text"
                   value={editFounderForm.name}
                   onChange={e => setEditFounderForm({ ...editFounderForm, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all"
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all"
                 />
               </div>
               <div>
@@ -1403,7 +1403,7 @@ export function AdminPanel({
                   type="text"
                   value={editFounderForm.username}
                   onChange={e => setEditFounderForm({ ...editFounderForm, username: e.target.value.replace(/@/g, '') })}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all"
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all"
                 />
               </div>
               <div>
@@ -1412,7 +1412,7 @@ export function AdminPanel({
                   type="text"
                   value={editFounderForm.companyName}
                   onChange={e => setEditFounderForm({ ...editFounderForm, companyName: e.target.value })}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all"
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all"
                 />
               </div>
               <div>
@@ -1421,7 +1421,7 @@ export function AdminPanel({
                   value={editFounderForm.companyBio}
                   onChange={e => setEditFounderForm({ ...editFounderForm, companyBio: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all resize-none"
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-primary transition-all resize-none"
                 />
               </div>
             </div>
@@ -1429,7 +1429,7 @@ export function AdminPanel({
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setEditingFounder(null)}
-                className="flex-1 py-3 rounded-md border border-stone-200 text-stone-600 font-semibold text-sm hover:bg-stone-50 transition-all"
+                className="flex-1 py-3 rounded-md border border-stone-100 text-stone-600 font-semibold text-sm hover:bg-stone-50 transition-all"
               >
                 Cancelar
               </button>

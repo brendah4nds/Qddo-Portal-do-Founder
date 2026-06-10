@@ -272,7 +272,7 @@ export function FounderPortal({
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
       {(activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+        <div className="flex flex-row items-center justify-between gap-3 mb-8">
           <div className="flex gap-4">
             <button
               onClick={() => setActiveSubTab?.('desafios-publicos')}
@@ -310,7 +310,7 @@ export function FounderPortal({
           {isAdmin ? (
             <div className="grid grid-cols-1 gap-6">
               {selectedCompanyFounder ? (
-                <div className="bg-white rounded-xl p-12 border border-stone-200 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+                <div className="bg-white rounded-xl p-12 border border-stone-100 shadow-sm animate-in fade-in zoom-in-95 duration-300">
                   <button
                     onClick={() => setSelectedCompanyFounder(null)}
                     className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 mb-8 flex items-center gap-2"
@@ -398,7 +398,7 @@ export function FounderPortal({
                       if (catFounders.length === 0) return null;
                       const CategoryIcon = CATEGORY_ICONS[cat] || Building2;
                       return (
-                        <div key={cat} className="bg-white rounded-xl p-6 border border-stone-200 shadow-sm">
+                        <div key={cat} className="bg-white rounded-xl p-6 border border-stone-100 shadow-sm">
                           <div className="flex items-center gap-3 mb-5">
                             <div className="w-9 h-9 rounded-md bg-stone-100 flex items-center justify-center flex-shrink-0">
                               <CategoryIcon size={16} className="text-stone-600" />
@@ -413,7 +413,7 @@ export function FounderPortal({
                               <button
                                 key={f._id || f.id}
                                 onClick={() => setSelectedCompanyFounder(f)}
-                                className="bg-stone-50 hover:bg-primary border border-stone-200 hover:border-primary rounded-md px-3 py-2.5 text-left transition-all group"
+                                className="bg-stone-50 hover:bg-primary border border-stone-100 hover:border-primary rounded-md px-3 py-2.5 text-left transition-all group"
                               >
                                 <span className="text-xs font-semibold text-stone-700 group-hover:text-white leading-snug block truncate">
                                   {f.company?.name}
@@ -429,7 +429,7 @@ export function FounderPortal({
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-xl p-12 border border-stone-200 shadow-sm">
+            <div className="bg-white rounded-xl p-12 border border-stone-100 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="space-y-8">
                   <div>
@@ -497,7 +497,7 @@ export function FounderPortal({
                             type="text"
                             value={companyEditData.name}
                             onChange={e => setCompanyEditData({ ...companyEditData, name: e.target.value })}
-                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all font-bold text-stone-900"
+                            className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all font-bold text-stone-900"
                             placeholder="Nome da sua empresa"
                           />
                         ) : (
@@ -510,7 +510,7 @@ export function FounderPortal({
                           <select
                             value={companyEditData.tipo}
                             onChange={e => setCompanyEditData({ ...companyEditData, tipo: e.target.value })}
-                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all appearance-none"
+                            className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all appearance-none"
                           >
                             <option value="">Selecione a categoria...</option>
                             <option value="HealthTech">HealthTech</option>
@@ -531,7 +531,7 @@ export function FounderPortal({
                             type="text"
                             value={companyEditData.cnpj}
                             onChange={e => setCompanyEditData({ ...companyEditData, cnpj: e.target.value })}
-                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                            className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
                             placeholder="00.000.000/0000-00"
                           />
                         ) : founder?.company?.cnpj ? (
@@ -552,7 +552,7 @@ export function FounderPortal({
                             rows={4}
                             value={companyEditData.bio}
                             onChange={e => setCompanyEditData({ ...companyEditData, bio: e.target.value })}
-                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all resize-none"
+                            className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all resize-none"
                             placeholder="Descreva sua empresa..."
                           />
                         ) : (
@@ -630,7 +630,7 @@ export function FounderPortal({
                     <button
                       type="button"
                       onClick={() => setShowNewChallenge(false)}
-                      className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-lg font-bold hover:bg-stone-50 transition-all"
+                      className="flex-1 border border-stone-100 text-stone-600 py-4 rounded-lg font-bold hover:bg-stone-50 transition-all"
                     >
                       Cancelar
                     </button>
@@ -693,7 +693,7 @@ export function FounderPortal({
                     <button
                       type="button"
                       onClick={() => setCompletingChallenge(null)}
-                      className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-lg font-bold hover:bg-stone-50 transition-all"
+                      className="flex-1 border border-stone-100 text-stone-600 py-4 rounded-lg font-bold hover:bg-stone-50 transition-all"
                     >
                       Voltar
                     </button>
@@ -764,7 +764,7 @@ export function FounderPortal({
                     <button
                       type="button"
                       onClick={() => setEditingChallenge(null)}
-                      className="flex-1 border border-stone-200 text-stone-600 py-4 rounded-lg font-bold hover:bg-stone-50 transition-all"
+                      className="flex-1 border border-stone-100 text-stone-600 py-4 rounded-lg font-bold hover:bg-stone-50 transition-all"
                     >
                       Cancelar
                     </button>
@@ -781,7 +781,7 @@ export function FounderPortal({
           )}
 
           {filteredChallenges.length === 0 ? (
-            <div className="bg-white rounded-xl p-20 border border-stone-200 shadow-sm text-center">
+            <div className="bg-white rounded-xl p-20 border border-stone-100 shadow-sm text-center">
               <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-300">
                 <CheckSquare size={32} />
               </div>
@@ -801,7 +801,7 @@ export function FounderPortal({
                   Desafios a Serem Resolvidos
                 </h3>
                 {filteredChallenges.filter(c => c.status === 'open').length === 0 ? (
-                  <div className="bg-white rounded-xl p-10 border border-stone-200 text-center">
+                  <div className="bg-white rounded-xl p-10 border border-stone-100 text-center">
                     <p className="text-stone-400 text-sm">Nenhum desafio em aberto</p>
                   </div>
                 ) : (
@@ -809,8 +809,8 @@ export function FounderPortal({
                     <div
                       key={challenge.id}
                       className={cn(
-                        "bg-white rounded-xl p-8 border transition-all flex flex-col gap-8 relative",
-                        "border-stone-200 hover:border-stone-400 hover:shadow-xl",
+                        "bg-white rounded-xl px-4 py-5 border transition-all flex flex-col gap-5 relative",
+                        "border-stone-100 hover:border-stone-300 hover:shadow-xl",
                         expandedChallengeId === challenge.id && "border-stone-900 shadow-2xl"
                       )}
                     >
@@ -887,7 +887,7 @@ export function FounderPortal({
                   Desafios Cumpridos
                 </h3>
                 {filteredChallenges.filter(c => c.status === 'completed').length === 0 ? (
-                  <div className="bg-white rounded-xl p-10 border border-stone-200 text-center">
+                  <div className="bg-white rounded-xl p-10 border border-stone-100 text-center">
                     <p className="text-stone-400 text-sm">Nenhum desafio concluído ainda</p>
                   </div>
                 ) : (
@@ -895,7 +895,7 @@ export function FounderPortal({
                     <div
                       key={challenge.id}
                       className={cn(
-                        "bg-white rounded-xl p-8 border transition-all flex flex-col gap-8 relative",
+                        "bg-white rounded-xl px-4 py-5 border transition-all flex flex-col gap-5 relative",
                         "border-emerald-100 bg-emerald-50/10",
                         expandedChallengeId === challenge.id && "border-emerald-400 shadow-2xl"
                       )}
@@ -922,7 +922,7 @@ export function FounderPortal({
                           </div>
                           <h3 className="text-h2 font-sans mb-2">{challenge.title}</h3>
                           <p className="text-stone-500 text-sm mb-6 leading-relaxed">{challenge.description}</p>
-                          <div className="mt-6 p-6 bg-white rounded-lg border border-emerald-100 space-y-4">
+                          <div className="mt-4 px-3 py-4 bg-white rounded-lg border border-emerald-100 space-y-4">
                             <div>
                               <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Ajudado por</span>
                               <p className="font-bold text-stone-900">{challenge.helperName}</p>

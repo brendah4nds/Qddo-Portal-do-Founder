@@ -318,7 +318,7 @@ export function BookingFlow({
                     window.history.pushState({}, '', `/sala/${room.id}`);
                     setStep(2);
                   }}
-                  className="rounded-xl border border-stone-200 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group overflow-hidden flex flex-row sm:flex-col"
+                  className="rounded-xl border border-stone-100 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group overflow-hidden flex flex-row sm:flex-col"
                 >
                   <div className="w-24 h-20 flex-shrink-0 sm:w-full sm:h-44 bg-stone-100 overflow-hidden">
                     {room.imageUrl ? (
@@ -361,7 +361,7 @@ export function BookingFlow({
               return (
                 <div className="mt-10">
                   <h3 className="text-xs uppercase tracking-widest font-bold text-stone-400 mb-4">Agendamentos do Mês</h3>
-                  <div className="bg-white rounded-xl border border-stone-200 shadow-sm divide-y divide-stone-100 overflow-hidden">
+                  <div className="bg-white rounded-xl border border-stone-100 shadow-sm divide-y divide-stone-100 overflow-hidden">
                     {visible.map(booking => {
                       const room = rooms.find(r => r.id === booking.roomId);
                       return (
@@ -412,7 +412,7 @@ export function BookingFlow({
               <h2 className="text-h1 font-sans">Escolha a data para {selectedRoom?.name}</h2>
             </div>
             
-            <div className="bg-white rounded-xl p-8 border border-stone-200 shadow-sm">
+            <div className="bg-white rounded-xl p-8 border border-stone-100 shadow-sm">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="font-sans text-h3">{format(selectedDate, "MMMM yyyy", { locale: ptBR })}</h3>
                 <div className="flex gap-2">
@@ -485,7 +485,7 @@ export function BookingFlow({
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-8 border border-stone-200 shadow-sm">
+            <div className="bg-white rounded-xl p-8 border border-stone-100 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <label className="text-xs uppercase tracking-widest font-bold text-stone-400 block">Selecione os Horários</label>
                 {selectedTimes.length > 0 && (
