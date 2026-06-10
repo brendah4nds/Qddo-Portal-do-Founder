@@ -270,9 +270,9 @@ export function FounderPortal({
     (challenge.founderId as any)?.toString() === user._id?.toString();
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
       {(activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') && (
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
           <div className="flex gap-4">
             <button
               onClick={() => setActiveSubTab?.('desafios-publicos')}
