@@ -244,7 +244,7 @@ export function CheckinSystem({
       : 'absent';
 
   return (
-    <div className="space-y-3 animate-in fade-in duration-500">
+    <div className="space-y-3 animate-in fade-in duration-500 w-full">
 
       {/* Admin User Selector */}
       {isAdmin && (
@@ -288,7 +288,7 @@ export function CheckinSystem({
       <div className="space-y-3">
 
           {/* Metrics grid */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
 
             <div className="bg-white px-3 py-2 rounded-xl border border-stone-200 shadow-sm">
               <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">

@@ -825,7 +825,7 @@ export default function App() {
                   <img
                     src={user.photoURL || ''}
                     alt=""
-                    className="w-8 h-8 rounded-full border border-stone-200 hover:ring-2 hover:ring-stone-400 transition-all cursor-pointer"
+                    className="w-8 h-8 rounded-full border border-stone-100 hover:ring-2 hover:ring-stone-400 transition-all cursor-pointer"
                     referrerPolicy="no-referrer"
                   />
                 </button>
@@ -1193,7 +1193,7 @@ export default function App() {
                   qddocentral.hub@h4ndslab.com
                 </button>
                 {showEmailCopy && (
-                  <div className="absolute bottom-6 left-0 bg-white border border-stone-200 rounded-lg shadow-lg py-1 z-50 min-w-max">
+                  <div className="absolute bottom-6 left-0 bg-white border border-stone-100 rounded-lg shadow-lg py-1 z-50 min-w-max">
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText('qddocentral.hub@h4ndslab.com');
@@ -1225,7 +1225,7 @@ export default function App() {
         </aside>
 
         {/* Main Content */}
-        <main className={`flex-1 w-full ${view === 'chat' ? 'overflow-hidden p-2 md:p-4' : 'overflow-y-auto p-4 md:p-6'}`}>
+        <main className={`flex-1 w-full min-w-0 ${view === 'chat' ? 'overflow-hidden p-2 md:p-4' : 'overflow-y-auto overflow-x-hidden p-4 md:p-6'}`}>
           <div className={view === 'chat' ? 'h-full' : 'max-w-7xl mx-auto'}>
             {view === 'admin' ? (
               <AdminPanel
@@ -1274,7 +1274,7 @@ export default function App() {
                     .map((item, i) => {
                       const isAviso = item.category === 'aviso';
                       return (
-                        <div key={item.id || i} className="bg-white rounded-xl border border-stone-200 shadow-sm hover:shadow-xl transition-all group overflow-hidden flex flex-col">
+                        <div key={item.id || i} className="bg-white rounded-xl border border-stone-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden flex flex-col">
                           {/* Image area */}
                           <div className="w-full h-32 bg-stone-100 overflow-hidden flex-shrink-0">
                             {item.imageUrl ? (
@@ -1352,7 +1352,7 @@ export default function App() {
             ) : view === 'qcoin' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {expandedQcoinCard ? (
-                  <div className="bg-white rounded-xl p-10 md:p-12 border border-stone-200 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+                  <div className="bg-white rounded-xl p-10 md:p-12 border border-stone-100 shadow-sm animate-in fade-in zoom-in-95 duration-300">
                     <button
                       onClick={() => { setExpandedQcoinCard(null); setEditingQcoinSection(null); }}
                       className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 mb-8 flex items-center gap-2 transition-colors"
@@ -1409,7 +1409,7 @@ export default function App() {
 
                           {/* Tabela de pontuação — editável, padronizada com os demais cards */}
                           {expandedQcoinCard === 'pontuacao' && (
-                            <div className="mb-8 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                            <div className="mb-8 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
                                   <thead>
@@ -1551,7 +1551,7 @@ export default function App() {
 
                           {/* Tabela de estágios — sempre visível dentro da caixa "Estágios e Thresholds de Progressão" */}
                           {expandedQcoinCard === 'estagios' && (
-                            <div className="mb-8 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                            <div className="mb-8 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
                                   <thead>
@@ -1719,7 +1719,7 @@ export default function App() {
                               .sort((a: any, b: any) => b.score - a.score);
 
                             return (
-                              <div className="mb-8 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                              <div className="mb-8 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
                                 {/* Header */}
                                 <div className="px-6 py-5 border-b border-stone-100 flex items-center gap-3">
                                   <Crown className="text-primary" size={18} />
@@ -1752,10 +1752,10 @@ export default function App() {
                                               alt={item.name}
                                               referrerPolicy="no-referrer"
                                               onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
-                                              className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-stone-200"
+                                              className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-stone-100"
                                             />
                                           ) : null}
-                                          <div className={cn("w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0 border border-stone-200", item.photoURL ? "hidden" : "")}>
+                                          <div className={cn("w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0 border border-stone-100", item.photoURL ? "hidden" : "")}>
                                             <Users size={14} className="text-stone-400" />
                                           </div>
                                           <div>
@@ -1777,7 +1777,7 @@ export default function App() {
 
                           {/* Tabela de premiações */}
                           {expandedQcoinCard === 'premiacoes' && (
-                            <div className="mb-8 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                            <div className="mb-8 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
                                   <thead>
@@ -1919,7 +1919,7 @@ export default function App() {
 
                           {/* Tabela de consequências */}
                           {expandedQcoinCard === 'consequencias' && (
-                            <div className="mb-8 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                            <div className="mb-8 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
                                   <thead>
@@ -2069,7 +2069,7 @@ export default function App() {
                                 value={qcoinEditContent}
                                 onChange={e => setQcoinEditContent(e.target.value)}
                                 rows={12}
-                                className="w-full px-5 py-4 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all resize-none"
+                                className="w-full px-5 py-4 bg-stone-50 border border-stone-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all resize-none"
                                 placeholder="Digite o conteúdo desta seção..."
                               />
                             </div>
@@ -2115,7 +2115,7 @@ export default function App() {
                         <div
                           key={section.id}
                           onClick={() => setExpandedQcoinCard(section.id)}
-                          className="bg-white rounded-xl border border-stone-200 shadow-sm hover:shadow-md hover:border-stone-300 transition-all cursor-pointer group"
+                          className="bg-white rounded-xl border border-stone-100 shadow-sm hover:shadow-md hover:border-stone-300 transition-all cursor-pointer group"
                         >
                           <div className="p-6">
                             <div className="flex items-start justify-between mb-5">
@@ -2163,21 +2163,21 @@ export default function App() {
                 </div>
 
                 {isAdmin && showAddRegra && (
-                  <div className="bg-white rounded-xl p-10 border border-stone-200 shadow-sm mb-8">
+                  <div className="bg-white rounded-xl p-10 border border-stone-100 shadow-sm mb-8">
                     <h4 className="text-lg font-sans text-stone-900 mb-6">Nova seção de Regras</h4>
                     <div className="space-y-4">
                       <input
                         value={newRegraTitle}
                         onChange={e => setNewRegraTitle(e.target.value)}
                         placeholder="Título da seção (ex: Uso do Espaço)"
-                        className="w-full px-4 py-3 border border-stone-200 rounded-lg text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                        className="w-full px-4 py-3 border border-stone-100 rounded-lg text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                       />
                       <textarea
                         rows={6}
                         value={newRegraContent}
                         onChange={e => setNewRegraContent(e.target.value)}
                         placeholder={"Cada linha vira um tópico:\nAcesso ao espaço: descrição aqui\nAmbientes compartilhados: descrição aqui"}
-                        className="w-full px-4 py-3 border border-stone-200 rounded-lg text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
+                        className="w-full px-4 py-3 border border-stone-100 rounded-lg text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
                       />
                       <div className="flex gap-3 justify-end">
                         <button
@@ -2210,19 +2210,19 @@ export default function App() {
                       .map((item, index) => {
                         const RuleIcon = RULE_ICONS[index % RULE_ICONS.length];
                         return (
-                        <div key={item.id} className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm hover:shadow-xl transition-all flex flex-col">
+                        <div key={item.id} className="bg-white rounded-xl p-5 border border-stone-100 shadow-sm hover:shadow-xl transition-all flex flex-col">
                           {editingRuleId === item.id ? (
                             <div className="space-y-3">
                               <input
                                 value={editingRuleData.title}
                                 onChange={e => setEditingRuleData(d => ({ ...d, title: e.target.value }))}
-                                className="w-full px-3 py-2 border border-stone-200 rounded-md text-stone-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                                className="w-full px-3 py-2 border border-stone-100 rounded-md text-stone-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                               />
                               <textarea
                                 rows={5}
                                 value={editingRuleData.content}
                                 onChange={e => setEditingRuleData(d => ({ ...d, content: e.target.value }))}
-                                className="w-full px-3 py-2 border border-stone-200 rounded-md text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
+                                className="w-full px-3 py-2 border border-stone-100 rounded-md text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
                                 placeholder="Cada linha vira um tópico da lista"
                               />
                               <div className="flex gap-3 justify-end">
@@ -2363,7 +2363,7 @@ export default function App() {
                 )}
 
                 {/* News Box */}
-                <div className="mb-6 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                <div className="mb-6 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
                   <div className="bg-stone-900 px-8 py-4 flex items-center gap-3">
                     <Bell size={20} className="text-white" />
                     <h3 className="text-white font-sans text-h3">News</h3>
@@ -2629,10 +2629,10 @@ export default function App() {
                                         <img
                                           src={item.photoURL}
                                           alt={item.name}
-                                          className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-stone-200"
+                                          className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-stone-100"
                                         />
                                       ) : (
-                                        <div className="w-7 h-7 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0 border border-stone-200">
+                                        <div className="w-7 h-7 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0 border border-stone-100">
                                           <Users size={14} className="text-stone-400" />
                                         </div>
                                       )}
@@ -2928,13 +2928,13 @@ export default function App() {
                           <input
                             value={editingRuleData.title}
                             onChange={e => setEditingRuleData(d => ({ ...d, title: e.target.value }))}
-                            className="w-full px-4 py-2 border border-stone-200 rounded-md text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                            className="w-full px-4 py-2 border border-stone-100 rounded-md text-stone-900 font-bold focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                           />
                           <textarea
                             rows={4}
                             value={editingRuleData.content}
                             onChange={e => setEditingRuleData(d => ({ ...d, content: e.target.value }))}
-                            className="w-full px-4 py-2 border border-stone-200 rounded-md text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
+                            className="w-full px-4 py-2 border border-stone-100 rounded-md text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
                           />
                           <div className="flex gap-2 justify-end">
                             <button
@@ -3163,7 +3163,7 @@ export default function App() {
                       setAdminInitialTab('news');
                       setView('admin');
                     }}
-                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-stone-600 bg-white border border-stone-200 rounded-lg hover:bg-stone-100 transition"
+                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-stone-600 bg-white border border-stone-100 rounded-lg hover:bg-stone-100 transition"
                   >
                     <Pencil size={13} /> Editar
                   </button>
@@ -3226,7 +3226,7 @@ export default function App() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarNome(e.target.value)}
                     placeholder="Ex: João Silva"
                     required
-                    className="w-full border border-stone-200 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                   />
                 </div>
                 <div>
@@ -3239,7 +3239,7 @@ export default function App() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarEmpresa(e.target.value)}
                     placeholder="Ex: Startup XYZ"
                     required
-                    className="w-full border border-stone-200 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                   />
                 </div>
                 <div>
@@ -3252,7 +3252,7 @@ export default function App() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarArea(e.target.value)}
                     placeholder="Ex: Fintech, Saúde, Educação..."
                     required
-                    className="w-full border border-stone-200 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                   />
                 </div>
                 <div>
@@ -3265,7 +3265,7 @@ export default function App() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarContato(e.target.value)}
                     placeholder="( ) "
                     required
-                    className="w-full border border-stone-200 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                   />
                 </div>
                 <button
@@ -3370,7 +3370,7 @@ export default function App() {
                   <select
                     value={profileBirthDay}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProfileBirthDay(e.target.value)}
-                    className="w-full border border-stone-200 rounded-md px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
+                    className="w-full border border-stone-100 rounded-md px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
                   >
                     <option value="">Dia</option>
                     {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
@@ -3382,7 +3382,7 @@ export default function App() {
                   <select
                     value={profileBirthMonth}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProfileBirthMonth(e.target.value)}
-                    className="w-full border border-stone-200 rounded-md px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
+                    className="w-full border border-stone-100 rounded-md px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
                   >
                     <option value="">Mês</option>
                     {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m, i) => (
@@ -3394,7 +3394,7 @@ export default function App() {
                   <select
                     value={profileBirthYear}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProfileBirthYear(e.target.value)}
-                    className="w-full border border-stone-200 rounded-md px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
+                    className="w-full border border-stone-100 rounded-md px-2 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white"
                   >
                     <option value="">Ano</option>
                     {Array.from({ length: 60 }, (_, i) => new Date().getFullYear() - 18 - i).map(y => (
@@ -3494,7 +3494,7 @@ export default function App() {
                   value={settingsSocialLinkedin}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettingsSocialLinkedin(e.target.value)}
                   placeholder="https://linkedin.com/in/seuperfil"
-                  className="w-full border border-stone-200 rounded-md px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
+                  className="w-full border border-stone-100 rounded-md px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
                 />
                 {settingsSocialLinkedin && (
                   <a href={settingsSocialLinkedin} target="_blank" rel="noopener noreferrer" className="text-xs text-stone-400 hover:text-stone-700 mt-1 inline-flex items-center gap-1 transition-colors">
@@ -3514,7 +3514,7 @@ export default function App() {
                   value={settingsSocialInstagram}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettingsSocialInstagram(e.target.value)}
                   placeholder="https://instagram.com/seuperfil"
-                  className="w-full border border-stone-200 rounded-md px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
+                  className="w-full border border-stone-100 rounded-md px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
                 />
                 {settingsSocialInstagram && (
                   <a href={settingsSocialInstagram} target="_blank" rel="noopener noreferrer" className="text-xs text-stone-400 hover:text-stone-700 mt-1 inline-flex items-center gap-1 transition-colors">
@@ -3534,7 +3534,7 @@ export default function App() {
                   value={settingsSocialSite}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettingsSocialSite(e.target.value)}
                   placeholder="https://seusite.com"
-                  className="w-full border border-stone-200 rounded-md px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
+                  className="w-full border border-stone-100 rounded-md px-4 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition bg-white placeholder:text-stone-300"
                 />
                 {settingsSocialSite && (
                   <a href={settingsSocialSite} target="_blank" rel="noopener noreferrer" className="text-xs text-stone-400 hover:text-stone-700 mt-1 inline-flex items-center gap-1 transition-colors">
@@ -3600,7 +3600,7 @@ export default function App() {
                   href={selectedFounderDetail.socialLinkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-200 rounded-lg hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
+                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-100 rounded-lg hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-stone-500 group-hover:text-white shrink-0"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
                   <span className="text-sm font-bold text-stone-700 group-hover:text-white truncate flex-1">LinkedIn</span>
@@ -3612,7 +3612,7 @@ export default function App() {
                   href={selectedFounderDetail.socialInstagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-200 rounded-lg hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
+                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-100 rounded-lg hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-500 group-hover:text-white shrink-0"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
                   <span className="text-sm font-bold text-stone-700 group-hover:text-white truncate flex-1">Instagram</span>
@@ -3624,7 +3624,7 @@ export default function App() {
                   href={selectedFounderDetail.socialSite}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-200 rounded-lg hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
+                  className="flex items-center gap-3 w-full px-5 py-3.5 bg-stone-50 border border-stone-100 rounded-lg hover:bg-stone-900 hover:border-stone-900 hover:text-white group transition-all"
                 >
                   <Globe size={16} className="text-stone-500 group-hover:text-white shrink-0" />
                   <span className="text-sm font-bold text-stone-700 group-hover:text-white truncate flex-1">Site</span>

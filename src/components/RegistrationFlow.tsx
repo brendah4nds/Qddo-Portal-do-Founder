@@ -56,7 +56,7 @@ export function RegistrationFlow({ user, onComplete }: { user: any; onComplete: 
           <p className="text-stone-500 font-sans text-lg">Complete seu cadastro de Founder para acessar a plataforma.</p>
         </div>
 
-        <form onSubmit={handleRegister} className="bg-white rounded-xl p-12 border border-stone-200 shadow-2xl space-y-8">
+        <form onSubmit={handleRegister} className="bg-white rounded-xl p-12 border border-stone-100 shadow-2xl space-y-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div className="space-y-2">
               <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Nome</label>

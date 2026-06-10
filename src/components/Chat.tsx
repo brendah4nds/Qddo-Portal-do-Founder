@@ -114,7 +114,7 @@ export function Chat({ user }: { user: any | null }) {
   const activeFounder = founders.find(f => f.id === activeChat);
 
   return (
-    <div className="flex h-full bg-white rounded-lg md:rounded-xl border border-stone-200 overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex h-full bg-white rounded-lg md:rounded-xl border border-stone-100 overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* Sidebar: User List */}
       <div className={cn(

@@ -14,7 +14,7 @@ export function LandingPage({ onLogin, onRegister }: { onLogin: () => void, onRe
           <p className="text-stone-500 text-lg">Gestão Inteligente de Espaços & Comunidade Founders</p>
         </div>
 
-        <div className="bg-white rounded-xl p-10 border border-stone-200 shadow-xl space-y-4">
+        <div className="bg-white rounded-xl p-10 border border-stone-100 shadow-xl space-y-4">
           <div className="space-y-4">
             <button
               onClick={onLogin}
