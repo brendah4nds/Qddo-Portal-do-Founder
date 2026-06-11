@@ -137,6 +137,11 @@ html.dark video {
   filter: invert(1) hue-rotate(180deg);
 }
 
+/* Cards aparecem cinza escuro (#272727) em vez de preto no dark mode */
+html.dark .bg-white {
+  background-color: #D8D8D8;
+}
+
 /* Custom scrollbar */
 aside::-webkit-scrollbar { width: 4px; }
 aside::-webkit-scrollbar-track { background: transparent; }

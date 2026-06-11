@@ -443,8 +443,12 @@ export function BookingFlow({
                       const room = rooms.find(r => r.id === booking.roomId);
                       return (
                         <div key={booking.id} className="flex items-center gap-4 p-4">
-                          <div className="w-10 h-10 rounded-lg bg-stone-50 flex items-center justify-center flex-shrink-0">
-                            <CalendarIcon size={18} className="text-stone-300" />
+                          <div className="w-10 h-10 rounded-lg bg-stone-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {room?.imageUrl ? (
+                              <img src={room.imageUrl} alt={room.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <CalendarIcon size={18} className="text-stone-300" />
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-sans text-sm font-bold text-stone-800 truncate">{room?.name || 'Sala'}</p>
