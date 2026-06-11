@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { api } from '../api';
+import { ImageCropModal } from './ImageCropModal';
 import { 
   format, 
   addDays, 
@@ -28,7 +29,10 @@ import {
   DoorOpen as RoomIcon,
   Calendar as CalendarIcon,
   Clock,
-  Download
+  Download,
+  Plus,
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 import { Room, Booking, BookingStatus } from '../types';
 import { clsx, type ClassValue } from 'clsx';
@@ -39,18 +43,20 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function BookingFlow({ 
-  rooms, 
-  bookings, 
+export function BookingFlow({
+  rooms,
+  bookings,
   businessHours,
-  selectedRoomId, 
+  selectedRoomId,
   setSelectedRoomId,
   selectedDate,
   setSelectedDate,
   status,
   setStatus,
   activeSubTab,
-  onStepChange
+  onStepChange,
+  isAdmin,
+  onRoomUpdate
 }: {
   rooms: Room[];
   bookings: Booking[];
@@ -63,6 +69,8 @@ export function BookingFlow({
   setStatus: (s: BookingStatus) => void;
   activeSubTab?: string;
   onStepChange?: (step: number) => void;
+  isAdmin?: boolean;
+  onRoomUpdate?: (roomId: string, updates: Partial<Room>) => Promise<void>;
 }) {
   const [step, setStep] = useState(1);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
@@ -73,6 +81,12 @@ export function BookingFlow({
     date: Date;
     times: string[];
   } | null>(null);
+  const [openDropdownRoomId, setOpenDropdownRoomId] = useState<string | null>(null);
+  const [editPhotoRoomId, setEditPhotoRoomId] = useState<string | null>(null);
+  const [editPhotoLoading, setEditPhotoLoading] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [pendingImageFileName, setPendingImageFileName] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync internal step with external activeSubTab
   useEffect(() => {
@@ -95,6 +109,44 @@ export function BookingFlow({
     if (!selectedRoomId) setStep(1);
     else if (step === 1) setStep(2);
   }, [selectedRoomId]);
+
+  useEffect(() => {
+    if (!openDropdownRoomId) return;
+    const handler = () => setOpenDropdownRoomId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [openDropdownRoomId]);
+
+  const handleRoomImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    if (!file.type.startsWith('image/')) {
+      alert('Apenas imagens são permitidas.');
+      return;
+    }
+    setPendingImageFileName(file.name);
+    setCropImageSrc(URL.createObjectURL(file));
+  };
+
+  const handleRoomCropConfirm = async (blob: Blob) => {
+    setCropImageSrc(null);
+    if (!editPhotoRoomId) return;
+    setEditPhotoLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', blob, pendingImageFileName || 'room-cover.jpg');
+      const { data } = await api.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      await onRoomUpdate?.(editPhotoRoomId, { imageUrl: data.url });
+      setEditPhotoRoomId(null);
+    } catch {
+      alert('Erro ao enviar imagem.');
+    } finally {
+      setEditPhotoLoading(false);
+    }
+  };
 
   const selectedRoom = rooms.find(r => r.id === selectedRoomId);
 
@@ -262,6 +314,7 @@ export function BookingFlow({
   ];
 
   return (
+    <>
     <div className="max-w-4xl mx-auto">
       {/* Step Indicator */}
       <div className="flex items-center justify-center gap-4 mb-12">
@@ -302,34 +355,67 @@ export function BookingFlow({
             <h2 className="text-base sm:text-h1 font-sans mb-4 sm:mb-8 text-center">Qual sala você deseja reservar?</h2>
             <div className="flex flex-col gap-3 sm:grid sm:grid-cols-3 sm:gap-6">
               {rooms.map(room => (
-                <button
-                  key={room.id}
-                  onClick={() => {
-                    setSelectedRoomId(room.id);
-                    window.history.pushState({}, '', `/sala/${room.id}`);
-                    setStep(2);
-                  }}
-                  className="rounded-xl border border-stone-100 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group overflow-hidden flex flex-row sm:flex-col"
-                >
-                  <div className="w-24 h-20 flex-shrink-0 sm:w-full sm:h-44 bg-stone-100 overflow-hidden">
-                    {room.imageUrl ? (
-                      <img src={room.imageUrl} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <RoomIcon size={28} className="text-stone-300 sm:hidden" />
-                        <RoomIcon size={40} className="text-stone-300 hidden sm:block" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3 sm:p-6 flex flex-col flex-1 justify-center">
-                    <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-stone-100 flex items-center justify-center mb-2 sm:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                      <RoomIcon size={14} className="sm:hidden" />
-                      <RoomIcon size={20} className="hidden sm:block" />
+                <div key={room.id} className="relative">
+                  <button
+                    onClick={() => {
+                      setSelectedRoomId(room.id);
+                      window.history.pushState({}, '', `/sala/${room.id}`);
+                      setStep(2);
+                    }}
+                    className="w-full rounded-xl border border-stone-100 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group overflow-hidden flex flex-row sm:flex-col"
+                  >
+                    <div className="w-24 h-20 flex-shrink-0 sm:w-full sm:h-44 bg-stone-100 overflow-hidden">
+                      {room.imageUrl ? (
+                        <img src={room.imageUrl} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <RoomIcon size={28} className="text-stone-300 sm:hidden" />
+                          <RoomIcon size={40} className="text-stone-300 hidden sm:block" />
+                        </div>
+                      )}
                     </div>
-                    <h3 className="font-sans text-sm sm:text-h3 leading-tight mb-1 sm:mb-2">{room.name}</h3>
-                    <p className="text-xs text-stone-400 line-clamp-2 sm:line-clamp-none">{room.description}</p>
-                  </div>
-                </button>
+                    <div className="p-3 sm:p-6 flex flex-col flex-1 justify-center">
+                      <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-stone-100 flex items-center justify-center mb-2 sm:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                        <RoomIcon size={14} className="sm:hidden" />
+                        <RoomIcon size={20} className="hidden sm:block" />
+                      </div>
+                      <h3 className="font-sans text-sm sm:text-h3 leading-tight mb-1 sm:mb-2">{room.name}</h3>
+                      <p className="text-xs text-stone-400 line-clamp-2 sm:line-clamp-none">{room.description}</p>
+                    </div>
+                  </button>
+
+                  {isAdmin && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdownRoomId(openDropdownRoomId === room.id ? null : room.id);
+                        }}
+                        className="w-7 h-7 rounded-full bg-white border border-stone-200 shadow-sm flex items-center justify-center text-stone-500 hover:text-stone-900 hover:border-stone-400 transition-all"
+                        title="Opções da sala"
+                      >
+                        <Plus size={14} />
+                      </button>
+                      {openDropdownRoomId === room.id && (
+                        <div
+                          className="absolute top-9 right-0 bg-white border border-stone-100 rounded-xl shadow-xl py-1 min-w-[160px] z-20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() => {
+                              setEditPhotoRoomId(room.id);
+                              setOpenDropdownRoomId(null);
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-3 rounded-xl"
+                          >
+                            <ImageIcon size={15} className="text-stone-400" />
+                            Editar foto
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
 
@@ -569,5 +655,71 @@ export function BookingFlow({
         )}
       </div>
     </div>
+
+    {editPhotoRoomId && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-md">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-sans text-h3">Editar Foto da Sala</h3>
+            <button
+              onClick={() => setEditPhotoRoomId(null)}
+              className="p-2 hover:bg-stone-100 rounded-full transition-colors"
+            >
+              <X size={18} className="text-stone-500" />
+            </button>
+          </div>
+
+          {(() => {
+            const room = rooms.find(r => r.id === editPhotoRoomId);
+            return room?.imageUrl ? (
+              <img src={room.imageUrl} alt="Foto atual" className="w-full h-40 object-cover rounded-xl border border-stone-100 mb-4" />
+            ) : (
+              <div className="w-full h-40 rounded-xl border border-dashed border-stone-200 bg-stone-50 flex items-center justify-center mb-4">
+                <ImageIcon size={32} className="text-stone-300" />
+              </div>
+            );
+          })()}
+
+          <label className={cn(
+            "flex items-center justify-center gap-3 w-full py-4 rounded-xl border border-stone-200 cursor-pointer hover:bg-stone-50 transition-all",
+            editPhotoLoading && "opacity-50 cursor-not-allowed"
+          )}>
+            <ImageIcon size={20} className="text-stone-400" />
+            <span className="text-sm font-medium text-stone-500">
+              {editPhotoLoading ? 'Enviando...' : 'Selecionar imagem'}
+            </span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleRoomImageSelect}
+              disabled={editPhotoLoading}
+              className="hidden"
+            />
+          </label>
+
+          <button
+            onClick={() => setEditPhotoRoomId(null)}
+            className="w-full mt-4 py-3 rounded-lg border border-stone-200 text-stone-600 font-semibold hover:bg-stone-50 transition-all"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    )}
+
+    {cropImageSrc && (
+      <ImageCropModal
+        imageSrc={cropImageSrc}
+        onConfirm={handleRoomCropConfirm}
+        onClose={() => {
+          URL.revokeObjectURL(cropImageSrc);
+          setCropImageSrc(null);
+        }}
+        aspect={16 / 10}
+        title="Ajustar foto da sala"
+      />
+    )}
+    </>
   );
 }

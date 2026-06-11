@@ -54,9 +54,11 @@ type Props = {
   imageSrc: string;
   onConfirm: (blob: Blob) => void;
   onClose: () => void;
+  aspect?: number;
+  title?: string;
 };
 
-export function ImageCropModal({ imageSrc, onConfirm, onClose }: Props) {
+export function ImageCropModal({ imageSrc, onConfirm, onClose, aspect = 16 / 6, title = 'Ajustar imagem de capa' }: Props) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -88,7 +90,7 @@ export function ImageCropModal({ imageSrc, onConfirm, onClose }: Props) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
           <div className="flex items-center gap-2">
             <Crop size={18} className="text-primary" />
-            <h3 className="font-sans font-bold text-stone-900">Ajustar imagem de capa</h3>
+            <h3 className="font-sans font-bold text-stone-900">{title}</h3>
           </div>
           <button
             onClick={onClose}
@@ -105,7 +107,7 @@ export function ImageCropModal({ imageSrc, onConfirm, onClose }: Props) {
             crop={crop}
             zoom={zoom}
             rotation={rotation}
-            aspect={16 / 6}
+            aspect={aspect}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onRotationChange={setRotation}

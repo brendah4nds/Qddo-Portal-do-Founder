@@ -688,6 +688,11 @@ export default function App() {
     }
   };
 
+  const handleRoomUpdate = async (roomId: string, updates: Partial<Room>) => {
+    await api.put(`/api/rooms/${roomId}`, updates);
+    setRooms((prev: Room[]) => prev.map((r: Room) => r.id === roomId ? { ...r, ...updates } : r));
+  };
+
   const handleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
@@ -2853,9 +2858,9 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <BookingFlow 
-                rooms={rooms} 
-                bookings={bookings} 
+              <BookingFlow
+                rooms={rooms}
+                bookings={bookings}
                 businessHours={businessHours}
                 selectedRoomId={selectedRoomId}
                 setSelectedRoomId={setSelectedRoomId}
@@ -2868,6 +2873,8 @@ export default function App() {
                   const subTabs = ['escolha-sala', 'escolha-data', 'escolha-horario'];
                   setActiveSubTab(subTabs[stepId - 1]);
                 }}
+                isAdmin={isAdmin}
+                onRoomUpdate={handleRoomUpdate}
               />
             )}
           </div>
