@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   User as UserIcon,
   Instagram,
@@ -78,6 +78,8 @@ export function FounderPortal({
   const [editingCompany, setEditingCompany] = useState(false);
   const [companyEditData, setCompanyEditData] = useState({ name: '', cnpj: '', bio: '', tipo: '' });
   const [savingCompany, setSavingCompany] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedCompanyFounder, setSelectedCompanyFounder] = useState<any | null>(null);
   const [localFounders, setLocalFounders] = useState<any[]>(founders);
@@ -166,6 +168,26 @@ export function FounderPortal({
       socket.off('challenge:delete', onDelete);
     };
   }, [user, isAdmin]);
+
+  const handleCompanyLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.put(`/api/founders/${user._id}`, {
+        company: { ...founder?.company, logoURL: data.url }
+      });
+      setFounder(prev => prev ? { ...prev, company: { ...prev.company!, logoURL: data.url } } : null);
+    } catch (err) {
+      console.error('Erro ao atualizar logo:', err);
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
 
   const handleStartEditCompany = () => {
     setCompanyEditData({
@@ -439,6 +461,14 @@ export function FounderPortal({
                       <div className="bg-stone-50 rounded-xl p-8 border border-stone-100">
                         <h3 className="text-h1 font-sans mb-6">Dados da Empresa</h3>
                         <div className="space-y-4">
+                          {selectedCompanyFounder.company?.logoURL && (
+                            <div>
+                              <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Logo</span>
+                              <div className="w-24 h-24 rounded-xl bg-white border border-stone-200 flex items-center justify-center overflow-hidden shadow-sm p-2">
+                                <img src={selectedCompanyFounder.company.logoURL} alt="Logo" className="max-w-full max-h-full object-contain" />
+                              </div>
+                            </div>
+                          )}
                           <div>
                             <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
                             <p className="font-bold text-stone-900 text-h3">{selectedCompanyFounder.company?.name || 'N/A'}</p>
@@ -502,11 +532,19 @@ export function FounderPortal({
                               <button
                                 key={f._id || f.id}
                                 onClick={() => setSelectedCompanyFounder(f)}
-                                className="bg-stone-50 hover:bg-primary border border-stone-100 hover:border-primary rounded-md px-3 py-2.5 text-left transition-all group"
+                                className="bg-stone-50 hover:bg-primary border border-stone-100 hover:border-primary rounded-md px-3 py-2.5 text-center transition-all group flex items-center justify-center min-h-[52px]"
                               >
-                                <span className="text-xs font-semibold text-stone-700 group-hover:text-white leading-snug block truncate">
-                                  {f.company?.name}
-                                </span>
+                                {f.company?.logoURL ? (
+                                  <img
+                                    src={f.company.logoURL}
+                                    alt={f.company.name}
+                                    className="max-h-8 max-w-full object-contain group-hover:brightness-0 group-hover:invert transition-all"
+                                  />
+                                ) : (
+                                  <span className="text-xs font-semibold text-stone-700 group-hover:text-white leading-snug block truncate">
+                                    {f.company?.name}
+                                  </span>
+                                )}
                               </button>
                             ))}
                           </div>
@@ -579,6 +617,29 @@ export function FounderPortal({
                       )}
                     </div>
                     <div className="space-y-4">
+                      <div>
+                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Logo da Empresa</span>
+                        <div className="relative inline-block group/logo">
+                          <div className="w-20 h-20 rounded-xl bg-white border-2 border-stone-200 overflow-hidden flex items-center justify-center shadow-sm">
+                            {founder?.company?.logoURL ? (
+                              <img src={founder.company.logoURL} alt="Logo" className="w-full h-full object-contain p-1" />
+                            ) : (
+                              <Building2 size={28} className="text-stone-300" />
+                            )}
+                          </div>
+                          <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover/logo:opacity-100 transition-opacity rounded-xl cursor-pointer">
+                            {uploadingLogo ? (
+                              <span className="text-white text-xs font-bold">...</span>
+                            ) : (
+                              <Plus size={20} className="text-white" />
+                            )}
+                            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleCompanyLogoChange} disabled={uploadingLogo} />
+                          </label>
+                        </div>
+                        {!founder?.company?.logoURL && (
+                          <p className="text-xs text-stone-400 mt-2">Passe o mouse para adicionar um logo</p>
+                        )}
+                      </div>
                       <div>
                         <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
                         {editingCompany ? (

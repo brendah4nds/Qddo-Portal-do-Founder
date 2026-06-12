@@ -33,6 +33,7 @@ export interface Founder {
     bio: string;
     cnpj?: string;
     tipo?: string;
+    logoURL?: string;
   };
   registeredAt: any;
   role?: 'user' | 'admin';
