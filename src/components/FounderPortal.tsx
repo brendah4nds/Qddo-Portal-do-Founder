@@ -21,7 +21,8 @@ import {
   AlertTriangle,
   Pencil,
   X,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react';
 import { api } from '../api';
 import { getSocket } from '../socket';
@@ -79,6 +80,14 @@ export function FounderPortal({
   const [savingCompany, setSavingCompany] = useState(false);
 
   const [selectedCompanyFounder, setSelectedCompanyFounder] = useState<any | null>(null);
+  const [localFounders, setLocalFounders] = useState<any[]>(founders);
+  const [showAddCompany, setShowAddCompany] = useState(false);
+  const [addCompanyData, setAddCompanyData] = useState({ founderName: '', username: '', companyName: '', tipo: '', cnpj: '', bio: '' });
+  const [savingAddCompany, setSavingAddCompany] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deletingFounder, setDeletingFounder] = useState(false);
+
+  useEffect(() => { setLocalFounders(founders); }, [founders]);
 
   const COMPANY_CATEGORIES = ['HealthTech', 'EdTech', 'SaaS/Software', 'Marketing', 'Eventos', 'Variados'];
 
@@ -186,6 +195,48 @@ export function FounderPortal({
       console.error('Error updating company:', error);
     } finally {
       setSavingCompany(false);
+    }
+  };
+
+  const handleAddCompany = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addCompanyData.founderName || !addCompanyData.companyName) return;
+    setSavingAddCompany(true);
+    try {
+      const res = await api.post('/api/founders', {
+        name: addCompanyData.founderName,
+        username: addCompanyData.username,
+        company: {
+          name: addCompanyData.companyName,
+          tipo: addCompanyData.tipo,
+          cnpj: addCompanyData.cnpj,
+          bio: addCompanyData.bio,
+        }
+      });
+      const newFounder = { ...res.data, id: res.data._id || res.data.id };
+      setLocalFounders(prev => [...prev, newFounder]);
+      setShowAddCompany(false);
+      setAddCompanyData({ founderName: '', username: '', companyName: '', tipo: '', cnpj: '', bio: '' });
+    } catch (error) {
+      console.error('Error adding company:', error);
+    } finally {
+      setSavingAddCompany(false);
+    }
+  };
+
+  const handleDeleteFounder = async () => {
+    if (!selectedCompanyFounder) return;
+    setDeletingFounder(true);
+    try {
+      const id = selectedCompanyFounder._id || selectedCompanyFounder.id;
+      await api.delete(`/api/founders/${id}`);
+      setLocalFounders(prev => prev.filter(f => (f._id || f.id) !== id));
+      setSelectedCompanyFounder(null);
+      setConfirmDelete(false);
+    } catch (error) {
+      console.error('Error deleting founder:', error);
+    } finally {
+      setDeletingFounder(false);
     }
   };
 
@@ -311,13 +362,42 @@ export function FounderPortal({
             <div className="grid grid-cols-1 gap-6">
               {selectedCompanyFounder ? (
                 <div className="bg-white rounded-xl p-12 border border-stone-100 shadow-sm animate-in fade-in zoom-in-95 duration-300">
-                  <button
-                    onClick={() => setSelectedCompanyFounder(null)}
-                    className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 mb-8 flex items-center gap-2"
-                  >
-                    <ArrowRight size={16} className="rotate-180" />
-                    Voltar para lista
-                  </button>
+                  <div className="flex items-center justify-between mb-8">
+                    <button
+                      onClick={() => { setSelectedCompanyFounder(null); setConfirmDelete(false); }}
+                      className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 flex items-center gap-2"
+                    >
+                      <ArrowRight size={16} className="rotate-180" />
+                      Voltar para lista
+                    </button>
+                    {confirmDelete ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-stone-500">Confirmar exclusão?</span>
+                        <button
+                          onClick={() => setConfirmDelete(false)}
+                          className="px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-all"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleDeleteFounder}
+                          disabled={deletingFounder}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-red-500 text-white hover:bg-red-600 rounded-md transition-all disabled:opacity-50"
+                        >
+                          <Trash2 size={13} />
+                          {deletingFounder ? 'Excluindo...' : 'Excluir'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDelete(true)}
+                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
+                      >
+                        <Trash2 size={13} />
+                        Excluir Empresa
+                      </button>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div className="space-y-8">
@@ -382,13 +462,22 @@ export function FounderPortal({
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div>
-                    <h3 className="text-h3 font-sans">Empresas que estão no QDDO</h3>
-                    <p className="text-stone-400 text-sm mt-1">Classificadas por segmento de atuação.</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-h3 font-sans">Empresas que estão no QDDO</h3>
+                      <p className="text-stone-400 text-sm mt-1">Classificadas por segmento de atuação.</p>
+                    </div>
+                    <button
+                      onClick={() => setShowAddCompany(true)}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-widest hover:bg-primary/80 transition-all"
+                    >
+                      <Plus size={14} />
+                      Adicionar Empresa
+                    </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {COMPANY_CATEGORIES.map(cat => {
-                      const catFounders = founders.filter(f =>
+                      const catFounders = localFounders.filter(f =>
                         f.company?.name && (
                           cat === 'Variados'
                             ? !f.company?.tipo || !COMPANY_CATEGORIES.slice(0, -1).includes(f.company.tipo)
@@ -562,6 +651,105 @@ export function FounderPortal({
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {isAdmin && showAddCompany && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+              <div className="bg-white rounded-xl p-10 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-300">
+                <h3 className="text-h1 font-sans mb-8">Adicionar Empresa</h3>
+                <form onSubmit={handleAddCompany} className="space-y-5">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-overline uppercase tracking-wider font-bold text-stone-400 text-xs">Nome do Founder *</label>
+                      <input
+                        required
+                        type="text"
+                        placeholder="Nome completo"
+                        value={addCompanyData.founderName}
+                        onChange={e => setAddCompanyData({ ...addCompanyData, founderName: e.target.value })}
+                        className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-overline uppercase tracking-wider font-bold text-stone-400 text-xs">Username</label>
+                      <input
+                        type="text"
+                        placeholder="@username"
+                        value={addCompanyData.username}
+                        onChange={e => setAddCompanyData({ ...addCompanyData, username: e.target.value })}
+                        className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-overline uppercase tracking-wider font-bold text-stone-400 text-xs">Nome da Empresa *</label>
+                    <input
+                      required
+                      type="text"
+                      placeholder="Nome da empresa"
+                      value={addCompanyData.companyName}
+                      onChange={e => setAddCompanyData({ ...addCompanyData, companyName: e.target.value })}
+                      className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-overline uppercase tracking-wider font-bold text-stone-400 text-xs">Categoria</label>
+                      <select
+                        value={addCompanyData.tipo}
+                        onChange={e => setAddCompanyData({ ...addCompanyData, tipo: e.target.value })}
+                        className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all appearance-none"
+                      >
+                        <option value="">Selecione...</option>
+                        <option value="HealthTech">HealthTech</option>
+                        <option value="EdTech">EdTech</option>
+                        <option value="SaaS/Software">SaaS/Software</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Eventos">Eventos</option>
+                        <option value="Variados">Variados</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-overline uppercase tracking-wider font-bold text-stone-400 text-xs">CNPJ</label>
+                      <input
+                        type="text"
+                        placeholder="00.000.000/0000-00"
+                        value={addCompanyData.cnpj}
+                        onChange={e => setAddCompanyData({ ...addCompanyData, cnpj: e.target.value })}
+                        className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-overline uppercase tracking-wider font-bold text-stone-400 text-xs">Sobre a Empresa</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Descreva a empresa..."
+                      value={addCompanyData.bio}
+                      onChange={e => setAddCompanyData({ ...addCompanyData, bio: e.target.value })}
+                      className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all resize-none"
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { setShowAddCompany(false); setAddCompanyData({ founderName: '', username: '', companyName: '', tipo: '', cnpj: '', bio: '' }); }}
+                      className="flex-1 px-4 py-3 rounded-md text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingAddCompany}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-md text-xs font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary/80 transition-all disabled:opacity-50"
+                    >
+                      <Plus size={14} />
+                      {savingAddCompany ? 'Salvando...' : 'Adicionar'}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}
