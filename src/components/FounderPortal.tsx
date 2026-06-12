@@ -627,14 +627,17 @@ export function FounderPortal({
                               <Building2 size={28} className="text-stone-300" />
                             )}
                           </div>
-                          <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover/logo:opacity-100 transition-opacity rounded-xl cursor-pointer">
+                          <div
+                            onClick={() => !uploadingLogo && logoInputRef.current?.click()}
+                            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover/logo:opacity-100 transition-opacity rounded-xl cursor-pointer"
+                          >
                             {uploadingLogo ? (
                               <span className="text-white text-xs font-bold">...</span>
                             ) : (
                               <Plus size={20} className="text-white" />
                             )}
-                            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleCompanyLogoChange} disabled={uploadingLogo} />
-                          </label>
+                          </div>
+                          <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleCompanyLogoChange} disabled={uploadingLogo} />
                         </div>
                         {!founder?.company?.logoURL && (
                           <p className="text-xs text-stone-400 mt-2">Passe o mouse para adicionar um logo</p>
