@@ -526,8 +526,7 @@ export function FounderPortal({
 
       {activeSubTab === 'empresa' && (
         <div className="space-y-8">
-          {isAdmin ? (
-            <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-6">
               {selectedCompanyFounder ? (
                 <div className="bg-white rounded-xl p-12 border border-stone-100 shadow-sm animate-in fade-in zoom-in-95 duration-300">
                   <div className="flex items-center justify-between mb-8">
@@ -546,7 +545,7 @@ export function FounderPortal({
                       <ArrowRight size={16} className="rotate-180" />
                       Voltar para lista
                     </button>
-                    {confirmDelete ? (
+                    {isAdmin && (confirmDelete ? (
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-stone-500">Confirmar exclusão?</span>
                         <button
@@ -572,7 +571,7 @@ export function FounderPortal({
                         <Trash2 size={13} />
                         Excluir Empresa
                       </button>
-                    )}
+                    ))}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -615,7 +614,7 @@ export function FounderPortal({
                       <div className="bg-stone-50 rounded-xl p-8 border border-stone-100">
                         <div className="flex items-center justify-between mb-6">
                           <h3 className="text-h1 font-sans">Dados da Empresa</h3>
-                          {!adminEditingCompany ? (
+                          {isAdmin && (!adminEditingCompany ? (
                             <button
                               onClick={handleAdminStartEdit}
                               className="flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-200 transition-all"
@@ -649,7 +648,7 @@ export function FounderPortal({
                                 {adminSavingCompany ? 'Salvando...' : 'Salvar'}
                               </button>
                             </div>
-                          )}
+                          ))}
                         </div>
                         <div className="space-y-4">
                           <div>
@@ -730,8 +729,13 @@ export function FounderPortal({
                                 onChange={e => setAdminCompanyEditData({ ...adminCompanyEditData, cnpj: e.target.value })}
                                 className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
                               />
-                            ) : (
+                            ) : isAdmin || selectedCompanyFounder._id === user._id || selectedCompanyFounder.id === user._id ? (
                               <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
+                            ) : (
+                              <p className="flex items-center gap-1.5 text-stone-400 text-sm italic">
+                                <Lock size={13} className="shrink-0" />
+                                Visível apenas para a empresa e admins
+                              </p>
                             )}
                           </div>
                           <div>
@@ -829,7 +833,7 @@ export function FounderPortal({
                 </div>
               )}
             </div>
-          ) : (
+          {!isAdmin && (
             <div className="bg-white rounded-xl p-12 border border-stone-100 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="space-y-8">
