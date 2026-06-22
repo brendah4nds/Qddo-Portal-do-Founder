@@ -95,6 +95,16 @@ export function FounderPortal({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deletingFounder, setDeletingFounder] = useState(false);
 
+  const [adminEditingCompany, setAdminEditingCompany] = useState(false);
+  const [adminCompanyEditData, setAdminCompanyEditData] = useState({ name: '', cnpj: '', bio: '', tipo: '' });
+  const [adminSavingCompany, setAdminSavingCompany] = useState(false);
+  const [adminLogoPendingBlob, setAdminLogoPendingBlob] = useState<Blob | null>(null);
+  const [adminLogoPendingPreview, setAdminLogoPendingPreview] = useState('');
+  const [adminCropImageSrc, setAdminCropImageSrc] = useState('');
+  const [adminShowCropModal, setAdminShowCropModal] = useState(false);
+  const [adminUploadError, setAdminUploadError] = useState('');
+  const adminLogoInputRef = useRef<HTMLInputElement>(null);
+
   // Sync localLogoURL from founder whenever it (re)loads
   useEffect(() => {
     if (founder?.company?.logoURL) setLocalLogoURL(founder.company.logoURL);
@@ -316,6 +326,88 @@ export function FounderPortal({
     }
   };
 
+  const handleAdminStartEdit = () => {
+    setAdminCompanyEditData({
+      name: selectedCompanyFounder?.company?.name || '',
+      cnpj: selectedCompanyFounder?.company?.cnpj || '',
+      bio: selectedCompanyFounder?.company?.bio || '',
+      tipo: selectedCompanyFounder?.company?.tipo || ''
+    });
+    setAdminEditingCompany(true);
+  };
+
+  const handleAdminLogoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAdminCropImageSrc(reader.result as string);
+      setAdminShowCropModal(true);
+    };
+    reader.readAsDataURL(file);
+    if (adminLogoInputRef.current) adminLogoInputRef.current.value = '';
+  };
+
+  const handleAdminCropConfirm = (blob: Blob) => {
+    if (adminLogoPendingPreview) URL.revokeObjectURL(adminLogoPendingPreview);
+    setAdminLogoPendingBlob(blob);
+    setAdminLogoPendingPreview(URL.createObjectURL(blob));
+    setAdminShowCropModal(false);
+    setAdminCropImageSrc('');
+  };
+
+  const handleAdminSaveCompany = async () => {
+    if (!selectedCompanyFounder) return;
+    const founderId = selectedCompanyFounder._id || selectedCompanyFounder.id;
+    setAdminSavingCompany(true);
+    setAdminUploadError('');
+    try {
+      let logoUrl = selectedCompanyFounder.company?.logoURL || '';
+
+      if (adminLogoPendingBlob) {
+        const formData = new FormData();
+        formData.append('file', adminLogoPendingBlob, 'logo.jpg');
+        const { data } = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        logoUrl = data.url;
+      }
+
+      await api.put(`/api/founders/${founderId}`, {
+        company: {
+          ...selectedCompanyFounder.company,
+          name: adminCompanyEditData.name,
+          cnpj: adminCompanyEditData.cnpj,
+          bio: adminCompanyEditData.bio,
+          tipo: adminCompanyEditData.tipo,
+          ...(logoUrl ? { logoURL: logoUrl } : {})
+        }
+      });
+
+      const updated = {
+        ...selectedCompanyFounder,
+        company: {
+          ...selectedCompanyFounder.company,
+          name: adminCompanyEditData.name,
+          cnpj: adminCompanyEditData.cnpj,
+          bio: adminCompanyEditData.bio,
+          tipo: adminCompanyEditData.tipo,
+          ...(logoUrl ? { logoURL: logoUrl } : {})
+        }
+      };
+      setSelectedCompanyFounder(updated);
+      setLocalFounders(prev => prev.map(f => (f._id || f.id) === founderId ? updated : f));
+
+      if (adminLogoPendingPreview) URL.revokeObjectURL(adminLogoPendingPreview);
+      setAdminLogoPendingBlob(null);
+      setAdminLogoPendingPreview('');
+      setAdminEditingCompany(false);
+    } catch (error) {
+      console.error('Error updating company (admin):', error);
+      setAdminUploadError('Erro ao salvar. Tente novamente.');
+    } finally {
+      setAdminSavingCompany(false);
+    }
+  };
+
   const handleCreateChallenge = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !challengeData.title) return;
@@ -440,7 +532,15 @@ export function FounderPortal({
                 <div className="bg-white rounded-xl p-12 border border-stone-100 shadow-sm animate-in fade-in zoom-in-95 duration-300">
                   <div className="flex items-center justify-between mb-8">
                     <button
-                      onClick={() => { setSelectedCompanyFounder(null); setConfirmDelete(false); }}
+                      onClick={() => {
+                        if (adminLogoPendingPreview) URL.revokeObjectURL(adminLogoPendingPreview);
+                        setSelectedCompanyFounder(null);
+                        setConfirmDelete(false);
+                        setAdminEditingCompany(false);
+                        setAdminLogoPendingBlob(null);
+                        setAdminLogoPendingPreview('');
+                        setAdminUploadError('');
+                      }}
                       className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 flex items-center gap-2"
                     >
                       <ArrowRight size={16} className="rotate-180" />
@@ -513,31 +613,139 @@ export function FounderPortal({
 
                     <div className="space-y-8">
                       <div className="bg-stone-50 rounded-xl p-8 border border-stone-100">
-                        <h3 className="text-h1 font-sans mb-6">Dados da Empresa</h3>
-                        <div className="space-y-4">
-                          {selectedCompanyFounder.company?.logoURL && (
-                            <div>
-                              <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Logo</span>
-                              <div className="w-24 h-24 rounded-xl bg-white border border-stone-200 flex items-center justify-center overflow-hidden shadow-sm p-2">
-                                <img src={selectedCompanyFounder.company.logoURL} alt="Logo" className="max-w-full max-h-full object-contain" />
-                              </div>
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-h1 font-sans">Dados da Empresa</h3>
+                          {!adminEditingCompany ? (
+                            <button
+                              onClick={handleAdminStartEdit}
+                              className="flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-200 transition-all"
+                            >
+                              <Pencil size={14} />
+                              Editar
+                            </button>
+                          ) : (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  if (adminLogoPendingPreview) URL.revokeObjectURL(adminLogoPendingPreview);
+                                  setAdminLogoPendingBlob(null);
+                                  setAdminLogoPendingPreview('');
+                                  setAdminCropImageSrc('');
+                                  setAdminShowCropModal(false);
+                                  setAdminUploadError('');
+                                  setAdminEditingCompany(false);
+                                }}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-200 transition-all"
+                              >
+                                <X size={14} />
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={handleAdminSaveCompany}
+                                disabled={adminSavingCompany}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary/80 transition-all disabled:opacity-50"
+                              >
+                                <Check size={14} />
+                                {adminSavingCompany ? 'Salvando...' : 'Salvar'}
+                              </button>
                             </div>
                           )}
+                        </div>
+                        <div className="space-y-4">
+                          <div>
+                            <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Logo</span>
+                            <div className="flex flex-col gap-3">
+                              <div className="w-full max-w-xs aspect-[3/1] rounded-xl bg-white border-2 border-stone-200 overflow-hidden flex items-center justify-center shadow-sm p-2">
+                                {(adminLogoPendingPreview || selectedCompanyFounder.company?.logoURL) ? (
+                                  <img
+                                    src={adminLogoPendingPreview || selectedCompanyFounder.company!.logoURL}
+                                    alt="Logo"
+                                    className="max-h-full max-w-full object-contain"
+                                  />
+                                ) : (
+                                  <Building2 size={24} className="text-stone-300" />
+                                )}
+                              </div>
+                              {adminEditingCompany && (
+                                <div className="flex flex-col gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => adminLogoInputRef.current?.click()}
+                                    className="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-xs font-bold uppercase tracking-widest transition-all self-start"
+                                  >
+                                    <Plus size={14} />
+                                    {(adminLogoPendingPreview || selectedCompanyFounder.company?.logoURL) ? 'Alterar logo' : 'Adicionar logo'}
+                                  </button>
+                                  <p className="text-xs text-stone-400">Formato retangular 3:1. JPG, PNG ou WebP.</p>
+                                  {adminUploadError && (
+                                    <p className="text-xs text-red-500 flex items-center gap-1">
+                                      <AlertTriangle size={12} />
+                                      {adminUploadError}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <input ref={adminLogoInputRef} type="file" accept="image/*" className="hidden" onChange={handleAdminLogoFileSelect} />
+                          </div>
                           <div>
                             <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
-                            <p className="font-bold text-stone-900 text-h3">{selectedCompanyFounder.company?.name || 'N/A'}</p>
+                            {adminEditingCompany ? (
+                              <input
+                                type="text"
+                                value={adminCompanyEditData.name}
+                                onChange={e => setAdminCompanyEditData({ ...adminCompanyEditData, name: e.target.value })}
+                                className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all font-bold text-stone-900"
+                              />
+                            ) : (
+                              <p className="font-bold text-stone-900 text-h3">{selectedCompanyFounder.company?.name || 'N/A'}</p>
+                            )}
                           </div>
                           <div>
                             <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Categoria</span>
-                            <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.tipo || 'Não informado'}</p>
+                            {adminEditingCompany ? (
+                              <select
+                                value={adminCompanyEditData.tipo}
+                                onChange={e => setAdminCompanyEditData({ ...adminCompanyEditData, tipo: e.target.value })}
+                                className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all appearance-none"
+                              >
+                                <option value="">Selecione a categoria...</option>
+                                <option value="HealthTech">HealthTech</option>
+                                <option value="EdTech">EdTech</option>
+                                <option value="SaaS/ Software">SaaS/ Software</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Eventos">Eventos</option>
+                                <option value="Variados">Variados</option>
+                              </select>
+                            ) : (
+                              <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.tipo || 'Não informado'}</p>
+                            )}
                           </div>
                           <div>
                             <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">CNPJ</span>
-                            <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
+                            {adminEditingCompany ? (
+                              <input
+                                type="text"
+                                value={adminCompanyEditData.cnpj}
+                                onChange={e => setAdminCompanyEditData({ ...adminCompanyEditData, cnpj: e.target.value })}
+                                className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                              />
+                            ) : (
+                              <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
+                            )}
                           </div>
                           <div>
                             <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Sobre a Empresa</span>
-                            <p className="text-sm text-stone-500 leading-relaxed">{selectedCompanyFounder.company?.bio || 'Sem descrição informada'}</p>
+                            {adminEditingCompany ? (
+                              <textarea
+                                rows={4}
+                                value={adminCompanyEditData.bio}
+                                onChange={e => setAdminCompanyEditData({ ...adminCompanyEditData, bio: e.target.value })}
+                                className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all resize-none"
+                              />
+                            ) : (
+                              <p className="text-sm text-stone-500 leading-relaxed">{selectedCompanyFounder.company?.bio || 'Sem descrição informada'}</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -561,13 +769,25 @@ export function FounderPortal({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {COMPANY_CATEGORIES.map(cat => {
-                      const catFounders = localFounders.filter(f =>
-                        f.company?.name && (
-                          cat === 'Variados'
-                            ? !f.company?.tipo || !COMPANY_CATEGORIES.slice(0, -1).includes(f.company.tipo)
-                            : f.company?.tipo === cat
+                      const seenNames = new Set<string>();
+                      const catFounders = localFounders
+                        .filter((f: any) =>
+                          f.company?.name && (
+                            cat === 'Variados'
+                              ? !f.company?.tipo || !COMPANY_CATEGORIES.slice(0, -1).includes(f.company.tipo)
+                              : f.company?.tipo === cat
+                          )
                         )
-                      );
+                        .sort((a: any, b: any) => {
+                          const score = (f: any) => (f.company?.logoURL ? 4 : 0) + (f.company?.bio ? 2 : 0) + (f.company?.cnpj ? 1 : 0);
+                          return score(b) - score(a);
+                        })
+                        .filter((f: any) => {
+                          const key = (f.company?.name || '').toLowerCase().trim();
+                          if (!key || seenNames.has(key)) return false;
+                          seenNames.add(key);
+                          return true;
+                        });
                       if (catFounders.length === 0) return null;
                       const CategoryIcon = CATEGORY_ICONS[cat] || Building2;
                       return (
@@ -582,20 +802,20 @@ export function FounderPortal({
                             </div>
                           </div>
                           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
-                            {catFounders.map(f => (
+                            {catFounders.map((f: any) => (
                               <button
                                 key={f._id || f.id}
                                 onClick={() => setSelectedCompanyFounder(f)}
-                                className="bg-stone-50 hover:bg-primary border border-stone-100 hover:border-primary rounded-md px-3 py-2.5 text-center transition-all group flex items-center justify-center min-h-[52px]"
+                                className="bg-stone-50 hover:bg-primary border border-stone-100 hover:border-primary rounded-md text-center transition-all group flex items-center justify-center overflow-hidden w-full aspect-[3/1]"
                               >
                                 {f.company?.logoURL ? (
                                   <img
                                     src={f.company.logoURL}
                                     alt={f.company.name}
-                                    className="max-h-8 max-w-full object-contain group-hover:brightness-0 group-hover:invert transition-all"
+                                    className="w-full h-full object-cover group-hover:brightness-0 group-hover:invert transition-all"
                                   />
                                 ) : (
-                                  <span className="text-xs font-semibold text-stone-700 group-hover:text-white leading-snug block truncate">
+                                  <span className="text-xs font-semibold text-stone-700 group-hover:text-white leading-snug block truncate px-3">
                                     {f.company?.name}
                                   </span>
                                 )}
@@ -681,16 +901,16 @@ export function FounderPortal({
                     <div className="space-y-4">
                       <div>
                         <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Logo da Empresa</span>
-                        <div className="flex items-center gap-4">
-                          <div className="w-20 h-20 rounded-xl bg-white border-2 border-stone-200 overflow-hidden flex items-center justify-center shadow-sm flex-shrink-0">
+                        <div className="flex flex-col gap-3">
+                          <div className="w-full max-w-xs aspect-[3/1] rounded-xl bg-white border-2 border-stone-200 overflow-hidden flex items-center justify-center shadow-sm p-2">
                             {(logoPendingPreview || localLogoURL || founder?.company?.logoURL) ? (
                               <img
                                 src={logoPendingPreview || localLogoURL || founder!.company!.logoURL}
                                 alt="Logo"
-                                className="w-full h-full object-contain p-1"
+                                className="max-h-full max-w-full object-contain"
                               />
                             ) : (
-                              <Building2 size={28} className="text-stone-300" />
+                              <Building2 size={24} className="text-stone-300" />
                             )}
                           </div>
                           {editingCompany && (
@@ -698,12 +918,12 @@ export function FounderPortal({
                               <button
                                 type="button"
                                 onClick={() => logoInputRef.current?.click()}
-                                className="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-xs font-bold uppercase tracking-widest transition-all"
+                                className="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-xs font-bold uppercase tracking-widest transition-all self-start"
                               >
                                 <Plus size={14} />
                                 {(logoPendingPreview || localLogoURL || founder?.company?.logoURL) ? 'Alterar logo' : 'Adicionar logo'}
                               </button>
-                              <p className="text-xs text-stone-400">Quadrada. JPG, PNG ou WebP.</p>
+                              <p className="text-xs text-stone-400">Formato retangular 3:1. JPG, PNG ou WebP.</p>
                               {uploadError && (
                                 <p className="text-xs text-red-500 flex items-center gap-1">
                                   <AlertTriangle size={12} />
@@ -1308,10 +1528,20 @@ export function FounderPortal({
       {showCropModal && cropImageSrc && (
         <ImageCropModal
           imageSrc={cropImageSrc}
-          aspect={1}
+          aspect={3}
           title="Ajustar logo da empresa"
           onConfirm={handleCropConfirm}
           onClose={() => { setShowCropModal(false); setCropImageSrc(''); }}
+        />
+      )}
+
+      {adminShowCropModal && adminCropImageSrc && (
+        <ImageCropModal
+          imageSrc={adminCropImageSrc}
+          aspect={3}
+          title="Ajustar logo da empresa"
+          onConfirm={handleAdminCropConfirm}
+          onClose={() => { setAdminShowCropModal(false); setAdminCropImageSrc(''); }}
         />
       )}
     </div>
