@@ -632,7 +632,14 @@ export default function App() {
     socket.on('founder:new',    (f: any) => setAllFounders(prev => [{ ...f, id: f._id }, ...prev.filter(x => x.id !== f._id)]));
     socket.on('founder:update', (f: any) => {
       const updated = { ...f, id: f._id || f.id };
-      setAllFounders(prev => prev.map(x => x.id === updated.id ? updated : x));
+      setAllFounders(prev => prev.map(x => {
+        if (x.id !== updated.id) return x;
+        // Preserve company.logoURL if the backend event doesn't include it (strict schema)
+        if (x.company?.logoURL && !updated.company?.logoURL) {
+          updated.company = { ...updated.company, logoURL: x.company.logoURL };
+        }
+        return updated;
+      }));
       if (user._id && updated.id === user._id) { setFounderData(updated); setUser((u: any) => ({ ...u, ...updated, uid: u.uid })); }
     });
     socket.on('founder:delete', ({ id }: any) => setAllFounders(prev => prev.filter(x => x.id !== id)));

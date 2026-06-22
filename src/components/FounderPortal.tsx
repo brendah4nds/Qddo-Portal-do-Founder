@@ -89,7 +89,15 @@ export function FounderPortal({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deletingFounder, setDeletingFounder] = useState(false);
 
-  useEffect(() => { setLocalFounders(founders); }, [founders]);
+  useEffect(() => {
+    setLocalFounders(prev => founders.map(f => {
+      const existing = prev.find(p => (p._id || p.id) === (f._id || f.id));
+      if (existing?.company?.logoURL && !f.company?.logoURL) {
+        return { ...f, company: { ...f.company, logoURL: existing.company.logoURL } };
+      }
+      return f;
+    }));
+  }, [founders]);
 
   const COMPANY_CATEGORIES = ['HealthTech', 'EdTech', 'SaaS/Software', 'Marketing', 'Eventos', 'Variados'];
 
@@ -116,7 +124,16 @@ export function FounderPortal({
     const socket = getSocket();
     const onUpdate = (f: any) => {
       const fId = f._id || f.id;
-      if (fId === user._id) setFounder({ ...f, id: fId });
+      if (fId === user._id) {
+        setFounder(prev => {
+          const incoming = { ...f, id: fId };
+          // Preserve logoURL from local state if the backend event doesn't include it
+          if (prev?.company?.logoURL && !incoming.company?.logoURL) {
+            incoming.company = { ...incoming.company, logoURL: prev.company.logoURL };
+          }
+          return incoming;
+        });
+      }
     };
     socket.on('founder:update', onUpdate);
     return () => { socket.off('founder:update', onUpdate); };
@@ -177,10 +194,22 @@ export function FounderPortal({
       const formData = new FormData();
       formData.append('file', file);
       const { data } = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const logoUrl: string = data.url;
+
       await api.put(`/api/founders/${user._id}`, {
-        company: { ...founder?.company, logoURL: data.url }
+        company: { ...founder?.company, logoURL: logoUrl }
       });
-      setFounder(prev => prev ? { ...prev, company: { ...prev.company!, logoURL: data.url } } : null);
+
+      // Re-fetch to get what the backend actually persisted
+      const res = await api.get(`/api/founders/${user._id}`);
+      if (res.data) {
+        const saved = { ...res.data, id: res.data._id || res.data.id };
+        // If the backend schema dropped logoURL (strict Mongoose), preserve it locally
+        if (!saved.company?.logoURL) {
+          saved.company = { ...saved.company, logoURL: logoUrl };
+        }
+        setFounder(saved);
+      }
     } catch (err) {
       console.error('Erro ao atualizar logo:', err);
     } finally {
