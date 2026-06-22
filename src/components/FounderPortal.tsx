@@ -79,6 +79,8 @@ export function FounderPortal({
   const [companyEditData, setCompanyEditData] = useState({ name: '', cnpj: '', bio: '', tipo: '' });
   const [savingCompany, setSavingCompany] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [localLogoURL, setLocalLogoURL] = useState('');
+  const [uploadError, setUploadError] = useState('');
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedCompanyFounder, setSelectedCompanyFounder] = useState<any | null>(null);
@@ -88,6 +90,11 @@ export function FounderPortal({
   const [savingAddCompany, setSavingAddCompany] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deletingFounder, setDeletingFounder] = useState(false);
+
+  // Sync localLogoURL from founder whenever it (re)loads
+  useEffect(() => {
+    if (founder?.company?.logoURL) setLocalLogoURL(founder.company.logoURL);
+  }, [founder?.company?.logoURL]);
 
   useEffect(() => {
     setLocalFounders(prev => founders.map(f => {
@@ -190,28 +197,33 @@ export function FounderPortal({
     const file = e.target.files?.[0];
     if (!file || !user) return;
     setUploadingLogo(true);
+    setUploadError('');
     try {
       const formData = new FormData();
       formData.append('file', file);
       const { data } = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       const logoUrl: string = data.url;
 
+      // Set immediately — independent of socket or backend schema
+      setLocalLogoURL(logoUrl);
+
       await api.put(`/api/founders/${user._id}`, {
         company: { ...founder?.company, logoURL: logoUrl }
       });
 
-      // Re-fetch to get what the backend actually persisted
+      // Re-fetch to sync any fields the backend may have updated
       const res = await api.get(`/api/founders/${user._id}`);
       if (res.data) {
         const saved = { ...res.data, id: res.data._id || res.data.id };
-        // If the backend schema dropped logoURL (strict Mongoose), preserve it locally
+        // If backend dropped logoURL (strict Mongoose schema), inject it back
         if (!saved.company?.logoURL) {
-          saved.company = { ...saved.company, logoURL: logoUrl };
+          saved.company = { ...(saved.company ?? {}), logoURL: logoUrl };
         }
         setFounder(saved);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao atualizar logo:', err);
+      setUploadError('Não foi possível enviar a imagem. Tente novamente.');
     } finally {
       setUploadingLogo(false);
       if (logoInputRef.current) logoInputRef.current.value = '';
@@ -232,15 +244,27 @@ export function FounderPortal({
     if (!user) return;
     setSavingCompany(true);
     try {
+      const currentLogoURL = localLogoURL || founder?.company?.logoURL || '';
       await api.put(`/api/founders/${user._id}`, {
         company: {
           ...founder?.company,
           name: companyEditData.name,
           cnpj: companyEditData.cnpj,
           bio: companyEditData.bio,
-          tipo: companyEditData.tipo
+          tipo: companyEditData.tipo,
+          ...(currentLogoURL ? { logoURL: currentLogoURL } : {})
         }
       });
+      // Re-fetch to get actual saved state
+      const res = await api.get(`/api/founders/${user._id}`);
+      if (res.data) {
+        const saved = { ...res.data, id: res.data._id || res.data.id };
+        // If backend dropped logoURL, re-inject from local state
+        if (!saved.company?.logoURL && currentLogoURL) {
+          saved.company = { ...(saved.company ?? {}), logoURL: currentLogoURL };
+        }
+        setFounder(saved);
+      }
       setEditingCompany(false);
     } catch (error) {
       console.error('Error updating company:', error);
@@ -650,8 +674,8 @@ export function FounderPortal({
                         <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Logo da Empresa</span>
                         <div className="relative inline-block group/logo">
                           <div className="w-20 h-20 rounded-xl bg-white border-2 border-stone-200 overflow-hidden flex items-center justify-center shadow-sm">
-                            {founder?.company?.logoURL ? (
-                              <img src={founder.company.logoURL} alt="Logo" className="w-full h-full object-contain p-1" />
+                            {(localLogoURL || founder?.company?.logoURL) ? (
+                              <img src={localLogoURL || founder!.company!.logoURL} alt="Logo" className="w-full h-full object-contain p-1" />
                             ) : (
                               <Building2 size={28} className="text-stone-300" />
                             )}
@@ -661,14 +685,20 @@ export function FounderPortal({
                             className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover/logo:opacity-100 transition-opacity rounded-xl cursor-pointer"
                           >
                             {uploadingLogo ? (
-                              <span className="text-white text-xs font-bold">...</span>
+                              <span className="text-white text-xs font-bold">Enviando...</span>
                             ) : (
                               <Plus size={20} className="text-white" />
                             )}
                           </div>
                           <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleCompanyLogoChange} disabled={uploadingLogo} />
                         </div>
-                        {!founder?.company?.logoURL && (
+                        {uploadError && (
+                          <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                            <AlertTriangle size={12} />
+                            {uploadError}
+                          </p>
+                        )}
+                        {!localLogoURL && !founder?.company?.logoURL && !uploadError && (
                           <p className="text-xs text-stone-400 mt-2">Passe o mouse para adicionar um logo</p>
                         )}
                       </div>
