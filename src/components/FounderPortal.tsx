@@ -29,6 +29,7 @@ import { getSocket } from '../socket';
 import { Founder, Challenge } from '../types';
 import { ChallengeComments } from './ChallengeComments';
 import { CheckinSystem } from './CheckinSystem';
+import { ImageCropModal } from './ImageCropModal';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -78,9 +79,12 @@ export function FounderPortal({
   const [editingCompany, setEditingCompany] = useState(false);
   const [companyEditData, setCompanyEditData] = useState({ name: '', cnpj: '', bio: '', tipo: '' });
   const [savingCompany, setSavingCompany] = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [localLogoURL, setLocalLogoURL] = useState('');
   const [uploadError, setUploadError] = useState('');
+  const [logoPendingBlob, setLogoPendingBlob] = useState<Blob | null>(null);
+  const [logoPendingPreview, setLogoPendingPreview] = useState('');
+  const [cropImageSrc, setCropImageSrc] = useState('');
+  const [showCropModal, setShowCropModal] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedCompanyFounder, setSelectedCompanyFounder] = useState<any | null>(null);
@@ -193,41 +197,24 @@ export function FounderPortal({
     };
   }, [user, isAdmin]);
 
-  const handleCompanyLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
-    setUploadingLogo(true);
-    setUploadError('');
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const { data } = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      const logoUrl: string = data.url;
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+      setShowCropModal(true);
+    };
+    reader.readAsDataURL(file);
+    if (logoInputRef.current) logoInputRef.current.value = '';
+  };
 
-      // Set immediately — independent of socket or backend schema
-      setLocalLogoURL(logoUrl);
-
-      await api.put(`/api/founders/${user._id}`, {
-        company: { ...founder?.company, logoURL: logoUrl }
-      });
-
-      // Re-fetch to sync any fields the backend may have updated
-      const res = await api.get(`/api/founders/${user._id}`);
-      if (res.data) {
-        const saved = { ...res.data, id: res.data._id || res.data.id };
-        // If backend dropped logoURL (strict Mongoose schema), inject it back
-        if (!saved.company?.logoURL) {
-          saved.company = { ...(saved.company ?? {}), logoURL: logoUrl };
-        }
-        setFounder(saved);
-      }
-    } catch (err: any) {
-      console.error('Erro ao atualizar logo:', err);
-      setUploadError('Não foi possível enviar a imagem. Tente novamente.');
-    } finally {
-      setUploadingLogo(false);
-      if (logoInputRef.current) logoInputRef.current.value = '';
-    }
+  const handleCropConfirm = (blob: Blob) => {
+    if (logoPendingPreview) URL.revokeObjectURL(logoPendingPreview);
+    setLogoPendingBlob(blob);
+    setLogoPendingPreview(URL.createObjectURL(blob));
+    setShowCropModal(false);
+    setCropImageSrc('');
   };
 
   const handleStartEditCompany = () => {
@@ -243,8 +230,18 @@ export function FounderPortal({
   const handleUpdateCompany = async () => {
     if (!user) return;
     setSavingCompany(true);
+    setUploadError('');
     try {
-      const currentLogoURL = localLogoURL || founder?.company?.logoURL || '';
+      let logoUrl = localLogoURL || founder?.company?.logoURL || '';
+
+      if (logoPendingBlob) {
+        const formData = new FormData();
+        formData.append('file', logoPendingBlob, 'logo.jpg');
+        const { data } = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        logoUrl = data.url;
+        setLocalLogoURL(logoUrl);
+      }
+
       await api.put(`/api/founders/${user._id}`, {
         company: {
           ...founder?.company,
@@ -252,22 +249,26 @@ export function FounderPortal({
           cnpj: companyEditData.cnpj,
           bio: companyEditData.bio,
           tipo: companyEditData.tipo,
-          ...(currentLogoURL ? { logoURL: currentLogoURL } : {})
+          ...(logoUrl ? { logoURL: logoUrl } : {})
         }
       });
-      // Re-fetch to get actual saved state
+
       const res = await api.get(`/api/founders/${user._id}`);
       if (res.data) {
         const saved = { ...res.data, id: res.data._id || res.data.id };
-        // If backend dropped logoURL, re-inject from local state
-        if (!saved.company?.logoURL && currentLogoURL) {
-          saved.company = { ...(saved.company ?? {}), logoURL: currentLogoURL };
+        if (!saved.company?.logoURL && logoUrl) {
+          saved.company = { ...(saved.company ?? {}), logoURL: logoUrl };
         }
         setFounder(saved);
       }
+
+      if (logoPendingPreview) URL.revokeObjectURL(logoPendingPreview);
+      setLogoPendingBlob(null);
+      setLogoPendingPreview('');
       setEditingCompany(false);
     } catch (error) {
       console.error('Error updating company:', error);
+      setUploadError('Erro ao salvar. Tente novamente.');
     } finally {
       setSavingCompany(false);
     }
@@ -652,7 +653,15 @@ export function FounderPortal({
                       ) : (
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setEditingCompany(false)}
+                            onClick={() => {
+                              if (logoPendingPreview) URL.revokeObjectURL(logoPendingPreview);
+                              setLogoPendingBlob(null);
+                              setLogoPendingPreview('');
+                              setCropImageSrc('');
+                              setShowCropModal(false);
+                              setUploadError('');
+                              setEditingCompany(false);
+                            }}
                             className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-200 transition-all"
                           >
                             <X size={14} />
@@ -672,35 +681,39 @@ export function FounderPortal({
                     <div className="space-y-4">
                       <div>
                         <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-2">Logo da Empresa</span>
-                        <div className="relative inline-block group/logo">
-                          <div className="w-20 h-20 rounded-xl bg-white border-2 border-stone-200 overflow-hidden flex items-center justify-center shadow-sm">
-                            {(localLogoURL || founder?.company?.logoURL) ? (
-                              <img src={localLogoURL || founder!.company!.logoURL} alt="Logo" className="w-full h-full object-contain p-1" />
+                        <div className="flex items-center gap-4">
+                          <div className="w-20 h-20 rounded-xl bg-white border-2 border-stone-200 overflow-hidden flex items-center justify-center shadow-sm flex-shrink-0">
+                            {(logoPendingPreview || localLogoURL || founder?.company?.logoURL) ? (
+                              <img
+                                src={logoPendingPreview || localLogoURL || founder!.company!.logoURL}
+                                alt="Logo"
+                                className="w-full h-full object-contain p-1"
+                              />
                             ) : (
                               <Building2 size={28} className="text-stone-300" />
                             )}
                           </div>
-                          <div
-                            onClick={() => !uploadingLogo && logoInputRef.current?.click()}
-                            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover/logo:opacity-100 transition-opacity rounded-xl cursor-pointer"
-                          >
-                            {uploadingLogo ? (
-                              <span className="text-white text-xs font-bold">Enviando...</span>
-                            ) : (
-                              <Plus size={20} className="text-white" />
-                            )}
-                          </div>
-                          <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleCompanyLogoChange} disabled={uploadingLogo} />
+                          {editingCompany && (
+                            <div className="flex flex-col gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => logoInputRef.current?.click()}
+                                className="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-xs font-bold uppercase tracking-widest transition-all"
+                              >
+                                <Plus size={14} />
+                                {(logoPendingPreview || localLogoURL || founder?.company?.logoURL) ? 'Alterar logo' : 'Adicionar logo'}
+                              </button>
+                              <p className="text-xs text-stone-400">Quadrada. JPG, PNG ou WebP.</p>
+                              {uploadError && (
+                                <p className="text-xs text-red-500 flex items-center gap-1">
+                                  <AlertTriangle size={12} />
+                                  {uploadError}
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        {uploadError && (
-                          <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                            <AlertTriangle size={12} />
-                            {uploadError}
-                          </p>
-                        )}
-                        {!localLogoURL && !founder?.company?.logoURL && !uploadError && (
-                          <p className="text-xs text-stone-400 mt-2">Passe o mouse para adicionar um logo</p>
-                        )}
+                        <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoFileSelect} />
                       </div>
                       <div>
                         <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Nome da Empresa</span>
@@ -1290,6 +1303,16 @@ export function FounderPortal({
             </div>
           )}
         </>
+      )}
+
+      {showCropModal && cropImageSrc && (
+        <ImageCropModal
+          imageSrc={cropImageSrc}
+          aspect={1}
+          title="Ajustar logo da empresa"
+          onConfirm={handleCropConfirm}
+          onClose={() => { setShowCropModal(false); setCropImageSrc(''); }}
+        />
       )}
     </div>
   );
