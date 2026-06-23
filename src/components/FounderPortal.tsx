@@ -113,6 +113,7 @@ export function FounderPortal({
   const [adminShowCropModal, setAdminShowCropModal] = useState(false);
   const [adminUploadError, setAdminUploadError] = useState('');
   const adminLogoInputRef = useRef<HTMLInputElement>(null);
+  const [adminIsCustomCategory, setAdminIsCustomCategory] = useState(false);
 
   // Sync localLogoURL from founder whenever it (re)loads
   useEffect(() => {
@@ -130,6 +131,13 @@ export function FounderPortal({
   }, [founders]);
 
   const COMPANY_CATEGORIES = ['HealthTech', 'EdTech', 'SaaS/Software', 'Marketing', 'Eventos', 'Variados'];
+
+  const customCats: string[] = [...new Set<string>(
+    localFounders
+      .map((f: any) => (f.company?.tipo || '') as string)
+      .filter((t: string) => t && !COMPANY_CATEGORIES.includes(t))
+  )];
+  const allCategoryOptions: string[] = [...COMPANY_CATEGORIES.slice(0, -1), ...customCats, 'Variados'];
 
   const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'HealthTech': Heart,
@@ -336,11 +344,13 @@ export function FounderPortal({
   };
 
   const handleAdminStartEdit = () => {
+    const tipo = selectedCompanyFounder?.company?.tipo || '';
+    setAdminIsCustomCategory(!!tipo && !COMPANY_CATEGORIES.includes(tipo));
     setAdminCompanyEditData({
       name: selectedCompanyFounder?.company?.name || '',
       cnpj: selectedCompanyFounder?.company?.cnpj || '',
       bio: selectedCompanyFounder?.company?.bio || '',
-      tipo: selectedCompanyFounder?.company?.tipo || ''
+      tipo,
     });
     setAdminEditingCompany(true);
   };
@@ -657,6 +667,7 @@ export function FounderPortal({
                                   setAdminCropImageSrc('');
                                   setAdminShowCropModal(false);
                                   setAdminUploadError('');
+                                  setAdminIsCustomCategory(false);
                                   setAdminEditingCompany(false);
                                 }}
                                 className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-200 transition-all"
@@ -728,19 +739,37 @@ export function FounderPortal({
                           <div>
                             <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Categoria</span>
                             {adminEditingCompany ? (
-                              <select
-                                value={adminCompanyEditData.tipo}
-                                onChange={e => setAdminCompanyEditData({ ...adminCompanyEditData, tipo: e.target.value })}
-                                className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all appearance-none"
-                              >
-                                <option value="">Selecione a categoria...</option>
-                                <option value="HealthTech">HealthTech</option>
-                                <option value="EdTech">EdTech</option>
-                                <option value="SaaS/ Software">SaaS/ Software</option>
-                                <option value="Marketing">Marketing</option>
-                                <option value="Eventos">Eventos</option>
-                                <option value="Variados">Variados</option>
-                              </select>
+                              <div className="space-y-2">
+                                <select
+                                  value={adminIsCustomCategory ? '__custom__' : adminCompanyEditData.tipo}
+                                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                    if (e.target.value === '__custom__') {
+                                      setAdminIsCustomCategory(true);
+                                      setAdminCompanyEditData({ ...adminCompanyEditData, tipo: '' });
+                                    } else {
+                                      setAdminIsCustomCategory(false);
+                                      setAdminCompanyEditData({ ...adminCompanyEditData, tipo: e.target.value });
+                                    }
+                                  }}
+                                  className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all appearance-none"
+                                >
+                                  <option value="">Selecione a categoria...</option>
+                                  {allCategoryOptions.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                  ))}
+                                  <option value="__custom__">+ Nova categoria...</option>
+                                </select>
+                                {adminIsCustomCategory && (
+                                  <input
+                                    type="text"
+                                    value={adminCompanyEditData.tipo}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAdminCompanyEditData({ ...adminCompanyEditData, tipo: e.target.value })}
+                                    placeholder="Digite o nome da nova categoria"
+                                    className="w-full px-4 py-3 bg-white border border-primary rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                                    autoFocus
+                                  />
+                                )}
+                              </div>
                             ) : (
                               <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.tipo || 'Não informado'}</p>
                             )}
@@ -801,14 +830,14 @@ export function FounderPortal({
                         cat === 'SaaS/Software'
                           ? SAAS_NORMS.includes(norm(tipo))
                           : norm(tipo) === norm(cat);
-                      const visibleCats = COMPANY_CATEGORIES.map(cat => {
+                      const visibleCats = allCategoryOptions.map(cat => {
                         const seenNames = new Set<string>();
                         const catFounders = localFounders
                           .filter((f: any) =>
                             f.company?.name && (
                               cat === 'Variados'
                                 ? !f.company?.tipo || (
-                                    !COMPANY_CATEGORIES.slice(0, -1).some(c => matchesCat(f.company.tipo, c))
+                                    !allCategoryOptions.slice(0, -1).some(c => matchesCat(f.company.tipo, c))
                                   )
                                 : matchesCat(f.company?.tipo, cat)
                             )
