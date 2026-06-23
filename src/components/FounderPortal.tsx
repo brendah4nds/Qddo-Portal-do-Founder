@@ -754,13 +754,8 @@ export function FounderPortal({
                                 onChange={e => setAdminCompanyEditData({ ...adminCompanyEditData, cnpj: e.target.value })}
                                 className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
                               />
-                            ) : isAdmin || selectedCompanyFounder._id === user._id || selectedCompanyFounder.id === user._id ? (
-                              <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
                             ) : (
-                              <p className="flex items-center gap-1.5 text-stone-400 text-sm italic">
-                                <Lock size={13} className="shrink-0" />
-                                Visível apenas para a empresa e admins
-                              </p>
+                              <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
                             )}
                           </div>
                           <div>
@@ -797,30 +792,35 @@ export function FounderPortal({
                     </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {COMPANY_CATEGORIES.map(cat => {
-                      const seenNames = new Set<string>();
-                      const catFounders = localFounders
-                        .filter((f: any) =>
-                          f.company?.name && (
-                            cat === 'Variados'
-                              ? !f.company?.tipo || !COMPANY_CATEGORIES.slice(0, -1).includes(f.company.tipo)
-                              : f.company?.tipo === cat
+                    {(() => {
+                      const visibleCats = COMPANY_CATEGORIES.map(cat => {
+                        const seenNames = new Set<string>();
+                        const catFounders = localFounders
+                          .filter((f: any) =>
+                            f.company?.name && (
+                              cat === 'Variados'
+                                ? !f.company?.tipo || !COMPANY_CATEGORIES.slice(0, -1).includes(f.company.tipo)
+                                : f.company?.tipo === cat
+                            )
                           )
-                        )
-                        .sort((a: any, b: any) => {
-                          const score = (f: any) => (f.company?.logoURL ? 4 : 0) + (f.company?.bio ? 2 : 0) + (f.company?.cnpj ? 1 : 0);
-                          return score(b) - score(a);
-                        })
-                        .filter((f: any) => {
-                          const key = (f.company?.name || '').toLowerCase().trim();
-                          if (!key || seenNames.has(key)) return false;
-                          seenNames.add(key);
-                          return true;
-                        });
-                      if (catFounders.length === 0) return null;
+                          .sort((a: any, b: any) => {
+                            const score = (f: any) => (f.company?.logoURL ? 4 : 0) + (f.company?.bio ? 2 : 0) + (f.company?.cnpj ? 1 : 0);
+                            return score(b) - score(a);
+                          })
+                          .filter((f: any) => {
+                            const key = (f.company?.name || '').toLowerCase().trim();
+                            if (!key || seenNames.has(key)) return false;
+                            seenNames.add(key);
+                            return true;
+                          });
+                        if (catFounders.length === 0) return null;
+                        return { cat, catFounders };
+                      }).filter(Boolean) as { cat: string; catFounders: any[] }[];
+                      return visibleCats.map(({ cat, catFounders }, idx) => {
+                      const isLastAlone = idx === visibleCats.length - 1 && visibleCats.length % 2 !== 0;
                       const CategoryIcon = CATEGORY_ICONS[cat] || Building2;
                       return (
-                        <div key={cat} className="bg-white rounded-xl p-6 border border-stone-100 shadow-sm">
+                        <div key={cat} className={`bg-white rounded-xl p-6 border border-stone-100 shadow-sm${isLastAlone ? ' md:col-span-2' : ''}`}>
                           <div className="flex items-center gap-3 mb-5">
                             <div className="w-9 h-9 rounded-md bg-stone-100 flex items-center justify-center flex-shrink-0">
                               <CategoryIcon size={16} className="text-stone-600" />
@@ -830,7 +830,7 @@ export function FounderPortal({
                               <p className="text-xs text-stone-400">{catFounders.length} empresa{catFounders.length !== 1 ? 's' : ''}</p>
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
+                          <div className={`grid gap-2 ${isLastAlone ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8' : 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-4'}`}>
                             {catFounders.map((f: any) => (
                               <button
                                 key={f._id || f.id}
@@ -853,7 +853,8 @@ export function FounderPortal({
                           </div>
                         </div>
                       );
-                    })}
+                    });
+                    })()}
                   </div>
                 </div>
               )}
