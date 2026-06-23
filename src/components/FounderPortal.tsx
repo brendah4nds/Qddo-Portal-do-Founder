@@ -754,13 +754,8 @@ export function FounderPortal({
                                 onChange={e => setAdminCompanyEditData({ ...adminCompanyEditData, cnpj: e.target.value })}
                                 className="w-full px-4 py-3 bg-white border border-stone-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
                               />
-                            ) : isAdmin || selectedCompanyFounder._id === user._id || selectedCompanyFounder.id === user._id ? (
-                              <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
                             ) : (
-                              <p className="flex items-center gap-1.5 text-stone-400 text-sm italic">
-                                <Lock size={13} className="shrink-0" />
-                                Visível apenas para a empresa e admins
-                              </p>
+                              <p className="font-bold text-stone-900">{selectedCompanyFounder.company?.cnpj || 'Não informado'}</p>
                             )}
                           </div>
                           <div>
