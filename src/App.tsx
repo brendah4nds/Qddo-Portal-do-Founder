@@ -1075,25 +1075,6 @@ export default function App() {
               </div>
             )}
 
-            {/* Admins Section — master admin only */}
-            {isMasterAdmin && (
-              <div>
-                <button
-                  onClick={() => { window.history.pushState({}, '', '/admins'); setView('portal'); setActiveSubTab('admins'); }}
-                  className={`flex items-center gap-3 w-full text-left group transition-all p-2 rounded-md ${
-                    view === 'portal' && activeSubTab === 'admins' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    view === 'portal' && activeSubTab === 'admins' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
-                  }`}>
-                    <ShieldCheck size={18} />
-                  </div>
-                  <span className={`text-lg ${view === 'portal' && activeSubTab === 'admins' ? 'text-white font-semibold' : 'text-stone-900'}`}>Admins</span>
-                </button>
-              </div>
-            )}
-
             {/* Notícias Section */}
             {!hiddenMenuItems.includes('noticias') && (
               <div className="group/item">
@@ -1298,6 +1279,7 @@ export default function App() {
                 bookings={bookings}
                 businessHours={businessHours}
                 isAdmin={isAdmin}
+                isMasterAdmin={isMasterAdmin}
                 founders={allFounders}
                 initialTab={adminInitialTab}
                 initialEditNewsItem={adminInitialEditNewsItem}
