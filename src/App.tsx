@@ -2333,18 +2333,28 @@ export default function App() {
                               {(() => {
                                 const lines = (item.content || '').split('\n').filter(line => line.trim());
                                 const isExpanded = expandedRuleIds.has(item.id);
-                                const visibleLines = isExpanded ? lines : lines.slice(0, 3);
+                                // Estima linhas visuais: ~48 chars por linha em text-sm nesta largura de card
+                                const totalVisualLines = lines.reduce((sum: number, l: string) => {
+                                  const clean = l.trim().replace(/^[•\-*]\s*/, '');
+                                  return sum + Math.ceil((clean.length || 1) / 48);
+                                }, 0);
+                                const hasMore = totalVisualLines > 9;
                                 return (
                                   <>
-                                    <ul className="space-y-1.5">
-                                      {visibleLines.map((line, i) => (
-                                        <li key={i} className="flex items-start gap-2 text-stone-600 text-sm leading-snug">
-                                          <span className="mt-0.5 text-primary/40 shrink-0">•</span>
-                                          <span>{line.trim().replace(/^[•\-*]\s*/, '')}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                    {lines.length > 3 && (
+                                    <div className={`relative ${!isExpanded && hasMore ? 'overflow-hidden max-h-[196px]' : ''}`}>
+                                      <ul className="space-y-1.5">
+                                        {lines.map((line: string, i: number) => (
+                                          <li key={i} className="flex items-start gap-2 text-stone-600 text-sm leading-snug">
+                                            <span className="mt-0.5 text-primary/40 shrink-0">•</span>
+                                            <span>{line.trim().replace(/^[•\-*]\s*/, '')}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                      {!isExpanded && hasMore && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                                      )}
+                                    </div>
+                                    {hasMore && (
                                       <button
                                         onClick={() => setExpandedRuleIds(prev => {
                                           const next = new Set(prev);
