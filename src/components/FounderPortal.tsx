@@ -80,6 +80,10 @@ export function FounderPortal({
     type: 'public' as 'public' | 'private'
   });
 
+  const [editingBio, setEditingBio] = useState(false);
+  const [bioEditValue, setBioEditValue] = useState('');
+  const [savingBio, setSavingBio] = useState(false);
+
   const [editingCompany, setEditingCompany] = useState(false);
   const [companyEditData, setCompanyEditData] = useState({ name: '', cnpj: '', bio: '', tipo: '' });
   const [savingCompany, setSavingCompany] = useState(false);
@@ -132,10 +136,17 @@ export function FounderPortal({
 
   const COMPANY_CATEGORIES = ['HealthTech', 'EdTech', 'SaaS/Software', 'Marketing', 'Eventos', 'Variados'];
 
+  const _norm = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
+  const _SAAS_NORMS = new Set(['saas/software', 'saas', 'software', 'tecnologia', 'tech']);
+  const _matchesBaseCategory = (t: string) =>
+    COMPANY_CATEGORIES.some(c =>
+      c === 'SaaS/Software' ? _SAAS_NORMS.has(_norm(t)) : _norm(c) === _norm(t)
+    );
+
   const customCats: string[] = [...new Set<string>(
     localFounders
       .map((f: any) => (f.company?.tipo || '') as string)
-      .filter((t: string) => t && !COMPANY_CATEGORIES.includes(t))
+      .filter((t: string) => t && !_matchesBaseCategory(t))
   )];
   const allCategoryOptions: string[] = [...COMPANY_CATEGORIES.slice(0, -1), ...customCats, 'Variados'];
 
@@ -242,6 +253,20 @@ export function FounderPortal({
     setLogoPendingPreview(URL.createObjectURL(blob));
     setShowCropModal(false);
     setCropImageSrc('');
+  };
+
+  const handleSaveBio = async () => {
+    if (!user) return;
+    setSavingBio(true);
+    try {
+      await api.put(`/api/founders/${user._id}`, { bio: bioEditValue });
+      setFounder(prev => prev ? { ...prev, bio: bioEditValue } : prev);
+      setEditingBio(false);
+    } catch (error) {
+      console.error('Error saving bio:', error);
+    } finally {
+      setSavingBio(false);
+    }
   };
 
   const handleStartEditCompany = () => {
@@ -925,8 +950,48 @@ export function FounderPortal({
                         </div>
                       )}
                       <div>
-                        <span className="text-overline uppercase tracking-widest font-bold text-stone-400 block mb-1">Sua Bio</span>
-                        <p className="text-sm text-stone-500 leading-relaxed">{founder?.bio || 'Você ainda não adicionou uma bio.'}</p>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-overline uppercase tracking-widest font-bold text-stone-400">Sua Bio</span>
+                          {!editingBio ? (
+                            <button
+                              onClick={() => { setBioEditValue(founder?.bio || ''); setEditingBio(true); }}
+                              className="flex items-center gap-1 px-2 py-1 text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded transition-all"
+                            >
+                              <Pencil size={12} />
+                              Editar
+                            </button>
+                          ) : (
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => setEditingBio(false)}
+                                className="flex items-center gap-1 px-2 py-1 text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded transition-all"
+                              >
+                                <X size={12} />
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={handleSaveBio}
+                                disabled={savingBio}
+                                className="flex items-center gap-1 px-2 py-1 text-xs font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary/80 rounded transition-all disabled:opacity-50"
+                              >
+                                <Check size={12} />
+                                {savingBio ? 'Salvando...' : 'Salvar'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        {editingBio ? (
+                          <textarea
+                            rows={4}
+                            value={bioEditValue}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBioEditValue(e.target.value)}
+                            className="w-full px-4 py-3 bg-white border border-stone-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all resize-none"
+                            placeholder="Escreva sua bio..."
+                            autoFocus
+                          />
+                        ) : (
+                          <p className="text-sm text-stone-500 leading-relaxed">{founder?.bio || 'Você ainda não adicionou uma bio.'}</p>
+                        )}
                       </div>
                     </div>
                   </div>
