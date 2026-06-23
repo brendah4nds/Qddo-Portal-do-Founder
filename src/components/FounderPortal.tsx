@@ -783,24 +783,34 @@ export function FounderPortal({
                       <h3 className="text-h3 font-sans">Empresas que estão no QDDO</h3>
                       <p className="text-stone-400 text-sm mt-1">Classificadas por segmento de atuação.</p>
                     </div>
-                    <button
-                      onClick={() => setShowAddCompany(true)}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-widest hover:bg-primary/80 transition-all"
-                    >
-                      <Plus size={14} />
-                      Adicionar Empresa
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => setShowAddCompany(true)}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-widest hover:bg-primary/80 transition-all"
+                      >
+                        <Plus size={14} />
+                        Adicionar Empresa
+                      </button>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {(() => {
+                      const norm = (s?: string) => (s || '').toLowerCase().replace(/\s+/g, '');
+                      const SAAS_NORMS = ['saas/software', 'saas', 'software', 'tecnologia', 'tech'];
+                      const matchesCat = (tipo: string | undefined, cat: string) =>
+                        cat === 'SaaS/Software'
+                          ? SAAS_NORMS.includes(norm(tipo))
+                          : norm(tipo) === norm(cat);
                       const visibleCats = COMPANY_CATEGORIES.map(cat => {
                         const seenNames = new Set<string>();
                         const catFounders = localFounders
                           .filter((f: any) =>
                             f.company?.name && (
                               cat === 'Variados'
-                                ? !f.company?.tipo || !COMPANY_CATEGORIES.slice(0, -1).includes(f.company.tipo)
-                                : f.company?.tipo === cat
+                                ? !f.company?.tipo || (
+                                    !COMPANY_CATEGORIES.slice(0, -1).some(c => matchesCat(f.company.tipo, c))
+                                  )
+                                : matchesCat(f.company?.tipo, cat)
                             )
                           )
                           .sort((a: any, b: any) => {
@@ -813,14 +823,13 @@ export function FounderPortal({
                             seenNames.add(key);
                             return true;
                           });
-                        if (catFounders.length === 0) return null;
+                        if (catFounders.length === 0 && cat !== 'SaaS/Software') return null;
                         return { cat, catFounders };
                       }).filter(Boolean) as { cat: string; catFounders: any[] }[];
-                      return visibleCats.map(({ cat, catFounders }, idx) => {
-                      const isLastAlone = idx === visibleCats.length - 1 && visibleCats.length % 2 !== 0;
+                      return visibleCats.map(({ cat, catFounders }) => {
                       const CategoryIcon = CATEGORY_ICONS[cat] || Building2;
                       return (
-                        <div key={cat} className={`bg-white rounded-xl p-6 border border-stone-100 shadow-sm${isLastAlone ? ' md:col-span-2' : ''}`}>
+                        <div key={cat} className="bg-white rounded-xl p-6 border border-stone-100 shadow-sm">
                           <div className="flex items-center gap-3 mb-5">
                             <div className="w-9 h-9 rounded-md bg-stone-100 flex items-center justify-center flex-shrink-0">
                               <CategoryIcon size={16} className="text-stone-600" />
@@ -830,19 +839,25 @@ export function FounderPortal({
                               <p className="text-xs text-stone-400">{catFounders.length} empresa{catFounders.length !== 1 ? 's' : ''}</p>
                             </div>
                           </div>
-                          <div className={`grid gap-2 ${isLastAlone ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8' : 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-4'}`}>
+                          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
+                            {catFounders.length === 0 && (
+                              <p className="col-span-full text-xs text-stone-400 italic">Nenhuma empresa nesta categoria ainda.</p>
+                            )}
                             {catFounders.map((f: any) => (
                               <button
                                 key={f._id || f.id}
                                 onClick={() => setSelectedCompanyFounder(f)}
-                                className="bg-stone-50 hover:bg-primary border border-stone-100 hover:border-primary rounded-md text-center transition-all group flex items-center justify-center overflow-hidden w-full aspect-[3/1]"
+                                className="relative bg-stone-50 hover:bg-primary border border-stone-100 hover:border-primary rounded-md text-center transition-all group flex items-center justify-center overflow-hidden w-full aspect-[3/1]"
                               >
                                 {f.company?.logoURL ? (
-                                  <img
-                                    src={f.company.logoURL}
-                                    alt={f.company.name}
-                                    className="w-full h-full object-cover group-hover:brightness-0 group-hover:invert transition-all"
-                                  />
+                                  <>
+                                    <img
+                                      src={f.company.logoURL}
+                                      alt={f.company.name}
+                                      className="w-full h-full object-cover transition-all"
+                                    />
+                                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/40 transition-all pointer-events-none" />
+                                  </>
                                 ) : (
                                   <span className="text-xs font-semibold text-stone-700 group-hover:text-white leading-snug block truncate px-3">
                                     {f.company?.name}
