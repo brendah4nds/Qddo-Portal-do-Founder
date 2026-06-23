@@ -22,7 +22,9 @@ import {
   Pencil,
   X,
   Check,
-  Trash2
+  Trash2,
+  Shield,
+  Search
 } from 'lucide-react';
 import { api } from '../api';
 import { getSocket } from '../socket';
@@ -42,12 +44,14 @@ export function FounderPortal({
   activeSubTab,
   setActiveSubTab,
   isAdmin,
+  isMasterAdmin = false,
   founders = []
 }: {
   user: any | null;
   activeSubTab: string;
   setActiveSubTab?: (tab: string) => void;
   isAdmin: boolean;
+  isMasterAdmin?: boolean;
   founders?: any[];
 }) {
   const [founder, setFounder] = useState<Founder | null>(null);
@@ -94,6 +98,11 @@ export function FounderPortal({
   const [savingAddCompany, setSavingAddCompany] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deletingFounder, setDeletingFounder] = useState(false);
+
+  const [showAddAdmin, setShowAddAdmin] = useState(false);
+  const [addAdminSearch, setAddAdminSearch] = useState('');
+  const [savingAdminRole, setSavingAdminRole] = useState(false);
+  const [confirmRemoveAdminId, setConfirmRemoveAdminId] = useState<string | null>(null);
 
   const [adminEditingCompany, setAdminEditingCompany] = useState(false);
   const [adminCompanyEditData, setAdminCompanyEditData] = useState({ name: '', cnpj: '', bio: '', tipo: '' });
@@ -405,6 +414,22 @@ export function FounderPortal({
       setAdminUploadError('Erro ao salvar. Tente novamente.');
     } finally {
       setAdminSavingCompany(false);
+    }
+  };
+
+  const handleSetAdminRole = async (founderId: string, role: 'admin' | 'user') => {
+    setSavingAdminRole(true);
+    try {
+      await api.put(`/api/founders/${founderId}`, { role });
+      setLocalFounders(prev => prev.map(f =>
+        (f._id || f.id) === founderId ? { ...f, role } : f
+      ));
+      if (role === 'user') setConfirmRemoveAdminId(null);
+      if (role === 'admin') { setShowAddAdmin(false); setAddAdminSearch(''); }
+    } catch (error) {
+      console.error('Error updating admin role:', error);
+    } finally {
+      setSavingAdminRole(false);
     }
   };
 
@@ -1527,6 +1552,166 @@ export function FounderPortal({
             </div>
           )}
         </>
+      )}
+
+      {activeSubTab === 'admins' && isMasterAdmin && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-h3 font-sans">Gestão de Admins</h3>
+              <p className="text-stone-400 text-sm mt-1">Adicione ou remova permissões de administrador para outros membros.</p>
+            </div>
+            <button
+              onClick={() => { setShowAddAdmin(true); setAddAdminSearch(''); }}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-widest hover:bg-primary/80 transition-all"
+            >
+              <Plus size={14} />
+              Adicionar Admin
+            </button>
+          </div>
+
+          {/* Lista de admins atuais */}
+          <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+            {localFounders.filter(f => f.role === 'admin').length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="w-14 h-14 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield size={24} className="text-stone-300" />
+                </div>
+                <p className="text-stone-400 text-sm">Nenhum admin cadastrado além de você.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-stone-50">
+                {localFounders.filter(f => f.role === 'admin').map(f => {
+                  const fId = f._id || f.id;
+                  return (
+                    <div key={fId} className="flex items-center justify-between px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        {f.photoURL ? (
+                          <img src={f.photoURL} alt={f.name} className="w-10 h-10 rounded-full object-cover border border-stone-200" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center">
+                            <UserIcon size={18} className="text-stone-400" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-bold text-stone-900 text-sm">{f.name}</p>
+                          <p className="text-xs text-stone-400">@{f.username?.replace(/@/g, '')}</p>
+                        </div>
+                        <span className="ml-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-overline font-bold uppercase tracking-widest flex items-center gap-1">
+                          <Shield size={10} />
+                          Admin
+                        </span>
+                      </div>
+                      <div>
+                        {confirmRemoveAdminId === fId ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-stone-400">Confirmar?</span>
+                            <button
+                              onClick={() => setConfirmRemoveAdminId(null)}
+                              className="px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-all"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={() => handleSetAdminRole(fId, 'user')}
+                              disabled={savingAdminRole}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-red-500 text-white hover:bg-red-600 rounded-md transition-all disabled:opacity-50"
+                            >
+                              <Trash2 size={12} />
+                              {savingAdminRole ? 'Removendo...' : 'Remover'}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmRemoveAdminId(fId)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
+                          >
+                            <Trash2 size={12} />
+                            Remover Admin
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Modal para adicionar admin */}
+          {showAddAdmin && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+              <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-h3 font-sans">Adicionar Admin</h3>
+                  <button
+                    onClick={() => { setShowAddAdmin(false); setAddAdminSearch(''); }}
+                    className="w-8 h-8 rounded-md bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-900 transition-all"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="relative mb-4">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-300" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nome ou username..."
+                    value={addAdminSearch}
+                    onChange={e => setAddAdminSearch(e.target.value)}
+                    className="w-full pl-9 pr-4 py-3 bg-stone-50 border border-stone-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-72 overflow-y-auto divide-y divide-stone-50 rounded-lg border border-stone-100">
+                  {localFounders
+                    .filter(f => f.role !== 'admin')
+                    .filter(f => {
+                      const q = addAdminSearch.toLowerCase();
+                      return !q || f.name?.toLowerCase().includes(q) || f.username?.toLowerCase().includes(q);
+                    })
+                    .length === 0 ? (
+                    <div className="p-8 text-center text-stone-400 text-sm">Nenhum membro encontrado.</div>
+                  ) : (
+                    localFounders
+                      .filter(f => f.role !== 'admin')
+                      .filter(f => {
+                        const q = addAdminSearch.toLowerCase();
+                        return !q || f.name?.toLowerCase().includes(q) || f.username?.toLowerCase().includes(q);
+                      })
+                      .map(f => {
+                        const fId = f._id || f.id;
+                        return (
+                          <div key={fId} className="flex items-center justify-between px-4 py-3 hover:bg-stone-50 transition-all">
+                            <div className="flex items-center gap-3">
+                              {f.photoURL ? (
+                                <img src={f.photoURL} alt={f.name} className="w-8 h-8 rounded-full object-cover border border-stone-200" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center">
+                                  <UserIcon size={14} className="text-stone-400" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-bold text-stone-900 text-sm">{f.name}</p>
+                                <p className="text-xs text-stone-400">@{f.username?.replace(/@/g, '')}</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleSetAdminRole(fId, 'admin')}
+                              disabled={savingAdminRole}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary/80 rounded-md transition-all disabled:opacity-50"
+                            >
+                              <Shield size={12} />
+                              Tornar Admin
+                            </button>
+                          </div>
+                        );
+                      })
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {showCropModal && cropImageSrc && (
