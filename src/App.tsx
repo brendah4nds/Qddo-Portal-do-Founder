@@ -74,6 +74,7 @@ import { LandingPage } from './components/LandingPage';
 import { RegistrationFlow } from './components/RegistrationFlow';
 import { Chat } from './components/Chat';
 import { TermsModal } from './components/TermsModal';
+import { AdminDashboard } from './components/AdminDashboard';
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
@@ -111,7 +112,7 @@ export default function App() {
   const [hiddenMenuItems, setHiddenMenuItems] = useState<string[]>([]);
   const [hiddenNewsIds, setHiddenNewsIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news' | 'qcoin'>('general');
+  const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news' | 'qcoin' | 'regras' | 'dashboard'>('general');
   const [activeSubTab, setActiveSubTab] = useState<string>('general');
   const [adminInitialTab, setAdminInitialTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes'>('bookings');
   const [adminInitialEditNewsItem, setAdminInitialEditNewsItem] = useState<any>(null);
@@ -493,6 +494,7 @@ export default function App() {
       '/bate-papo':         () => { setView('chat');    setActiveSubTab('bate-papo'); },
       '/regras':            () => { setView('regras');  setActiveSubTab('regras'); },
       '/admin':             () => { setView('admin'); },
+      '/dashboard':         () => { setView('dashboard'); },
     };
     (routes[path] ?? (() => { setView('general'); setActiveSubTab('general'); }))();
   };
@@ -1162,6 +1164,25 @@ export default function App() {
                     </button>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Dashboard — admin only */}
+            {isAdmin && (
+              <div>
+                <button
+                  onClick={() => { window.history.pushState({}, '', '/dashboard'); setView('dashboard'); }}
+                  className={`flex items-center gap-3 w-full text-left group transition-all p-2 rounded-md ${
+                    view === 'dashboard' ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'hover:bg-stone-50'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                    view === 'dashboard' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white'
+                  }`}>
+                    <LayoutDashboard size={18} />
+                  </div>
+                  <span className={`text-lg ${view === 'dashboard' ? 'text-white font-semibold' : 'text-stone-900'}`}>Dashboard</span>
+                </button>
               </div>
             )}
 
@@ -2402,6 +2423,12 @@ export default function App() {
                   </p>
                 </div>
               </div>
+            ) : view === 'dashboard' && isAdmin ? (
+              <AdminDashboard
+                founders={allFounders}
+                checkins={allCheckins}
+                challenges={allChallenges}
+              />
             ) : view === 'general' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Pendência Banner */}
