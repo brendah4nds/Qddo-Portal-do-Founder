@@ -434,10 +434,10 @@ function VelocityChart({ data, labels }: { data: number[]; labels: string[] }) {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Delta({ value }: { value: number }) {
-  if (value === 0) return <span className="text-stone-400 text-[11px] flex items-center gap-0.5"><Minus size={10} />0%</span>;
+  if (value === 0) return <span className="text-stone-400 text-xs flex items-center gap-0.5"><Minus size={11} />0%</span>;
   return (
-    <span className={cn('text-[11px] flex items-center gap-0.5 font-medium', value > 0 ? 'text-emerald-600' : 'text-red-500')}>
-      {value > 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+    <span className={cn('text-xs flex items-center gap-0.5 font-medium', value > 0 ? 'text-emerald-600' : 'text-red-500')}>
+      {value > 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
       {value > 0 ? '+' : ''}{value}%
     </span>
   );
@@ -450,12 +450,12 @@ function KPICard({ label, value, sub, delta, icon: Icon, dark }: {
   return (
     <div className={cn('rounded-xl border p-4 flex flex-col gap-2', dark ? 'bg-stone-900 border-stone-800' : 'bg-white border-stone-100')}>
       <div className="flex items-center justify-between">
-        <span className={cn('text-[10px] font-bold uppercase tracking-widest', dark ? 'text-stone-500' : 'text-stone-400')}>{label}</span>
-        {Icon && <Icon size={13} className={dark ? 'text-stone-600' : 'text-stone-300'} />}
+        <span className={cn('text-overline font-bold uppercase tracking-widest', dark ? 'text-stone-500' : 'text-stone-400')}>{label}</span>
+        {Icon && <Icon size={14} className={dark ? 'text-stone-600' : 'text-stone-300'} />}
       </div>
       <div>
-        <span className={cn('text-2xl font-black tabular-nums', dark ? 'text-white' : 'text-stone-900')}>{value}</span>
-        {sub && <span className={cn('text-xs ml-1', dark ? 'text-stone-500' : 'text-stone-400')}>{sub}</span>}
+        <span className={cn('text-h2 font-black tabular-nums', dark ? 'text-white' : 'text-stone-900')}>{value}</span>
+        {sub && <span className={cn('text-sm ml-1.5', dark ? 'text-stone-500' : 'text-stone-400')}>{sub}</span>}
       </div>
       {delta !== undefined && <Delta value={delta} />}
     </div>
@@ -476,11 +476,11 @@ function InsightCard({ insight }: { insight: Insight }) {
       <div className={cn('w-1 rounded-full flex-shrink-0 self-stretch', bar)} />
       <div className="flex flex-col gap-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <Icon size={10} className="text-stone-400 flex-shrink-0" />
-          <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400">{label}</span>
+          <Icon size={12} className="text-stone-400 flex-shrink-0" />
+          <span className="text-overline font-bold uppercase tracking-widest text-stone-400">{label}</span>
         </div>
-        <p className="text-xs font-semibold text-stone-800 leading-snug">{insight.title}</p>
-        <p className="text-xs text-stone-500 leading-relaxed">{insight.body}</p>
+        <p className="text-sm font-semibold text-stone-800 leading-snug">{insight.title}</p>
+        <p className="text-sm text-stone-500 leading-relaxed">{insight.body}</p>
       </div>
     </div>
   );
@@ -506,12 +506,12 @@ function SortTh({ label, col, current, dir, onSort }: {
   return (
     <th className="px-3 py-2.5 text-left cursor-pointer select-none group" onClick={() => onSort(col)}>
       <div className="flex items-center gap-1">
-        <span className={cn('text-[10px] font-bold uppercase tracking-widest transition-colors', active ? 'text-stone-800' : 'text-stone-400 group-hover:text-stone-600')}>
+        <span className={cn('text-overline font-bold uppercase tracking-widest transition-colors', active ? 'text-stone-800' : 'text-stone-400 group-hover:text-stone-600')}>
           {label}
         </span>
         {active
-          ? dir === 'desc' ? <ChevronDown size={10} className="text-stone-600" /> : <ChevronUp size={10} className="text-stone-600" />
-          : <Minus size={10} className="text-stone-300" />}
+          ? dir === 'desc' ? <ChevronDown size={11} className="text-stone-600" /> : <ChevronUp size={11} className="text-stone-600" />
+          : <Minus size={11} className="text-stone-300" />}
       </div>
     </th>
   );
@@ -591,8 +591,8 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
         <div className="bg-white border border-stone-100 rounded-2xl p-5 flex flex-col items-center gap-3 min-w-[196px]">
           <HealthRing score={m.chs} size={148} />
           <div className="text-center">
-            <div className={cn('text-xs font-bold', chsLabelColor)}>Comunidade {chsLabel}</div>
-            <div className="text-[10px] text-stone-400 mt-0.5">{founders.length} founders · {m.totalActive} ativos</div>
+            <div className={cn('text-sm font-bold', chsLabelColor)}>Comunidade {chsLabel}</div>
+            <div className="text-xs text-stone-400 mt-0.5">{founders.length} founders · {m.totalActive} ativos</div>
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -610,7 +610,7 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Zap size={12} className="text-stone-400" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Insights automáticos</span>
+            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Insights automáticos</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             {m.insights.map((insight, i) => <InsightCard key={i} insight={insight} />)}
@@ -624,13 +624,13 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
           <div>
             <div className="flex items-center gap-2">
               <Activity size={12} className="text-stone-400" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Velocidade de check-ins</span>
+              <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Velocidade de check-ins</span>
             </div>
-            <p className="text-[10px] text-stone-400 mt-0.5">Últimas 8 semanas</p>
+            <p className="text-xs text-stone-400 mt-0.5">Últimas 8 semanas</p>
           </div>
           <div className="text-right">
-            <span className="text-xl font-black text-stone-900 tabular-nums">{m.velocityTrend[m.velocityTrend.length - 1]}</span>
-            <span className="text-xs text-stone-400 ml-1">esta semana</span>
+            <span className="text-h2 font-black text-stone-900 tabular-nums">{m.velocityTrend[m.velocityTrend.length - 1]}</span>
+            <span className="text-sm text-stone-400 ml-1.5">esta semana</span>
           </div>
         </div>
         <VelocityChart data={m.velocityTrend} labels={velocityLabels} />
@@ -641,12 +641,12 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
         <div className="px-5 py-4 border-b border-stone-50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <BarChart2 size={12} className="text-stone-400" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Matriz de founders</span>
+            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Matriz de founders</span>
           </div>
           <div className="flex gap-1.5 flex-wrap">
             {(['all', 'S', 'A', 'B', 'C'] as const).map(t => (
               <button key={t} onClick={() => { setTierFilter(t); setMatrixExpanded(false); }}
-                className={cn('px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all',
+                className={cn('px-3 py-1.5 rounded-md text-overline font-bold uppercase tracking-wide transition-all',
                   tierFilter === t
                     ? t === 'all' ? 'bg-stone-900 text-white' : cn('ring-1', TIER_COLOR[t as Tier])
                     : 'text-stone-400 hover:text-stone-600 hover:bg-stone-50')}>
@@ -661,14 +661,14 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
             <thead>
               <tr className="border-b border-stone-50 bg-stone-50/40">
                 <SortTh label="Founder" col="name" current={sortKey} dir={sortDir} onSort={toggleSort} />
-                <th className="px-3 py-2.5 text-left"><span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Tier</span></th>
+                <th className="px-3 py-2.5 text-left"><span className="text-overline font-bold uppercase tracking-widest text-stone-400">Tier</span></th>
                 <SortTh label="Health" col="healthScore" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortTh label="Streak" col="streak" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortTh label="Check-ins" col="checkins" current={sortKey} dir={sortDir} onSort={toggleSort} />
-                <th className="px-3 py-2.5 text-left"><span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">4 semanas</span></th>
+                <th className="px-3 py-2.5 text-left"><span className="text-overline font-bold uppercase tracking-widest text-stone-400">4 semanas</span></th>
                 <SortTh label="Momentum" col="momentum" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortTh label="Churn" col="churnRisk" current={sortKey} dir={sortDir} onSort={toggleSort} />
-                <th className="px-3 py-2.5 text-left"><span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Última ativ.</span></th>
+                <th className="px-3 py-2.5 text-left"><span className="text-overline font-bold uppercase tracking-widest text-stone-400">Última ativ.</span></th>
               </tr>
             </thead>
             <tbody>
@@ -683,13 +683,13 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
                       <div className="flex items-center gap-2.5">
                         <Avatar founder={fm.founder} size={28} />
                         <div>
-                          <p className="text-xs font-semibold text-stone-800 leading-none">{fm.founder.name}</p>
-                          {fm.founder.company?.name && <p className="text-[10px] text-stone-400 mt-0.5 leading-none">{fm.founder.company.name}</p>}
+                          <p className="text-sm font-semibold text-stone-800 leading-none">{fm.founder.name}</p>
+                          {fm.founder.company?.name && <p className="text-xs text-stone-400 mt-0.5 leading-none">{fm.founder.company.name}</p>}
                         </div>
                       </div>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={cn('inline-flex items-center justify-center w-6 h-6 rounded-md text-[10px] font-black ring-1', TIER_COLOR[fm.tier])}>
+                      <span className={cn('inline-flex items-center justify-center w-7 h-7 rounded-md text-xs font-black ring-1', TIER_COLOR[fm.tier])}>
                         {fm.tier}
                       </span>
                     </td>
@@ -699,19 +699,19 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
                           <div className={cn('h-full rounded-full', fm.healthScore >= 75 ? 'bg-emerald-400' : fm.healthScore >= 50 ? 'bg-amber-400' : 'bg-red-400')}
                             style={{ width: `${fm.healthScore}%` }} />
                         </div>
-                        <span className="text-[11px] font-bold text-stone-600 tabular-nums">{fm.healthScore}</span>
+                        <span className="text-xs font-bold text-stone-600 tabular-nums">{fm.healthScore}</span>
                       </div>
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-1">
                         {fm.streak >= 3 && <Flame size={10} className="text-orange-400" />}
-                        <span className={cn('text-xs font-semibold tabular-nums', fm.streak >= 7 ? 'text-orange-500' : fm.streak >= 3 ? 'text-amber-500' : 'text-stone-400')}>
+                        <span className={cn('text-sm font-semibold tabular-nums', fm.streak >= 7 ? 'text-orange-500' : fm.streak >= 3 ? 'text-amber-500' : 'text-stone-400')}>
                           {fm.streak}d
                         </span>
                       </div>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={cn('text-xs font-bold tabular-nums', fm.periodCheckins > 0 ? 'text-stone-800' : 'text-stone-300')}>
+                      <span className={cn('text-sm font-bold tabular-nums', fm.periodCheckins > 0 ? 'text-stone-800' : 'text-stone-300')}>
                         {fm.periodCheckins}
                       </span>
                     </td>
@@ -723,20 +723,20 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
                         {fm.momentum > 0 ? <TrendingUp size={10} className="text-emerald-500" />
                           : fm.momentum < 0 ? <TrendingDown size={10} className="text-red-400" />
                           : <Minus size={10} className="text-stone-300" />}
-                        <span className={cn('text-[11px] font-semibold tabular-nums', fm.momentum > 0 ? 'text-emerald-600' : fm.momentum < 0 ? 'text-red-500' : 'text-stone-300')}>
+                        <span className={cn('text-xs font-semibold tabular-nums', fm.momentum > 0 ? 'text-emerald-600' : fm.momentum < 0 ? 'text-red-500' : 'text-stone-300')}>
                           {fm.momentum > 0 ? '+' : ''}{fm.momentum}%
                         </span>
                       </div>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={cn('text-xs tabular-nums', churnColor)}>{fm.churnRisk}%</span>
+                      <span className={cn('text-sm tabular-nums', churnColor)}>{fm.churnRisk}%</span>
                     </td>
                     <td className="px-3 py-3">
                       {fm.lastActivity
-                        ? <span className="text-[11px] text-stone-400">
+                        ? <span className="text-xs text-stone-400">
                           {fm.daysSinceLastActivity === 0 ? 'Hoje' : fm.daysSinceLastActivity === 1 ? 'Ontem' : `${fm.daysSinceLastActivity}d atrás`}
                           </span>
-                        : <span className="text-[11px] text-stone-300">Nunca</span>
+                        : <span className="text-xs text-stone-300">Nunca</span>
                       }
                     </td>
                   </tr>
@@ -750,7 +750,7 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
           <div className="border-t border-stone-50 px-5 py-3 flex items-center justify-center">
             <button
               onClick={() => setMatrixExpanded(e => !e)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors"
+              className="flex items-center gap-1.5 text-sm font-semibold text-stone-500 hover:text-stone-800 transition-colors"
             >
               {matrixExpanded ? (
                 <>
@@ -768,9 +768,9 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
         )}
 
         <div className="px-5 py-3 border-t border-stone-50 flex flex-wrap gap-x-4 gap-y-1">
-          <span className="text-[10px] text-stone-400">Health = streak(25%) + consistência(30%) + desafios(20%) + recência(15%) + QCoins(10%)</span>
-          <span className="text-[10px] text-stone-400 hidden sm:inline">·</span>
-          <span className="text-[10px] text-stone-400">Churn = risco de abandono por inatividade e streak</span>
+          <span className="text-xs text-stone-400">Health = streak(25%) + consistência(30%) + desafios(20%) + recência(15%) + QCoins(10%)</span>
+          <span className="text-xs text-stone-400 hidden sm:inline">·</span>
+          <span className="text-xs text-stone-400">Churn = risco de abandono por inatividade e streak</span>
         </div>
       </div>
 
