@@ -4,14 +4,14 @@ import {
   AlertTriangle, Zap, Activity, ChevronUp, ChevronDown,
   Minus, Flame, BarChart2, Award
 } from 'lucide-react';
-import { format, subDays, startOfDay, differenceInDays } from 'date-fns';
+import { format, subDays, startOfDay, startOfMonth, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Founder, Challenge } from '../types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Period = '7d' | '30d' | '90d' | 'all';
-type SortKey = 'name' | 'healthScore' | 'streak' | 'checkins' | 'churnRisk' | 'momentum';
+type SortKey = 'name' | 'healthScore' | 'streak' | 'checkins' | 'monthCheckins' | 'churnRisk' | 'momentum';
 type SortDir = 'asc' | 'desc';
 type InsightSeverity = 'critical' | 'warning' | 'positive' | 'predictive';
 type Tier = 'S' | 'A' | 'B' | 'C';
@@ -31,6 +31,7 @@ interface FounderMetric {
   momentum: number;
   consistencyRate: number;
   weeklyCheckins: number[];
+  monthCheckins: number;
 }
 
 interface Insight {
@@ -55,6 +56,12 @@ function toDate(v: any): Date | null {
   return null;
 }
 
+// Checkins usam `checkinTime` como timestamp principal (igual ao App.tsx).
+// Fallback para `date` (string 'yyyy-MM-dd') e depois `createdAt`.
+function checkinDate(c: any): Date | null {
+  return toDate(c.checkinTime) ?? toDate(c.date) ?? toDate(c.createdAt);
+}
+
 function gini(values: number[]): number {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -70,7 +77,11 @@ function computeStreak(checkins: any[], founderId: string, now: Date): number {
   const days = new Set(
     checkins
       .filter(c => c.userId === founderId)
-      .map(c => { const d = toDate(c.createdAt); return d ? format(d, 'yyyy-MM-dd') : null; })
+      .map(c => {
+        // prefer c.date (already 'yyyy-MM-dd') to avoid re-parsing
+        if (c.date && typeof c.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(c.date)) return c.date;
+        const d = checkinDate(c); return d ? format(d, 'yyyy-MM-dd') : null;
+      })
       .filter(Boolean) as string[]
   );
   let streak = 0;
@@ -117,16 +128,18 @@ function computeAll(
   const periodDays = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 9999;
   const periodStart = startOfDay(period === 'all' ? new Date(0) : subDays(now, periodDays));
   const prevStart = startOfDay(period === 'all' ? new Date(0) : subDays(now, periodDays * 2));
+  const currentMonthStart = startOfMonth(now);
+  const prevMonthStart = startOfMonth(subDays(currentMonthStart, 1));
 
   const founderMetrics: FounderMetric[] = founders.map(founder => {
     const fid = founder.id;
     const fCheckins = checkins.filter(c => c.userId === fid);
 
     const periodCheckins = fCheckins.filter(c => {
-      const d = toDate(c.createdAt); return d && d >= periodStart;
+      const d = checkinDate(c); return d && d >= periodStart;
     }).length;
     const prevPeriodCheckins = fCheckins.filter(c => {
-      const d = toDate(c.createdAt); return d && d >= prevStart && d < periodStart;
+      const d = checkinDate(c); return d && d >= prevStart && d < periodStart;
     }).length;
 
     const fChallenges = challenges.filter(c => c.founderId === fid);
@@ -136,7 +149,7 @@ function computeAll(
       return c.status === 'completed' && d && d >= periodStart;
     }).length;
 
-    const actDates = fCheckins.map(c => toDate(c.createdAt)).filter(Boolean) as Date[];
+    const actDates = fCheckins.map(c => checkinDate(c)).filter(Boolean) as Date[];
     const lastActivity = actDates.length ? new Date(Math.max(...actDates.map(d => d.getTime()))) : null;
     const daysSince = lastActivity ? differenceInDays(now, lastActivity) : 999;
     const streak = computeStreak(checkins, fid, now);
@@ -160,8 +173,12 @@ function computeAll(
     for (let w = 3; w >= 0; w--) {
       const wStart = startOfDay(subDays(now, (w + 1) * 7));
       const wEnd = startOfDay(subDays(now, w * 7));
-      weeklyCheckins.push(fCheckins.filter(c => { const d = toDate(c.createdAt); return d && d >= wStart && d < wEnd; }).length);
+      weeklyCheckins.push(fCheckins.filter(c => { const d = checkinDate(c); return d && d >= wStart && d < wEnd; }).length);
     }
+
+    const monthCheckins = fCheckins.filter(c => {
+      const d = checkinDate(c); return d && d >= currentMonthStart;
+    }).length;
 
     return {
       founder, healthScore, tier: tierFromScore(healthScore), streak,
@@ -169,7 +186,7 @@ function computeAll(
       challengesCompleted: periodCompleted,
       churnRisk: Math.round(churnRiskScore(daysSince, streak)),
       daysSinceLastActivity: daysSince, lastActivity, momentum,
-      consistencyRate: Math.round(consistencyRate), weeklyCheckins,
+      consistencyRate: Math.round(consistencyRate), weeklyCheckins, monthCheckins,
     };
   });
 
@@ -201,8 +218,16 @@ function computeAll(
   for (let w = 7; w >= 0; w--) {
     const wStart = startOfDay(subDays(now, (w + 1) * 7));
     const wEnd = startOfDay(subDays(now, w * 7));
-    velocityTrend.push(checkins.filter(c => { const d = toDate(c.createdAt); return d && d >= wStart && d < wEnd; }).length);
+    velocityTrend.push(checkins.filter(c => { const d = checkinDate(c); return d && d >= wStart && d < wEnd; }).length);
   }
+
+  const totalMonthCheckins = founderMetrics.reduce((s, m) => s + m.monthCheckins, 0);
+  const prevMonthCheckins = checkins.filter(c => {
+    const d = checkinDate(c); return d && d >= prevMonthStart && d < currentMonthStart;
+  }).length;
+  const monthCheckinsDelta = prevMonthCheckins > 0
+    ? Math.round(((totalMonthCheckins - prevMonthCheckins) / prevMonthCheckins) * 100)
+    : totalMonthCheckins > 0 ? 100 : 0;
 
   const insights: Insight[] = generateInsights({
     founderMetrics, chs, checkinDelta, activeDelta,
@@ -215,6 +240,8 @@ function computeAll(
     avgStreak: Math.round(avgStreak), giniIndex, velocityTrend, insights,
     atRiskCount: founderMetrics.filter(m => m.churnRisk > 60).length,
     championsCount: founderMetrics.filter(m => m.tier === 'S').length,
+    totalMonthCheckins, monthCheckinsDelta,
+    currentMonthLabel: format(now, 'MMM', { locale: ptBR }),
   };
 }
 
@@ -601,7 +628,7 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
           <KPICard label="Conclusão desafios" value={`${m.completionRate}%`} icon={Trophy} />
           <KPICard label="Streak médio" value={`${m.avgStreak}d`} icon={Flame} />
           <KPICard label="Em risco" value={m.atRiskCount} sub="founders" icon={AlertTriangle} />
-          <KPICard label="Champions" value={m.championsCount} sub="tier S" icon={Award} />
+          <KPICard label={`Check-ins ${m.currentMonthLabel}`} value={m.totalMonthCheckins} delta={m.monthCheckinsDelta} icon={Award} />
         </div>
       </div>
 
@@ -665,6 +692,7 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
                 <SortTh label="Health" col="healthScore" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortTh label="Streak" col="streak" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortTh label="Check-ins" col="checkins" current={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortTh label="Este mês" col="monthCheckins" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <th className="px-3 py-2.5 text-left"><span className="text-overline font-bold uppercase tracking-widest text-stone-400">4 semanas</span></th>
                 <SortTh label="Momentum" col="momentum" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortTh label="Churn" col="churnRisk" current={sortKey} dir={sortDir} onSort={toggleSort} />
@@ -716,6 +744,11 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
                       </span>
                     </td>
                     <td className="px-3 py-3">
+                      <span className={cn('text-sm font-bold tabular-nums', fm.monthCheckins > 0 ? 'text-stone-800' : 'text-stone-300')}>
+                        {fm.monthCheckins}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
                       <Sparkline data={fm.weeklyCheckins} />
                     </td>
                     <td className="px-3 py-3">
@@ -733,9 +766,14 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
                     </td>
                     <td className="px-3 py-3">
                       {fm.lastActivity
-                        ? <span className="text-xs text-stone-400">
-                          {fm.daysSinceLastActivity === 0 ? 'Hoje' : fm.daysSinceLastActivity === 1 ? 'Ontem' : `${fm.daysSinceLastActivity}d atrás`}
-                          </span>
+                        ? <div className="flex flex-col leading-tight">
+                            <span className="text-xs text-stone-700 font-medium">
+                              {fm.daysSinceLastActivity === 0 ? 'Hoje' : fm.daysSinceLastActivity === 1 ? 'Ontem' : format(fm.lastActivity, "d MMM", { locale: ptBR })}
+                            </span>
+                            {fm.daysSinceLastActivity > 1 && (
+                              <span className="text-[10px] text-stone-400">{fm.daysSinceLastActivity}d atrás</span>
+                            )}
+                          </div>
                         : <span className="text-xs text-stone-300">Nunca</span>
                       }
                     </td>
