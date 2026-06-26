@@ -567,13 +567,13 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
   const chsLabelColor = m.chs >= 75 ? 'text-emerald-600' : m.chs >= 50 ? 'text-amber-600' : 'text-red-600';
 
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6 max-w-[1100px] mx-auto">
+    <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* Header */}
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-1 md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-stone-900 tracking-tight">Intelligence Dashboard</h1>
-          <p className="text-xs text-stone-400 mt-0.5">Atualizado em {format(now, "d 'de' MMM, HH:mm", { locale: ptBR })}</p>
+          <h2 className="text-h1 font-sans mb-1">Intelligence Dashboard</h2>
+          <p className="text-stone-500 text-sm">Atualizado em {format(now, "d 'de' MMM, HH:mm", { locale: ptBR })}</p>
         </div>
         <div className="flex gap-1 bg-stone-100 rounded-lg p-1 self-start">
           {(['7d', '30d', '90d', 'all'] as Period[]).map(p => (
