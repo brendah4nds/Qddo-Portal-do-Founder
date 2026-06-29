@@ -1222,7 +1222,7 @@ export default function App() {
               <p className="text-overline uppercase tracking-widest font-bold text-stone-400 mb-3">Redes Sociais</p>
               <div className="flex flex-col gap-2">
                 <a
-                  href="https://instagram.com/qddo.central.hub"
+                  href="https://www.instagram.com/qddo.central/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-xs text-stone-500 hover:text-stone-900 transition-colors group"
@@ -1230,7 +1230,7 @@ export default function App() {
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors bg-stone-100 text-stone-600 group-hover:bg-primary group-hover:text-white flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
                   </div>
-                  <span className="font-medium">@qddo.central.hub</span>
+                  <span className="font-medium">@qddo.central</span>
                 </a>
                 <a
                   href="https://tiktok.com/@qddo.central.hub"
