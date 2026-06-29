@@ -600,7 +600,7 @@ export function AdminPanel({
             </span>
           )}
         </button>
-        {isMasterAdmin && (
+        {isAdmin && (
           <button
             onClick={() => setAdminTab('admins')}
             className={cn(
@@ -1375,20 +1375,22 @@ export function AdminPanel({
         </section>
       )}
 
-      {adminTab === 'admins' && isMasterAdmin && (
+      {adminTab === 'admins' && isAdmin && (
         <section className="animate-in fade-in duration-500 space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-h3 font-sans">Gestão de Admins</h3>
-              <p className="text-stone-400 text-sm mt-1">Adicione ou remova permissões de administrador para outros membros.</p>
+              <p className="text-stone-400 text-sm mt-1">{isMasterAdmin ? 'Adicione ou remova permissões de administrador para outros membros.' : 'Veja todos os administradores da plataforma.'}</p>
             </div>
-            <button
-              onClick={() => { setShowAddAdminModal(true); setAdminSearch(''); }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-widest hover:bg-primary/80 transition-all"
-            >
-              <Plus size={14} />
-              Adicionar Admin
-            </button>
+            {isMasterAdmin && (
+              <button
+                onClick={() => { setShowAddAdminModal(true); setAdminSearch(''); }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-widest hover:bg-primary/80 transition-all"
+              >
+                <Plus size={14} />
+                Adicionar Admin
+              </button>
+            )}
           </div>
 
           <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
@@ -1422,45 +1424,47 @@ export function AdminPanel({
                           Admin
                         </span>
                       </div>
-                      <div>
-                        {confirmRemoveAdminId === fId ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-stone-400">Confirmar?</span>
+                      {isMasterAdmin && (
+                        <div>
+                          {confirmRemoveAdminId === fId ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-stone-400">Confirmar?</span>
+                              <button
+                                onClick={() => setConfirmRemoveAdminId(null)}
+                                className="px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-all"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  setSavingAdminRole(true);
+                                  try {
+                                    await api.put(`/api/founders/${fId}`, { role: 'user' });
+                                    setConfirmRemoveAdminId(null);
+                                  } catch (e) {
+                                    console.error(e);
+                                  } finally {
+                                    setSavingAdminRole(false);
+                                  }
+                                }}
+                                disabled={savingAdminRole}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-red-500 text-white hover:bg-red-600 rounded-md transition-all disabled:opacity-50"
+                              >
+                                <Trash2 size={12} />
+                                {savingAdminRole ? 'Removendo...' : 'Remover'}
+                              </button>
+                            </div>
+                          ) : (
                             <button
-                              onClick={() => setConfirmRemoveAdminId(null)}
-                              className="px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-all"
-                            >
-                              Cancelar
-                            </button>
-                            <button
-                              onClick={async () => {
-                                setSavingAdminRole(true);
-                                try {
-                                  await api.put(`/api/founders/${fId}`, { role: 'user' });
-                                  setConfirmRemoveAdminId(null);
-                                } catch (e) {
-                                  console.error(e);
-                                } finally {
-                                  setSavingAdminRole(false);
-                                }
-                              }}
-                              disabled={savingAdminRole}
-                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-red-500 text-white hover:bg-red-600 rounded-md transition-all disabled:opacity-50"
+                              onClick={() => setConfirmRemoveAdminId(fId)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
                             >
                               <Trash2 size={12} />
-                              {savingAdminRole ? 'Removendo...' : 'Remover'}
+                              Remover Admin
                             </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setConfirmRemoveAdminId(fId)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
-                          >
-                            <Trash2 size={12} />
-                            Remover Admin
-                          </button>
-                        )}
-                      </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
