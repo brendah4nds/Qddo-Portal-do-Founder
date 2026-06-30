@@ -81,7 +81,11 @@ export function CheckinSystem({
   const [todayFoundersCount, setTodayFoundersCount] = useState<number | null>(null);
   const [selectedFounderPoints, setSelectedFounderPoints] = useState<number>(0);
 
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  // Use native JS local-date methods — format() uses UTC on some environments
+  const getLocalDateStr = (d = new Date()) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  const [todayStr, setTodayStr] = useState(() => getLocalDateStr());
 
   // Load checkins for selected user + real-time updates
   useEffect(() => {
@@ -131,6 +135,23 @@ export function CheckinSystem({
     return () => { socket.off('founder:update', onUpdate); };
   }, [selectedUserId]);
 
+  // Midnight: auto-checkout active check-in and roll todayStr to the new date
+  useEffect(() => {
+    const now = new Date();
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
+    const msUntilMidnight = midnight.getTime() - now.getTime();
+
+    const timer = setTimeout(async () => {
+      const activeCheckin = checkins.find(c => c.status === 'active');
+      if (activeCheckin) {
+        try { await api.put(`/api/checkins/${activeCheckin.id}/checkout`); } catch {}
+      }
+      setTodayStr(getLocalDateStr());
+    }, msUntilMidnight);
+
+    return () => clearTimeout(timer);
+  }, [checkins]);
+
   // Load today's founders count
   useEffect(() => {
     api.get('/api/checkins', { params: { date: todayStr } })
@@ -175,7 +196,7 @@ export function CheckinSystem({
             checkinDatesSet.add(todayStr);
             let streak = 0;
             let d = new Date();
-            while (checkinDatesSet.has(format(d, 'yyyy-MM-dd'))) {
+            while (checkinDatesSet.has(getLocalDateStr(d))) {
               streak++;
               d = subDays(d, 1);
             }
