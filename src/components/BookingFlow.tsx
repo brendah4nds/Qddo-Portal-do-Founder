@@ -32,8 +32,11 @@ import {
   Download,
   Plus,
   Image as ImageIcon,
-  X
+  X,
+  Settings,
+  Trash2
 } from 'lucide-react';
+import { ConfirmationModal } from './ConfirmationModal';
 import { Room, Booking, BookingStatus } from '../types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -42,6 +45,12 @@ import { isBlockedDay } from '../utils/holidays';
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+const DEFAULT_BUSINESS_HOURS = Array.from({ length: 21 }, (_, i) => {
+  const hour = Math.floor(i / 2) + 8;
+  const minute = (i % 2) * 30;
+  return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+});
 
 export function BookingFlow({
   rooms,
@@ -87,6 +96,27 @@ export function BookingFlow({
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [pendingImageFileName, setPendingImageFileName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [settingsNewHour, setSettingsNewHour] = useState('');
+  const [settingsConfirmModal, setSettingsConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', confirmText: '', onConfirm: () => {} });
+
+  const handleSettingsAddHour = async () => {
+    if (!settingsNewHour.match(/^\d{2}:\d{2}$/)) return;
+    const updated = [...businessHours, settingsNewHour].sort();
+    await api.put('/api/settings/global', { businessHours: updated });
+    setSettingsNewHour('');
+  };
+
+  const handleSettingsRemoveHour = async (hour: string) => {
+    const updated = businessHours.filter(h => h !== hour);
+    await api.put('/api/settings/global', { businessHours: updated });
+  };
 
   // Sync internal step with external activeSubTab
   useEffect(() => {
@@ -315,7 +345,18 @@ export function BookingFlow({
 
   return (
     <>
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto relative">
+      {/* Settings button — admin only */}
+      {isAdmin && (
+        <button
+          onClick={() => setShowSettingsModal(true)}
+          className="absolute top-0 right-0 p-2 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all z-10"
+          title="Configurações de Agendamento"
+        >
+          <Settings size={20} />
+        </button>
+      )}
+
       {/* Step Indicator */}
       <div className="flex items-center justify-center gap-4 mb-12">
         {[
@@ -724,6 +765,124 @@ export function BookingFlow({
         title="Ajustar foto da sala"
       />
     )}
+
+    {/* Settings Modal */}
+    {showSettingsModal && (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+        onClick={() => setShowSettingsModal(false)}
+      >
+        <div
+          className="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-8 py-6 border-b border-stone-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center">
+                <Settings size={20} className="text-stone-600" />
+              </div>
+              <h3 className="text-lg font-sans text-stone-900">Configurações de Agendamento</h3>
+            </div>
+            <button
+              onClick={() => setShowSettingsModal(false)}
+              className="p-2 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-8 space-y-8">
+            {/* Business Hours */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-sans text-base text-stone-900">Horários Disponíveis</h4>
+                <button
+                  onClick={() => {
+                    setSettingsConfirmModal({
+                      isOpen: true,
+                      title: 'Restaurar Horários',
+                      message: 'Deseja restaurar os horários para o padrão de 30 minutos? Suas configurações personalizadas serão perdidas.',
+                      confirmText: 'Restaurar',
+                      onConfirm: async () => {
+                        await api.put('/api/settings/global', { businessHours: DEFAULT_BUSINESS_HOURS });
+                        setSettingsConfirmModal(prev => ({ ...prev, isOpen: false }));
+                      }
+                    });
+                  }}
+                  className="text-overline bg-primary text-white px-3 py-1.5 rounded-lg font-bold hover:bg-primary/90 transition-colors"
+                >
+                  Restaurar Padrão (30 min)
+                </button>
+              </div>
+              <p className="text-stone-500 text-sm mb-6">Edite os horários que estarão disponíveis para agendamento em todas as salas.</p>
+
+              <div className="flex flex-wrap gap-3 mb-6">
+                {businessHours.map(hour => (
+                  <div key={hour} className="flex items-center gap-2 px-4 py-2 bg-stone-100 rounded-full text-sm font-medium">
+                    {hour}
+                    <button onClick={() => handleSettingsRemoveHour(hour)} className="text-stone-400 hover:text-red-500 transition-colors">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-4 max-w-xs">
+                <input
+                  type="text"
+                  placeholder="HH:mm"
+                  value={settingsNewHour}
+                  onChange={e => setSettingsNewHour(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSettingsAddHour()}
+                  className="flex-1 px-4 py-3 bg-stone-50 border border-stone-100 rounded-md focus:outline-none focus:border-primary"
+                />
+                <button
+                  onClick={handleSettingsAddHour}
+                  className="bg-primary text-white px-6 py-3 rounded-md hover:bg-primary/90 transition-all"
+                >
+                  <Plus size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Booking Links */}
+            <div>
+              <h4 className="font-sans text-base text-stone-900 mb-2">Links de Agendamento</h4>
+              <p className="text-stone-500 text-sm mb-4">Compartilhe estes links para que os usuários acessem diretamente o agendamento de cada sala.</p>
+              <div className="space-y-3">
+                {rooms.map(room => {
+                  const link = `${window.location.origin}/sala/${room.id}`;
+                  return (
+                    <div key={room.id} className="p-4 bg-stone-50 border border-stone-100 rounded-lg flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">{room.name}</span>
+                        <div className="text-sm font-mono text-stone-600 break-all">{link}</div>
+                      </div>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(link); alert('Link copiado!'); }}
+                        className="text-xs bg-white border border-stone-100 px-3 py-1.5 rounded-lg hover:bg-stone-100 transition-colors font-bold shrink-0 ml-4"
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    <ConfirmationModal
+      isOpen={settingsConfirmModal.isOpen}
+      title={settingsConfirmModal.title}
+      message={settingsConfirmModal.message}
+      confirmText={settingsConfirmModal.confirmText}
+      variant="primary"
+      onConfirm={settingsConfirmModal.onConfirm}
+      onClose={() => setSettingsConfirmModal(prev => ({ ...prev, isOpen: false }))}
+    />
     </>
   );
 }
