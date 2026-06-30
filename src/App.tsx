@@ -61,7 +61,8 @@ import {
   Crown,
   Cake,
   EyeOff,
-  Eye
+  Eye,
+  CheckCircle2
 } from 'lucide-react';
 import { auth } from './firebase';
 import { api, API_BASE } from './api';
@@ -75,6 +76,7 @@ import { RegistrationFlow } from './components/RegistrationFlow';
 import { Chat } from './components/Chat';
 import { TermsModal } from './components/TermsModal';
 import { AdminDashboard } from './components/AdminDashboard';
+import { NewsFormModal } from './components/NewsFormModal';
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
@@ -193,6 +195,8 @@ export default function App() {
   const [allCheckins, setAllCheckins] = useState<any[]>([]);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [showIndicarFounderModal, setShowIndicarFounderModal] = useState(false);
+  const [showAddNewsModal, setShowAddNewsModal] = useState(false);
+  const [eventCheckinLoading, setEventCheckinLoading] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const emailRef = useRef<HTMLDivElement>(null);
@@ -700,6 +704,30 @@ export default function App() {
   const handleRoomUpdate = async (roomId: string, updates: Partial<Room>) => {
     await api.put(`/api/rooms/${roomId}`, updates);
     setRooms((prev: Room[]) => prev.map((r: Room) => r.id === roomId ? { ...r, ...updates } : r));
+  };
+
+  const handleEventCheckin = async (eventId: string) => {
+    if (!user?._id || !founderData) return;
+    const already = (founderData.eventAttendance || []).includes(eventId);
+    if (already) return;
+    setEventCheckinLoading(true);
+    try {
+      const updatedAttendance = [...(founderData.eventAttendance || []), eventId];
+      const updatedPoints = (founderData.totalPoints ?? 0) + 20;
+      await api.put(`/api/founders/${user._id}`, {
+        totalPoints: updatedPoints,
+        eventAttendance: updatedAttendance,
+      });
+      setFounderData((prev: any) => ({
+        ...prev,
+        totalPoints: updatedPoints,
+        eventAttendance: updatedAttendance,
+      }));
+    } catch {
+      alert('Erro ao registrar presença. Tente novamente.');
+    } finally {
+      setEventCheckinLoading(false);
+    }
   };
 
   const handleLogin = async () => {
@@ -3143,11 +3171,7 @@ export default function App() {
             {activeGeneralCategory !== 'founders' && isAdmin && (
               <div className="p-6 bg-stone-50 border-t border-stone-100 flex justify-center">
                 <button
-                  onClick={() => {
-                    setActiveGeneralCategory(null);
-                    setAdminInitialTab('news');
-                    setView('admin');
-                  }}
+                  onClick={() => setShowAddNewsModal(true)}
                   className="bg-primary text-white px-6 py-3 rounded-lg font-bold hover:bg-primary/90 transition-all flex items-center gap-2"
                 >
                   <Plus size={18} />
@@ -3249,6 +3273,27 @@ export default function App() {
                 )}
               </div>
 
+              {/* Event check-in footer */}
+              {!isAviso && selectedNewsItem.category === 'evento' && founderData && (
+                <div className="px-6 py-4 border-t border-stone-100 flex-shrink-0">
+                  {(founderData.eventAttendance || []).includes(selectedNewsItem.id) ? (
+                    <div className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-emerald-50 text-emerald-600 font-bold text-sm">
+                      <CheckCircle2 size={18} />
+                      Presença confirmada · +20 pts
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleEventCheckin(selectedNewsItem.id)}
+                      disabled={eventCheckinLoading}
+                      className="w-full py-3 rounded-lg bg-primary text-white font-bold text-sm hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-60 flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle2 size={18} />
+                      {eventCheckinLoading ? 'Registrando...' : 'Estive aqui · +20 pts'}
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Admin footer */}
               {isAdmin && (
                 <div className="px-6 py-4 bg-stone-50 border-t border-stone-100 flex justify-end gap-2 flex-shrink-0">
@@ -3280,6 +3325,12 @@ export default function App() {
           </div>
         );
       })()}
+
+      {showAddNewsModal && (
+        <NewsFormModal
+          onClose={() => setShowAddNewsModal(false)}
+        />
+      )}
 
       {showIndicarFounderModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowIndicarFounderModal(false)}>
