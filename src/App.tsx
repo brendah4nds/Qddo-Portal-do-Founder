@@ -82,6 +82,16 @@ const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Bool
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "bbrendaribeiroc@gmail.com";
 
+const QDDO_LOCATION = { lat: -15.789209930873332, lng: -47.90071054840695, radius: 300 };
+
+function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371e3;
+  const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180, Δλ = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
 const QCOIN_SECTIONS = [
   { id: 'pontuacao', title: 'Sistema de pontuação', icon: Trophy },
   { id: 'estagios', title: 'Estágios e Thresholds de Progressão', icon: TrendingUp },
@@ -197,6 +207,7 @@ export default function App() {
   const [showIndicarFounderModal, setShowIndicarFounderModal] = useState(false);
   const [showAddNewsModal, setShowAddNewsModal] = useState(false);
   const [eventCheckinLoading, setEventCheckinLoading] = useState(false);
+  const [eventCheckinError, setEventCheckinError] = useState<string | null>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const emailRef = useRef<HTMLDivElement>(null);
@@ -322,6 +333,11 @@ export default function App() {
     if (!v) return null;
     if (v?.seconds) return new Date(v.seconds * 1000);
     if (v?.toDate) return v.toDate();
+    // YYYY-MM-DD strings are parsed as UTC by new Date() — treat as local midnight instead
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      const [y, m, d] = v.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
     const d = new Date(v);
     return isNaN(d.getTime()) ? null : d;
   };
@@ -706,28 +722,83 @@ export default function App() {
     setRooms((prev: Room[]) => prev.map((r: Room) => r.id === roomId ? { ...r, ...updates } : r));
   };
 
-  const handleEventCheckin = async (eventId: string) => {
+  const handleEventCheckin = async (event: any) => {
     if (!user?._id || !founderData) return;
-    const already = (founderData.eventAttendance || []).includes(eventId);
+    const already = (founderData.eventAttendance || []).includes(event.id);
     if (already) return;
-    setEventCheckinLoading(true);
-    try {
-      const updatedAttendance = [...(founderData.eventAttendance || []), eventId];
-      const updatedPoints = (founderData.totalPoints ?? 0) + 20;
-      await api.put(`/api/founders/${user._id}`, {
-        totalPoints: updatedPoints,
-        eventAttendance: updatedAttendance,
-      });
-      setFounderData((prev: any) => ({
-        ...prev,
-        totalPoints: updatedPoints,
-        eventAttendance: updatedAttendance,
-      }));
-    } catch {
-      alert('Erro ao registrar presença. Tente novamente.');
-    } finally {
-      setEventCheckinLoading(false);
+
+    setEventCheckinError(null);
+
+    // Time window validation
+    if (event.eventDate) {
+      const now = new Date();
+      const yy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const today = `${yy}-${mm}-${dd}`;
+      if (today !== event.eventDate) {
+        setEventCheckinError('Check-in disponível apenas no dia do evento.');
+        return;
+      }
+      const nowMins = now.getHours() * 60 + now.getMinutes();
+      if (event.startTime) {
+        const [h, m] = event.startTime.split(':').map(Number);
+        if (nowMins < h * 60 + m) {
+          setEventCheckinError(`Check-in disponível a partir das ${event.startTime}.`);
+          return;
+        }
+      }
+      if (event.endTime) {
+        const [h, m] = event.endTime.split(':').map(Number);
+        if (nowMins > h * 60 + m) {
+          setEventCheckinError(`Check-in encerrado às ${event.endTime}.`);
+          return;
+        }
+      }
     }
+
+    // Geolocation validation
+    if (!navigator.geolocation) {
+      setEventCheckinError('Geolocalização não disponível neste dispositivo.');
+      return;
+    }
+
+    setEventCheckinLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const dist = calcDistance(position.coords.latitude, position.coords.longitude, QDDO_LOCATION.lat, QDDO_LOCATION.lng);
+        if (dist > QDDO_LOCATION.radius) {
+          setEventCheckinError(`Você precisa estar no QDDO para fazer check-in (${Math.round(dist)}m de distância).`);
+          setEventCheckinLoading(false);
+          return;
+        }
+        try {
+          const updatedAttendance = [...(founderData.eventAttendance || []), event.id];
+          const updatedPoints = (founderData.totalPoints ?? 0) + 20;
+          await api.put(`/api/founders/${user._id}`, {
+            totalPoints: updatedPoints,
+            eventAttendance: updatedAttendance,
+          });
+          setFounderData((prev: any) => ({
+            ...prev,
+            totalPoints: updatedPoints,
+            eventAttendance: updatedAttendance,
+          }));
+        } catch {
+          setEventCheckinError('Erro ao registrar presença. Tente novamente.');
+        } finally {
+          setEventCheckinLoading(false);
+        }
+      },
+      (err) => {
+        const msg = err.code === err.PERMISSION_DENIED
+          ? 'Permissão de localização negada. Ative o acesso e tente novamente.'
+          : 'Não foi possível obter sua localização.';
+        setEventCheckinError(msg);
+        setEventCheckinLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const handleLogin = async () => {
@@ -3191,7 +3262,7 @@ export default function App() {
         return (
           <div
             className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300"
-            onClick={() => setSelectedNewsItem(null)}
+            onClick={() => { setSelectedNewsItem(null); setEventCheckinError(null); }}
           >
             <div
               className="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
@@ -3226,7 +3297,7 @@ export default function App() {
                   )}
                 </div>
                 <button
-                  onClick={() => setSelectedNewsItem(null)}
+                  onClick={() => { setSelectedNewsItem(null); setEventCheckinError(null); }}
                   className="w-9 h-9 rounded-full hover:bg-stone-100 flex items-center justify-center transition-colors shrink-0 mt-0.5"
                 >
                   <X size={18} />
@@ -3275,7 +3346,7 @@ export default function App() {
 
               {/* Event check-in footer */}
               {!isAviso && selectedNewsItem.category === 'evento' && founderData && (
-                <div className="px-6 py-4 border-t border-stone-100 flex-shrink-0">
+                <div className="px-6 py-4 border-t border-stone-100 flex-shrink-0 space-y-2">
                   {(founderData.eventAttendance || []).includes(selectedNewsItem.id) ? (
                     <div className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-emerald-50 text-emerald-600 font-bold text-sm">
                       <CheckCircle2 size={18} />
@@ -3283,13 +3354,16 @@ export default function App() {
                     </div>
                   ) : (
                     <button
-                      onClick={() => handleEventCheckin(selectedNewsItem.id)}
+                      onClick={() => { setEventCheckinError(null); handleEventCheckin(selectedNewsItem); }}
                       disabled={eventCheckinLoading}
                       className="w-full py-3 rounded-lg bg-primary text-white font-bold text-sm hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-60 flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 size={18} />
-                      {eventCheckinLoading ? 'Registrando...' : 'Estive aqui · +20 pts'}
+                      {eventCheckinLoading ? 'Verificando localização...' : 'Estive aqui · +20 pts'}
                     </button>
+                  )}
+                  {eventCheckinError && (
+                    <p className="text-xs text-center text-red-500 font-medium">{eventCheckinError}</p>
                   )}
                 </div>
               )}
