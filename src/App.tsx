@@ -114,7 +114,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'booking' | 'admin' | 'portal' | 'chat' | 'general' | 'news' | 'qcoin' | 'regras' | 'dashboard'>('general');
   const [activeSubTab, setActiveSubTab] = useState<string>('general');
-  const [adminInitialTab, setAdminInitialTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes'>('bookings');
+  const [adminInitialTab, setAdminInitialTab] = useState<'founders' | 'challenges' | 'news' | 'indicacoes'>('founders');
   const [adminInitialEditNewsItem, setAdminInitialEditNewsItem] = useState<any>(null);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());

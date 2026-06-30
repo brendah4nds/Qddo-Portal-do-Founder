@@ -43,12 +43,6 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const DEFAULT_BUSINESS_HOURS = Array.from({ length: 21 }, (_, i) => {
-  const hour = Math.floor(i / 2) + 8;
-  const minute = (i % 2) * 30;
-  return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-});
-
 function toDateStr(val: any): string {
   if (!val) return '';
   if (typeof val === 'string') return val.split('T')[0];
@@ -64,7 +58,7 @@ export function AdminPanel({
   businessHours,
   isAdmin,
   founders = [],
-  initialTab = 'bookings',
+  initialTab = 'founders',
   initialEditNewsItem = null,
   onEditNewsConsumed,
   hiddenMenuItems = [],
@@ -78,18 +72,17 @@ export function AdminPanel({
   businessHours: string[];
   isAdmin: boolean;
   founders?: any[];
-  initialTab?: 'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes' | 'hidden-items' | 'admins';
+  initialTab?: 'founders' | 'challenges' | 'news' | 'indicacoes' | 'hidden-items' | 'admins';
   initialEditNewsItem?: any;
   onEditNewsConsumed?: () => void;
   hiddenMenuItems?: string[];
   onRestoreMenuItem?: (key: string) => void;
   isMasterAdmin?: boolean;
 }) {
-  const [adminTab, setAdminTab] = useState<'bookings' | 'settings' | 'founders' | 'challenges' | 'news' | 'indicacoes' | 'hidden-items' | 'admins'>(initialTab);
+  const [adminTab, setAdminTab] = useState<'founders' | 'challenges' | 'news' | 'indicacoes' | 'hidden-items' | 'admins'>(initialTab);
   const [indicacoes, setIndicacoes] = useState<any[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [newsItems, setNewsItems] = useState<any[]>([]);
-  const [newHour, setNewHour] = useState('');
   const [newNews, setNewNews] = useState({
     title: '',
     content: '',
@@ -203,12 +196,6 @@ export function AdminPanel({
     );
   }
 
-  const sortedBookings = [...bookings].sort((a, b) => {
-    const dateA = new Date(`${a.date}T${a.startTime}`);
-    const dateB = new Date(`${b.date}T${b.startTime}`);
-    return dateB.getTime() - dateA.getTime();
-  });
-
   useEffect(() => {
     if (!isAdmin) return;
 
@@ -311,24 +298,6 @@ export function AdminPanel({
     });
   };
 
-  const handleDelete = async (id: string) => {
-    setModalConfig({
-      isOpen: true,
-      title: "Cancelar Agendamento",
-      message: "Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.",
-      confirmText: "Cancelar Reserva",
-      variant: "danger",
-      onConfirm: async () => {
-        try {
-          await api.delete(`/api/bookings/${id}`);
-          setModalConfig(prev => ({ ...prev, isOpen: false }));
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    });
-  };
-
   const handleDeleteFounder = (founder: any) => {
     const founderId = founder._id || founder.id;
     if (founderId === user._id) return;
@@ -394,18 +363,6 @@ export function AdminPanel({
         }
       }
     });
-  };
-
-  const handleAddHour = async () => {
-    if (!newHour.match(/^\d{2}:\d{2}$/)) return;
-    const updated = [...businessHours, newHour].sort();
-    await api.put('/api/settings/global', { businessHours: updated });
-    setNewHour('');
-  };
-
-  const handleRemoveHour = async (hour: string) => {
-    const updated = businessHours.filter(h => h !== hour);
-    await api.put('/api/settings/global', { businessHours: updated });
   };
 
   const handleCreateNews = async (e: React.FormEvent) => {
@@ -555,8 +512,6 @@ export function AdminPanel({
 
       <div className="flex gap-4 md:gap-6 border-b border-stone-200 overflow-x-auto scrollbar-hide pb-px">
         {[
-          { id: 'bookings', label: 'Agendamentos' },
-          { id: 'settings', label: 'Configurações' },
           { id: 'founders', label: 'Usuários' },
           { id: 'challenges', label: 'Desafios' },
           { id: 'news', label: 'News' },
@@ -613,57 +568,6 @@ export function AdminPanel({
           </button>
         )}
       </div>
-
-      {adminTab === 'bookings' && (
-        <section className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden animate-in fade-in duration-500">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-stone-50 border-b border-stone-100">
-                  <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Data e Hora</th>
-                  <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Sala</th>
-                  <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Usuário</th>
-                  <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedBookings.map(booking => {
-                  const room = rooms.find(r => r.id === booking.roomId);
-                  return (
-                    <tr key={booking.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
-                      <td className="px-8 py-6">
-                        <div className="font-bold text-stone-900">{booking.date}</div>
-                        <div className="text-xs text-stone-400">{booking.startTime} - {booking.endTime}</div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="font-sans text-stone-700">{room?.name || 'Sala excluída'}</div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="font-bold text-stone-900">{booking.userName}</div>
-                        <div className="text-xs text-stone-400">{booking.userEmail}</div>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <button
-                          onClick={() => handleDelete(booking.id)}
-                          className="inline-flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-md transition-all font-bold text-xs"
-                        >
-                          <Trash2 size={14} />
-                          <span>Cancelar</span>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {bookings.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-8 py-20 text-center text-stone-400">Nenhum agendamento encontrado.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
 
       {adminTab === 'founders' && (
         <section className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden animate-in fade-in duration-500">
@@ -1124,87 +1028,6 @@ export function AdminPanel({
                   )}
                 </tbody>
               </table>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {adminTab === 'settings' && (
-        <section className="space-y-8 animate-in fade-in duration-500">
-          <div className="bg-white rounded-xl p-8 border border-stone-100 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-sans text-lg">Horários Disponíveis</h4>
-              <button
-                onClick={() => {
-                  setModalConfig({
-                    isOpen: true,
-                    title: "Restaurar Horários",
-                    message: "Deseja restaurar os horários para o padrão de 30 minutos? Suas configurações personalizadas serão perdidas.",
-                    confirmText: "Restaurar",
-                    variant: "primary",
-                    onConfirm: async () => {
-                      await api.put('/api/settings/global', { businessHours: DEFAULT_BUSINESS_HOURS });
-                      setModalConfig(prev => ({ ...prev, isOpen: false }));
-                    }
-                  });
-                }}
-                className="text-overline bg-primary text-white px-3 py-1.5 rounded-lg font-bold hover:bg-primary/90 transition-colors"
-              >
-                Restaurar Padrão (30 min)
-              </button>
-            </div>
-            <p className="text-stone-500 text-sm mb-8">Edite os horários que estarão disponíveis para agendamento em todas as salas.</p>
-
-            <div className="flex flex-wrap gap-3 mb-12">
-              {businessHours.map(hour => (
-                <div key={hour} className="flex items-center gap-2 px-4 py-2 bg-stone-100 rounded-full text-sm font-medium group">
-                  {hour}
-                  <button onClick={() => handleRemoveHour(hour)} className="text-stone-400 hover:text-red-500">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex gap-4 max-w-xs mb-12">
-              <input
-                type="text"
-                placeholder="HH:mm"
-                value={newHour}
-                onChange={e => setNewHour(e.target.value)}
-                className="flex-1 px-4 py-3 bg-stone-50 border border-stone-100 rounded-md focus:outline-none focus:border-primary"
-              />
-              <button
-                onClick={handleAddHour}
-                className="bg-primary text-white px-6 py-3 rounded-md hover:bg-primary/90 transition-all"
-              >
-                <Plus size={20} />
-              </button>
-            </div>
-
-            <h4 className="font-sans text-lg mb-4">Links de Agendamento</h4>
-            <p className="text-stone-500 text-sm mb-6">Compartilhe estes links para que os usuários acessem diretamente o agendamento de cada sala.</p>
-            <div className="space-y-3">
-              {rooms.map(room => {
-                const link = `${window.location.origin}/sala/${room.id}`;
-                return (
-                  <div key={room.id} className="p-4 bg-stone-50 border border-stone-100 rounded-lg flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">{room.name}</span>
-                      <div className="text-sm font-mono text-stone-600 break-all">{link}</div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(link);
-                        alert('Link copiado!');
-                      }}
-                      className="text-xs bg-white border border-stone-100 px-3 py-1.5 rounded-lg hover:bg-stone-100 transition-colors font-bold"
-                    >
-                      Copiar
-                    </button>
-                  </div>
-                );
-              })}
             </div>
           </div>
         </section>
