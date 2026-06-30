@@ -2490,7 +2490,7 @@ export default function App() {
                         const d = toDate(c.checkinTime) || new Date();
                         return isWithinInterval(d, { start: currentMonthStart, end: currentMonthEnd });
                       }).length;
-                      const userScore = currentMonthCheckins * 10;
+                      const userScore = founderData?.totalPoints ?? 0;
 
                       // Ranking Top 5 calculation
                       const allCurrentMonthCheckins = allCheckins.filter(c => {
@@ -2755,7 +2755,7 @@ export default function App() {
                               </div>
                               <span className="text-overline uppercase tracking-widest font-bold text-white/80 mb-1 relative z-10">Seu Score QDDO</span>
                               <div className="text-[3rem] font-black leading-none mb-0.5 relative z-10">{userScore}</div>
-                              <span className="text-xs font-bold text-white/80 relative z-10">pontos este mês</span>
+                              <span className="text-xs font-bold text-white/80 relative z-10">pontos acumulados</span>
                               {userRankPosition > 0 && (
                                 <span className="text-overline text-white/60 relative z-10 mt-0.5">#{userRankPosition}º no ranking</span>
                               )}
