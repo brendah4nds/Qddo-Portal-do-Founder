@@ -2586,16 +2586,18 @@ export default function App() {
                         .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
                         .slice(0, 3);
 
+                      const currentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
                       const currentMonthStart = startOfMonth(now);
                       const currentMonthEnd = endOfMonth(now);
                       const currentMonthCheckins = userCheckins.filter(c => {
                         const d = toDate(c.checkinTime) || new Date();
                         return isWithinInterval(d, { start: currentMonthStart, end: currentMonthEnd });
                       }).length;
-                      const userScore = founderData?.totalPoints ?? 0;
+                      const userScore = founderData?.monthlyPoints?.[currentYM]
+                        ?? (founderData?.monthlyPoints as any)?.get?.(currentYM)
+                        ?? 0;
 
                       // Ranking Top 5 — current month points only
-                      const currentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
                       const fullRanking = allFounders
                         .map((f: any) => ({
                           userId: f.id,
