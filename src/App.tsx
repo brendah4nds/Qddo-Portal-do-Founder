@@ -208,6 +208,8 @@ export default function App() {
   const [showAddNewsModal, setShowAddNewsModal] = useState(false);
   const [eventCheckinLoading, setEventCheckinLoading] = useState(false);
   const [eventCheckinError, setEventCheckinError] = useState<string | null>(null);
+  const [eventCheckinTime, setEventCheckinTime] = useState<string | null>(null);
+  const eventCheckinInFlight = useRef(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const emailRef = useRef<HTMLDivElement>(null);
@@ -724,12 +726,15 @@ export default function App() {
 
   const handleEventCheckin = async (event: any) => {
     if (!user?._id || !founderData) return;
-    const already = (founderData.eventAttendance || []).includes(event.id);
+    // Synchronous guard — prevents concurrent calls even before React re-renders
+    if (eventCheckinInFlight.current) return;
+    const eventId = String(event.id || event._id);
+    const already = (founderData.eventAttendance || []).map(String).includes(eventId);
     if (already) return;
 
     setEventCheckinError(null);
 
-    // Time window validation
+    // Time window: from startTime until 23:59 of the event day
     if (event.eventDate) {
       const now = new Date();
       const yy = now.getFullYear();
@@ -740,18 +745,11 @@ export default function App() {
         setEventCheckinError('Check-in disponível apenas no dia do evento.');
         return;
       }
-      const nowMins = now.getHours() * 60 + now.getMinutes();
       if (event.startTime) {
         const [h, m] = event.startTime.split(':').map(Number);
+        const nowMins = now.getHours() * 60 + now.getMinutes();
         if (nowMins < h * 60 + m) {
           setEventCheckinError(`Check-in disponível a partir das ${event.startTime}.`);
-          return;
-        }
-      }
-      if (event.endTime) {
-        const [h, m] = event.endTime.split(':').map(Number);
-        if (nowMins > h * 60 + m) {
-          setEventCheckinError(`Check-in encerrado às ${event.endTime}.`);
           return;
         }
       }
@@ -763,31 +761,45 @@ export default function App() {
       return;
     }
 
+    eventCheckinInFlight.current = true;
     setEventCheckinLoading(true);
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const dist = calcDistance(position.coords.latitude, position.coords.longitude, QDDO_LOCATION.lat, QDDO_LOCATION.lng);
         if (dist > QDDO_LOCATION.radius) {
           setEventCheckinError(`Você precisa estar no QDDO para fazer check-in (${Math.round(dist)}m de distância).`);
           setEventCheckinLoading(false);
+          eventCheckinInFlight.current = false;
           return;
         }
         try {
-          const updatedAttendance = [...(founderData.eventAttendance || []), event.id];
-          const updatedPoints = (founderData.totalPoints ?? 0) + 20;
-          await api.put(`/api/founders/${user._id}`, {
-            totalPoints: updatedPoints,
-            eventAttendance: updatedAttendance,
-          });
+          // Atomic endpoint: server rejects duplicate with 409
+          const { data } = await api.post(`/api/founders/${user._id}/event-checkin`, { eventId, points: 20 });
+          const now = new Date();
+          setEventCheckinTime(`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
           setFounderData((prev: any) => ({
             ...prev,
-            totalPoints: updatedPoints,
-            eventAttendance: updatedAttendance,
+            totalPoints: data.totalPoints,
+            eventAttendance: (data.eventAttendance || []).map(String),
           }));
-        } catch {
-          setEventCheckinError('Erro ao registrar presença. Tente novamente.');
+        } catch (err: any) {
+          if (err?.response?.status === 409) {
+            // Already registered — sync local state from server response
+            const serverUser = err.response.data?.user;
+            if (serverUser) {
+              setFounderData((prev: any) => ({
+                ...prev,
+                totalPoints: serverUser.totalPoints,
+                eventAttendance: (serverUser.eventAttendance || []).map(String),
+              }));
+            }
+          } else {
+            setEventCheckinError('Erro ao registrar presença. Tente novamente.');
+          }
         } finally {
           setEventCheckinLoading(false);
+          eventCheckinInFlight.current = false;
         }
       },
       (err) => {
@@ -796,6 +808,7 @@ export default function App() {
           : 'Não foi possível obter sua localização.';
         setEventCheckinError(msg);
         setEventCheckinLoading(false);
+        eventCheckinInFlight.current = false;
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -1867,24 +1880,13 @@ export default function App() {
                           {/* Ranking Geral dinâmico */}
                           {expandedQcoinCard === 'ranking' && (() => {
                             const now = new Date();
-                            const monthStart = startOfMonth(now);
-                            const monthEnd = endOfMonth(now);
                             const monthLabel = format(now, 'MMMM yyyy', { locale: ptBR });
 
-                            const monthCheckins = allCheckins.filter((c: any) => {
-                              const d = toDate(c.checkinTime);
-                              return d && isWithinInterval(d, { start: monthStart, end: monthEnd });
-                            });
-
-                            const scoresMap: Record<string, number> = {};
-                            monthCheckins.forEach((c: any) => {
-                              scoresMap[c.userId] = (scoresMap[c.userId] || 0) + 10;
-                            });
-
+                            // Uses totalPoints as single source of truth — same field as SEU SCORE QDDO
                             const fullRanking = allFounders
                               .map((founder: any) => ({
                                 userId: founder.id,
-                                score: scoresMap[founder.id] || 0,
+                                score: founder.totalPoints || 0,
                                 name: founder.name || 'Founder',
                                 username: founder.username || founder.id?.slice(0, 6),
                                 photoURL: founder.photoURL || null,
@@ -2591,32 +2593,19 @@ export default function App() {
                       }).length;
                       const userScore = founderData?.totalPoints ?? 0;
 
-                      // Ranking Top 5 calculation
-                      const allCurrentMonthCheckins = allCheckins.filter(c => {
-                        const d = toDate(c.checkinTime) || new Date();
-                        return isWithinInterval(d, { start: currentMonthStart, end: currentMonthEnd });
-                      });
-
-                      const scoresMap: Record<string, number> = {};
-                      allCurrentMonthCheckins.forEach(c => {
-                        scoresMap[c.userId] = (scoresMap[c.userId] || 0) + 10;
-                      });
-
-                      const fullRanking = Object.entries(scoresMap)
-                        .map(([userId, score]) => {
-                          const founder = allFounders.find(f => f.id === userId);
-                          return {
-                            userId,
-                            score,
-                            name: founder?.name || 'Founder',
-                            username: founder?.username || userId.slice(0, 6),
-                            photoURL: founder?.photoURL || null
-                          };
-                        })
-                        .sort((a, b) => b.score - a.score);
+                      // Ranking Top 5 — uses totalPoints as single source of truth
+                      const fullRanking = allFounders
+                        .map((f: any) => ({
+                          userId: f.id,
+                          score: f.totalPoints || 0,
+                          name: f.name || 'Founder',
+                          username: f.username || f.id?.slice(0, 6),
+                          photoURL: f.photoURL || null,
+                        }))
+                        .sort((a: any, b: any) => b.score - a.score);
 
                       const ranking = fullRanking.slice(0, 5);
-                      const userRankPosition = fullRanking.findIndex(r => r.userId === user?.uid) + 1;
+                      const userRankPosition = fullRanking.findIndex((r: any) => r.userId === (founderData?.id || founderData?._id)) + 1;
 
                       const today = new Date();
                       const sunday = new Date(today);
@@ -3262,7 +3251,7 @@ export default function App() {
         return (
           <div
             className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300"
-            onClick={() => { setSelectedNewsItem(null); setEventCheckinError(null); }}
+            onClick={() => { setSelectedNewsItem(null); setEventCheckinError(null); setEventCheckinTime(null); }}
           >
             <div
               className="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
@@ -3297,7 +3286,7 @@ export default function App() {
                   )}
                 </div>
                 <button
-                  onClick={() => { setSelectedNewsItem(null); setEventCheckinError(null); }}
+                  onClick={() => { setSelectedNewsItem(null); setEventCheckinError(null); setEventCheckinTime(null); }}
                   className="w-9 h-9 rounded-full hover:bg-stone-100 flex items-center justify-center transition-colors shrink-0 mt-0.5"
                 >
                   <X size={18} />
@@ -3347,10 +3336,15 @@ export default function App() {
               {/* Event check-in footer */}
               {!isAviso && selectedNewsItem.category === 'evento' && founderData && (
                 <div className="px-6 py-4 border-t border-stone-100 flex-shrink-0 space-y-2">
-                  {(founderData.eventAttendance || []).includes(selectedNewsItem.id) ? (
-                    <div className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-emerald-50 text-emerald-600 font-bold text-sm">
-                      <CheckCircle2 size={18} />
-                      Presença confirmada · +20 pts
+                  {(founderData.eventAttendance || []).map(String).includes(String(selectedNewsItem.id || selectedNewsItem._id)) ? (
+                    <div className="flex flex-col items-center justify-center gap-1 w-full py-3 rounded-lg bg-emerald-50 text-emerald-600 font-bold text-sm">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={18} />
+                        Presença confirmada · +20 pts
+                      </div>
+                      {eventCheckinTime && (
+                        <span className="text-emerald-500 font-normal text-xs">Check-in às {eventCheckinTime}</span>
+                      )}
                     </div>
                   ) : (
                     <button
