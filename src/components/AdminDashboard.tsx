@@ -563,6 +563,8 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
   ).sort().reverse();
 
   const [sortKey, setSortKey] = useState<string>(currentYM);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
+  const HISTORY_PAGE = 10;
 
   if (allMonths.length === 0) return null;
 
@@ -574,9 +576,9 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
   });
 
   return (
-    <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden">
+    <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden hover:border-primary/20 transition-colors">
       <button
-        className="w-full px-5 py-4 border-b border-stone-50 flex items-center justify-between hover:bg-stone-50/40 transition-colors"
+        className="w-full px-5 py-4 border-b border-stone-50 flex items-center justify-between hover:bg-primary/5 transition-colors"
         onClick={() => setExpanded(e => !e)}
       >
         <div className="flex items-center gap-2">
@@ -588,14 +590,14 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
 
       {expanded && (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full">
             <thead>
               <tr className="border-b border-stone-50 bg-stone-50/40">
-                <th className="px-4 py-3 text-left sticky left-0 bg-stone-50/90 z-10 min-w-[160px]">
+                <th className="px-3 py-2.5 text-left sticky left-0 bg-stone-50/90 z-10 min-w-[200px]">
                   <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Founder</span>
                 </th>
                 {allMonths.map(m => (
-                  <th key={m} className="px-4 py-3 text-center min-w-[80px]">
+                  <th key={m} className="px-3 py-2.5 text-center min-w-[80px]">
                     <button
                       onClick={() => setSortKey(m)}
                       className={cn(
@@ -608,7 +610,7 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
                     </button>
                   </th>
                 ))}
-                <th className="px-4 py-3 text-right min-w-[80px]">
+                <th className="px-3 py-2.5 text-right min-w-[80px]">
                   <button
                     onClick={() => setSortKey('total')}
                     className={cn(
@@ -623,35 +625,35 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((founder, idx) => {
+              {(historyExpanded ? sorted : sorted.slice(0, HISTORY_PAGE)).map((founder, idx) => {
                 const mp: Record<string, number> = (founder as any).monthlyPoints ?? {};
                 const total: number = (founder as any).totalPoints ?? 0;
                 return (
                   <tr key={founder.id} className={cn('border-b border-stone-50 hover:bg-primary/5 transition-colors', idx % 2 !== 0 ? 'bg-stone-50/20' : 'bg-white')}>
-                    <td className="px-4 py-3 sticky left-0 z-10 bg-inherit transition-colors">
+                    <td className="px-3 py-3 sticky left-0 z-10 bg-inherit transition-colors">
                       <div className="flex items-center gap-2.5">
-                        <Avatar founder={founder} size={24} />
+                        <Avatar founder={founder} size={28} />
                         <div>
                           <p className="text-sm font-semibold text-stone-800 leading-none">{founder.name}</p>
-                          <p className="text-[11px] text-stone-400 mt-0.5">@{(founder as any).username ?? ''}</p>
+                          <p className="text-xs text-stone-400 mt-0.5">@{(founder as any).username ?? ''}</p>
                         </div>
                       </div>
                     </td>
                     {allMonths.map(m => {
                       const pts = mp[m] ?? 0;
                       return (
-                        <td key={m} className="px-4 py-3 text-center">
+                        <td key={m} className="px-3 py-3 text-center">
                           <span className={cn(
-                            'font-bold tabular-nums',
-                            pts > 0 ? m === currentYM ? 'text-primary' : 'text-stone-800' : 'text-stone-200'
+                            'text-sm font-bold tabular-nums',
+                            pts > 0 ? m === sortKey ? 'text-primary' : 'text-stone-800' : 'text-stone-300'
                           )}>
                             {pts > 0 ? pts : '—'}
                           </span>
                         </td>
                       );
                     })}
-                    <td className="px-4 py-3 text-right">
-                      <span className="font-bold text-stone-500 tabular-nums">{total}</span>
+                    <td className="px-3 py-3 text-right">
+                      <span className={cn('text-sm font-bold tabular-nums', sortKey === 'total' ? 'text-primary' : 'text-stone-500')}>{total}</span>
                     </td>
                   </tr>
                 );
@@ -659,27 +661,42 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
             </tbody>
             <tfoot>
               <tr className="border-t border-stone-200 bg-stone-50">
-                <td className="px-4 py-3 sticky left-0 bg-stone-50 z-10">
-                  <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Comunidade</span>
+                <td className="px-3 py-3 sticky left-0 bg-stone-50 z-10">
+                  <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Comunidade</span>
                 </td>
                 {allMonths.map(m => {
                   const sum = sorted.reduce((s, f) => s + (((f as any).monthlyPoints ?? {})[m] ?? 0), 0);
                   return (
-                    <td key={m} className="px-4 py-3 text-center">
-                      <span className={cn('font-bold tabular-nums', m === currentYM ? 'text-primary' : 'text-stone-600')}>
+                    <td key={m} className="px-3 py-3 text-center">
+                      <span className={cn('text-sm font-bold tabular-nums', m === sortKey ? 'text-primary' : 'text-stone-600')}>
                         {sum > 0 ? sum : '—'}
                       </span>
                     </td>
                   );
                 })}
-                <td className="px-4 py-3 text-right">
-                  <span className="font-bold text-stone-600 tabular-nums">
+                <td className="px-3 py-3 text-right">
+                  <span className={cn('text-sm font-bold tabular-nums', sortKey === 'total' ? 'text-primary' : 'text-stone-600')}>
                     {sorted.reduce((s, f) => s + ((f as any).totalPoints ?? 0), 0)}
                   </span>
                 </td>
               </tr>
             </tfoot>
           </table>
+        </div>
+      )}
+
+      {sorted.length > HISTORY_PAGE && (
+        <div className="border-t border-stone-50 px-5 py-3 flex items-center justify-center">
+          <button
+            onClick={() => setHistoryExpanded(e => !e)}
+            className="flex items-center gap-1.5 text-sm font-semibold text-stone-500 hover:text-stone-800 transition-colors"
+          >
+            {historyExpanded ? (
+              <><ChevronUp size={14} />Ver menos</>
+            ) : (
+              <><ChevronDown size={14} />Ver mais ({sorted.length - HISTORY_PAGE} founders)</>
+            )}
+          </button>
         </div>
       )}
     </div>
