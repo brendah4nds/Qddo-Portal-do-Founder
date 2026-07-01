@@ -562,12 +562,15 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
     )
   ).sort().reverse();
 
+  const [sortKey, setSortKey] = useState<string>(currentYM);
+
   if (allMonths.length === 0) return null;
 
   const sorted = [...founders].sort((a, b) => {
+    if (sortKey === 'total') return ((b as any).totalPoints ?? 0) - ((a as any).totalPoints ?? 0);
     const aP = (a as any).monthlyPoints ?? {};
     const bP = (b as any).monthlyPoints ?? {};
-    return (bP[currentYM] ?? 0) - (aP[currentYM] ?? 0);
+    return (bP[sortKey] ?? 0) - (aP[sortKey] ?? 0);
   });
 
   return (
@@ -593,13 +596,29 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
                 </th>
                 {allMonths.map(m => (
                   <th key={m} className="px-4 py-3 text-center min-w-[80px]">
-                    <span className={cn('text-overline font-bold uppercase tracking-widest', m === currentYM ? 'text-primary' : 'text-stone-400')}>
+                    <button
+                      onClick={() => setSortKey(m)}
+                      className={cn(
+                        'inline-flex items-center gap-1 text-overline font-bold uppercase tracking-widest transition-colors hover:text-primary',
+                        m === sortKey ? 'text-primary' : m === currentYM ? 'text-primary/60' : 'text-stone-400'
+                      )}
+                    >
                       {formatMonthLabel(m)}
-                    </span>
+                      {m === sortKey && <ChevronDown size={10} />}
+                    </button>
                   </th>
                 ))}
                 <th className="px-4 py-3 text-right min-w-[80px]">
-                  <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Total</span>
+                  <button
+                    onClick={() => setSortKey('total')}
+                    className={cn(
+                      'inline-flex items-center gap-1 text-overline font-bold uppercase tracking-widest transition-colors hover:text-primary',
+                      sortKey === 'total' ? 'text-primary' : 'text-stone-400'
+                    )}
+                  >
+                    Total
+                    {sortKey === 'total' && <ChevronDown size={10} />}
+                  </button>
                 </th>
               </tr>
             </thead>
