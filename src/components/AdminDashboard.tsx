@@ -470,19 +470,19 @@ function Delta({ value }: { value: number }) {
   );
 }
 
-function KPICard({ label, value, sub, delta, icon: Icon, dark }: {
+function KPICard({ label, value, sub, delta, icon: Icon }: {
   label: string; value: string | number; sub?: string;
-  delta?: number; icon?: React.ElementType; dark?: boolean;
+  delta?: number; icon?: React.ElementType;
 }) {
   return (
-    <div className={cn('rounded-xl border p-4 flex flex-col gap-2', dark ? 'bg-stone-900 border-stone-800' : 'bg-white border-stone-100')}>
+    <div className="rounded-xl border border-stone-100 bg-white p-4 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/20 transition-colors">
       <div className="flex items-center justify-between">
-        <span className={cn('text-overline font-bold uppercase tracking-widest', dark ? 'text-stone-500' : 'text-stone-400')}>{label}</span>
-        {Icon && <Icon size={14} className={dark ? 'text-stone-600' : 'text-stone-300'} />}
+        <span className="text-overline font-bold uppercase tracking-widest text-stone-400">{label}</span>
+        {Icon && <Icon size={14} className="text-stone-300" />}
       </div>
       <div>
-        <span className={cn('text-h2 font-black tabular-nums', dark ? 'text-white' : 'text-stone-900')}>{value}</span>
-        {sub && <span className={cn('text-sm ml-1.5', dark ? 'text-stone-500' : 'text-stone-400')}>{sub}</span>}
+        <span className="text-h2 font-black tabular-nums text-stone-900">{value}</span>
+        {sub && <span className="text-sm ml-1.5 text-stone-400">{sub}</span>}
       </div>
       {delta !== undefined && <Delta value={delta} />}
     </div>
@@ -499,7 +499,7 @@ const INSIGHT_META: Record<InsightSeverity, { bar: string; Icon: React.ElementTy
 function InsightCard({ insight }: { insight: Insight }) {
   const { bar, Icon, label } = INSIGHT_META[insight.severity];
   return (
-    <div className="bg-white border border-stone-100 rounded-xl p-4 flex gap-3">
+    <div className="bg-white border border-stone-100 rounded-xl p-4 flex gap-3 hover:bg-primary/5 hover:border-primary/20 transition-colors">
       <div className={cn('w-1 rounded-full flex-shrink-0 self-stretch', bar)} />
       <div className="flex flex-col gap-1 min-w-0">
         <div className="flex items-center gap-1.5">
@@ -592,7 +592,7 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
                   <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Founder</span>
                 </th>
                 {allMonths.map(m => (
-                  <th key={m} className={cn('px-4 py-3 text-center min-w-[80px]', m === currentYM && 'bg-primary/5')}>
+                  <th key={m} className="px-4 py-3 text-center min-w-[80px]">
                     <span className={cn('text-overline font-bold uppercase tracking-widest', m === currentYM ? 'text-primary' : 'text-stone-400')}>
                       {formatMonthLabel(m)}
                     </span>
@@ -608,8 +608,8 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
                 const mp: Record<string, number> = (founder as any).monthlyPoints ?? {};
                 const total: number = (founder as any).totalPoints ?? 0;
                 return (
-                  <tr key={founder.id} className={cn('border-b border-stone-50 hover:bg-stone-50/40 transition-colors', idx % 2 !== 0 && 'bg-stone-50/20')}>
-                    <td className="px-4 py-3 sticky left-0 bg-white z-10">
+                  <tr key={founder.id} className={cn('border-b border-stone-50 hover:bg-primary/5 transition-colors', idx % 2 !== 0 ? 'bg-stone-50/20' : 'bg-white')}>
+                    <td className="px-4 py-3 sticky left-0 z-10 bg-inherit transition-colors">
                       <div className="flex items-center gap-2.5">
                         <Avatar founder={founder} size={24} />
                         <div>
@@ -621,7 +621,7 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
                     {allMonths.map(m => {
                       const pts = mp[m] ?? 0;
                       return (
-                        <td key={m} className={cn('px-4 py-3 text-center', m === currentYM && 'bg-primary/5')}>
+                        <td key={m} className="px-4 py-3 text-center">
                           <span className={cn(
                             'font-bold tabular-nums',
                             pts > 0 ? m === currentYM ? 'text-primary' : 'text-stone-800' : 'text-stone-200'
@@ -646,7 +646,7 @@ function PointsHistory({ founders }: { founders: Founder[] }) {
                 {allMonths.map(m => {
                   const sum = sorted.reduce((s, f) => s + (((f as any).monthlyPoints ?? {})[m] ?? 0), 0);
                   return (
-                    <td key={m} className={cn('px-4 py-3 text-center', m === currentYM && 'bg-primary/5')}>
+                    <td key={m} className="px-4 py-3 text-center">
                       <span className={cn('font-bold tabular-nums', m === currentYM ? 'text-primary' : 'text-stone-600')}>
                         {sum > 0 ? sum : '—'}
                       </span>
@@ -746,7 +746,7 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <KPICard label="Check-ins" value={m.totalCheckins} delta={m.checkinDelta} icon={CheckSquare} dark />
+          <KPICard label="Check-ins" value={m.totalCheckins} delta={m.checkinDelta} icon={CheckSquare} />
           <KPICard label="Founders ativos" value={m.totalActive} sub={`de ${founders.length}`} delta={m.activeDelta} icon={Users} />
           <KPICard label="Conclusão desafios" value={`${m.completionRate}%`} icon={Trophy} />
           <KPICard label="Streak médio" value={`${m.avgStreak}d`} icon={Flame} />
@@ -787,7 +787,7 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
       </div>
 
       {/* Founder Matrix */}
-      <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden hover:border-primary/20 transition-colors">
         <div className="px-5 py-4 border-b border-stone-50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <BarChart2 size={12} className="text-stone-400" />
@@ -829,7 +829,7 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
               {(matrixExpanded ? sorted : sorted.slice(0, MATRIX_PAGE)).map((fm, idx) => {
                 const churnColor = fm.churnRisk > 65 ? 'text-red-600 font-bold' : fm.churnRisk > 40 ? 'text-amber-600 font-semibold' : 'text-stone-400';
                 return (
-                  <tr key={fm.founder.id} className={cn('border-b border-stone-50 hover:bg-stone-50/40 transition-colors', idx % 2 !== 0 && 'bg-stone-50/20')}>
+                  <tr key={fm.founder.id} className={cn('border-b border-stone-50 hover:bg-primary/5 transition-colors', idx % 2 !== 0 && 'bg-stone-50/20')}>
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2.5">
                         <Avatar founder={fm.founder} size={28} />
