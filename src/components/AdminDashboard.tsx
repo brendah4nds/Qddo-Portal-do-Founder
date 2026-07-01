@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   TrendingUp, TrendingDown, Users, CheckSquare, Trophy,
   AlertTriangle, Zap, Activity, ChevronUp, ChevronDown,
-  Minus, Flame, BarChart2, Award
+  Minus, Flame, BarChart2, Award, History
 } from 'lucide-react';
 import { format, subDays, startOfDay, startOfMonth, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -544,6 +544,129 @@ function SortTh({ label, col, current, dir, onSort }: {
   );
 }
 
+// ─── Monthly Points History ───────────────────────────────────────────────────
+
+function formatMonthLabel(ym: string): string {
+  const [y, m] = ym.split('-').map(Number);
+  return format(new Date(y, m - 1, 1), "MMM'/'yy", { locale: ptBR });
+}
+
+function PointsHistory({ founders }: { founders: Founder[] }) {
+  const [expanded, setExpanded] = useState(true);
+  const now = new Date();
+  const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  const allMonths = Array.from(
+    new Set(
+      founders.flatMap(f => Object.keys((f as any).monthlyPoints ?? {}))
+    )
+  ).sort().reverse();
+
+  if (allMonths.length === 0) return null;
+
+  const sorted = [...founders].sort((a, b) => {
+    const aP = (a as any).monthlyPoints ?? {};
+    const bP = (b as any).monthlyPoints ?? {};
+    return (bP[currentYM] ?? 0) - (aP[currentYM] ?? 0);
+  });
+
+  return (
+    <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden">
+      <button
+        className="w-full px-5 py-4 border-b border-stone-50 flex items-center justify-between hover:bg-stone-50/40 transition-colors"
+        onClick={() => setExpanded(e => !e)}
+      >
+        <div className="flex items-center gap-2">
+          <History size={12} className="text-stone-400" />
+          <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Histórico de Pontuação Mensal</span>
+        </div>
+        {expanded ? <ChevronUp size={14} className="text-stone-400" /> : <ChevronDown size={14} className="text-stone-400" />}
+      </button>
+
+      {expanded && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-stone-50 bg-stone-50/40">
+                <th className="px-4 py-3 text-left sticky left-0 bg-stone-50/90 z-10 min-w-[160px]">
+                  <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Founder</span>
+                </th>
+                {allMonths.map(m => (
+                  <th key={m} className={cn('px-4 py-3 text-center min-w-[80px]', m === currentYM && 'bg-primary/5')}>
+                    <span className={cn('text-overline font-bold uppercase tracking-widest', m === currentYM ? 'text-primary' : 'text-stone-400')}>
+                      {formatMonthLabel(m)}
+                    </span>
+                  </th>
+                ))}
+                <th className="px-4 py-3 text-right min-w-[80px]">
+                  <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Total</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((founder, idx) => {
+                const mp: Record<string, number> = (founder as any).monthlyPoints ?? {};
+                const total: number = (founder as any).totalPoints ?? 0;
+                return (
+                  <tr key={founder.id} className={cn('border-b border-stone-50 hover:bg-stone-50/40 transition-colors', idx % 2 !== 0 && 'bg-stone-50/20')}>
+                    <td className="px-4 py-3 sticky left-0 bg-white z-10">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar founder={founder} size={24} />
+                        <div>
+                          <p className="text-sm font-semibold text-stone-800 leading-none">{founder.name}</p>
+                          <p className="text-[11px] text-stone-400 mt-0.5">@{(founder as any).username ?? ''}</p>
+                        </div>
+                      </div>
+                    </td>
+                    {allMonths.map(m => {
+                      const pts = mp[m] ?? 0;
+                      return (
+                        <td key={m} className={cn('px-4 py-3 text-center', m === currentYM && 'bg-primary/5')}>
+                          <span className={cn(
+                            'font-bold tabular-nums',
+                            pts > 0 ? m === currentYM ? 'text-primary' : 'text-stone-800' : 'text-stone-200'
+                          )}>
+                            {pts > 0 ? pts : '—'}
+                          </span>
+                        </td>
+                      );
+                    })}
+                    <td className="px-4 py-3 text-right">
+                      <span className="font-bold text-stone-500 tabular-nums">{total}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-stone-200 bg-stone-50">
+                <td className="px-4 py-3 sticky left-0 bg-stone-50 z-10">
+                  <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Comunidade</span>
+                </td>
+                {allMonths.map(m => {
+                  const sum = sorted.reduce((s, f) => s + (((f as any).monthlyPoints ?? {})[m] ?? 0), 0);
+                  return (
+                    <td key={m} className={cn('px-4 py-3 text-center', m === currentYM && 'bg-primary/5')}>
+                      <span className={cn('font-bold tabular-nums', m === currentYM ? 'text-primary' : 'text-stone-600')}>
+                        {sum > 0 ? sum : '—'}
+                      </span>
+                    </td>
+                  );
+                })}
+                <td className="px-4 py-3 text-right">
+                  <span className="font-bold text-stone-600 tabular-nums">
+                    {sorted.reduce((s, f) => s + ((f as any).totalPoints ?? 0), 0)}
+                  </span>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 interface Props {
@@ -811,6 +934,9 @@ export function AdminDashboard({ founders, checkins, challenges }: Props) {
           <span className="text-xs text-stone-400">Churn = risco de abandono por inatividade e streak</span>
         </div>
       </div>
+
+      {/* Monthly Points History */}
+      <PointsHistory founders={founders} />
 
     </div>
   );

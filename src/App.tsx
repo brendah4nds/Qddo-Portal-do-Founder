@@ -1882,11 +1882,12 @@ export default function App() {
                             const now = new Date();
                             const monthLabel = format(now, 'MMMM yyyy', { locale: ptBR });
 
-                            // Uses totalPoints as single source of truth — same field as SEU SCORE QDDO
+                            // Ranking uses current-month points only
+                            const currentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
                             const fullRanking = allFounders
                               .map((founder: any) => ({
                                 userId: founder.id,
-                                score: founder.totalPoints || 0,
+                                score: (founder.monthlyPoints?.[currentYM] ?? founder.monthlyPoints?.get?.(currentYM) ?? 0),
                                 name: founder.name || 'Founder',
                                 username: founder.username || founder.id?.slice(0, 6),
                                 photoURL: founder.photoURL || null,
@@ -2585,19 +2586,22 @@ export default function App() {
                         .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
                         .slice(0, 3);
 
+                      const currentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
                       const currentMonthStart = startOfMonth(now);
                       const currentMonthEnd = endOfMonth(now);
                       const currentMonthCheckins = userCheckins.filter(c => {
                         const d = toDate(c.checkinTime) || new Date();
                         return isWithinInterval(d, { start: currentMonthStart, end: currentMonthEnd });
                       }).length;
-                      const userScore = founderData?.totalPoints ?? 0;
+                      const userScore = founderData?.monthlyPoints?.[currentYM]
+                        ?? (founderData?.monthlyPoints as any)?.get?.(currentYM)
+                        ?? 0;
 
-                      // Ranking Top 5 — uses totalPoints as single source of truth
+                      // Ranking Top 5 — current month points only
                       const fullRanking = allFounders
                         .map((f: any) => ({
                           userId: f.id,
-                          score: f.totalPoints || 0,
+                          score: (f.monthlyPoints?.[currentYM] ?? f.monthlyPoints?.get?.(currentYM) ?? 0),
                           name: f.name || 'Founder',
                           username: f.username || f.id?.slice(0, 6),
                           photoURL: f.photoURL || null,
