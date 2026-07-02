@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -1536,790 +1536,560 @@ export default function App() {
                 </div>
               </div>
             ) : view === 'qcoin' ? (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {expandedQcoinCard ? (
-                  <div className="bg-white rounded-xl p-10 md:p-12 border border-stone-100 shadow-sm animate-in fade-in zoom-in-95 duration-300">
-                    <button
-                      onClick={() => { window.history.pushState({}, '', '/qcoin'); setExpandedQcoinCard(null); setEditingQcoinSection(null); }}
-                      className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 mb-8 flex items-center gap-2 transition-colors"
-                    >
-                      <ArrowRight size={16} className="rotate-180" />
-                      Voltar
-                    </button>
+              (() => {
+                const _now = new Date();
+                const _monthLabel = format(_now, 'MMMM yyyy', { locale: ptBR });
+                const _ym = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+                const _myId = user?._id || user?.uid;
 
-                    {(() => {
-                      const section = QCOIN_SECTIONS.find(s => s.id === expandedQcoinCard);
-                      if (!section) return null;
-                      const Icon = section.icon;
-                      const sectionData = qcoinSections.find(s => s.id === expandedQcoinCard);
+                const _ranking = [...allFounders]
+                  .map((f: any) => ({
+                    id: f.id || f._id,
+                    name: f.name || 'Founder',
+                    username: (f.username || '').replace(/^@/, ''),
+                    photoURL: f.photoURL || null,
+                    coins: f.monthlyPoints?.[_ym] ?? f.monthlyPoints?.get?.(_ym) ?? 0,
+                    totalPoints: f.totalPoints || 0,
+                  }))
+                  .sort((a: any, b: any) => b.coins - a.coins);
 
-                      return (
-                        <div>
-                          <div className="flex items-center justify-between mb-10">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-lg bg-terracota-100 flex items-center justify-center">
-                                <Icon size={22} className="text-primary" />
-                              </div>
-                              <h2 className="text-h2 md:text-h1 font-sans">{section.title}</h2>
-                            </div>
-                            {isAdmin && (
-                              editingQcoinSection === expandedQcoinCard ? (
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => setEditingQcoinSection(null)}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                  >
-                                    <X size={14} />
-                                    Cancelar
-                                  </button>
-                                  <button
-                                    onClick={() => handleSaveQcoinSection(expandedQcoinCard)}
-                                    disabled={savingQcoinSection}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary/80 transition-all disabled:opacity-50"
-                                  >
-                                    <Check size={14} />
-                                    {savingQcoinSection ? 'Salvando...' : 'Salvar'}
-                                  </button>
+                const _myFounderId = founderData?.id || founderData?._id || _myId;
+                const _myIdx = _ranking.findIndex((f: any) => f.id === _myFounderId);
+                const _myRank = _myIdx + 1;
+                const _me = _myIdx >= 0 ? _ranking[_myIdx] : { id: _myFounderId, name: founderData?.name || user?.name || user?.displayName || 'Você', username: founderData?.username || '', photoURL: founderData?.photoURL || null, coins: 0, totalPoints: founderData?.totalPoints || 0 };
+                const _totalPoints: number = founderData?.monthlyPoints?.[_ym] ?? founderData?.monthlyPoints?.get?.(_ym) ?? _me.coins ?? 0;
+                const _above = _myIdx > 0 ? _ranking[_myIdx - 1] : null;
+                const _coinsToNext = _above ? Math.max(0, _above.coins - _me.coins) : 0;
+
+                const _thrIdx = estagiosCols.findIndex((c: string) => /thr/i.test(c.trim()));
+                const _stagesRaw: any[] = estagiosRows
+                  .filter((r: string[]) => r[0]?.trim())
+                  .map((r: string[], i: number) => ({
+                    name: (r[0] || '').split(/\s*->\s*|\s*→\s*/)[0].trim() || `Estágio ${i+1}`,
+                    fullName: (r[0] || '').trim(),
+                    thr: _thrIdx >= 0 ? (parseInt(r[_thrIdx]) || 0) : [0, 50, 120, 220, 400][i] ?? i * 80,
+                    row: r,
+                  }));
+                const _stages: any[] = _stagesRaw.length >= 2 ? _stagesRaw : [
+                  { name: 'Cinza', fullName: 'Cinza', thr: 0, row: [] },
+                  { name: 'Bronze', fullName: 'Bronze', thr: 50, row: [] },
+                  { name: 'Prata', fullName: 'Prata', thr: 120, row: [] },
+                  { name: 'Ouro', fullName: 'Ouro', thr: 220, row: [] },
+                  { name: 'Diamante', fullName: 'Diamante', thr: 400, row: [] },
+                ];
+                const _curIdx = _stages.reduce((b: number, s: any, i: number) => _totalPoints >= s.thr ? i : b, 0);
+                const _curStage = _stages[_curIdx];
+                const _nxtStage = _stages[_curIdx + 1];
+                const _stagePct = _nxtStage
+                  ? Math.min(100, Math.round(((_totalPoints - _curStage.thr) / Math.max(1, _nxtStage.thr - _curStage.thr)) * 100))
+                  : 100;
+                const _stageDelta = _nxtStage ? Math.max(0, _nxtStage.thr - _totalPoints) : 0;
+
+                const _actions = pontuacaoRows.filter((r: string[]) => r[0]?.trim()).map((r: string[]) => ({ title: r[0]?.trim() || '', pts: r[1]?.trim() || '' }));
+                const _premios = premiacoesRows.filter((r: string[]) => r[0]?.trim()).map((r: string[]) => ({ name: r[0]?.trim() || '', desc: r[1]?.trim() || '', cost: r[2]?.trim() || r[1]?.trim() || '' }));
+
+                const SHOW_TOP = 7;
+                const _displayRows: Array<{item: any; rIdx: number; sep?: boolean}> =
+                  _myIdx < 0 || _myIdx < SHOW_TOP + 2
+                    ? _ranking.slice(0, Math.max(SHOW_TOP, _myIdx >= 0 ? _myIdx + 3 : SHOW_TOP)).map((item: any, rIdx: number) => ({ item, rIdx }))
+                    : [
+                        ..._ranking.slice(0, SHOW_TOP).map((item: any, rIdx: number) => ({ item, rIdx })),
+                        { item: null, rIdx: -1, sep: true },
+                        ...(_myIdx > 0 ? [{ item: _ranking[_myIdx - 1], rIdx: _myIdx - 1 }] : []),
+                        { item: _ranking[_myIdx], rIdx: _myIdx },
+                        ...(_myIdx + 1 < _ranking.length ? [{ item: _ranking[_myIdx + 1], rIdx: _myIdx + 1 }] : []),
+                      ];
+
+                const _toMs = (t: any): number => {
+                  if (!t) return 0;
+                  if (typeof t === 'number') return t;
+                  if (t?.toDate) return t.toDate().getTime();
+                  if (t?.seconds) return t.seconds * 1000;
+                  return new Date(t).getTime() || 0;
+                };
+                // userCheckins pode estar vazio por race condition (filtrado antes de user._id ser atualizado)
+                // fallback: usa allCheckins filtrado pelo founderData._id que é confiável
+                const _fId = founderData?.id || founderData?._id;
+                const _myCheckins = (() => {
+                  if (userCheckins.length > 0) return userCheckins;
+                  if (!_fId) return [];
+                  return allCheckins.filter((c: any) =>
+                    c.userId === _fId || c.userId === user?._id || c.userId === user?.uid
+                  );
+                })();
+                const _recentCheckins = [..._myCheckins]
+                  .sort((a: any, b: any) => _toMs(b.checkinTime || b.date) - _toMs(a.checkinTime || a.date))
+                  .slice(0, 4);
+
+                const _weekStart = new Date(_now);
+                const _dayOfWeek = _weekStart.getDay();
+                _weekStart.setDate(_weekStart.getDate() - (_dayOfWeek === 0 ? 6 : _dayOfWeek - 1));
+                _weekStart.setHours(0, 0, 0, 0);
+                const _weekPoints = _myCheckins
+                  .filter((c: any) => _toMs(c.checkinTime || c.date) >= _weekStart.getTime())
+                  .reduce((sum: number, c: any) => sum + Number(c.points || c.pts || 0), 0);
+
+                const _suggestedAction = _actions.find((a: any) => { const n = parseInt(a.pts); return !isNaN(n) && n >= _coinsToNext; }) || _actions[0];
+
+                const AdminTableEditor = ({ sectionId, cols, colWidths, rows, setCols, setColWidths, setRows, resizingRef }: any) => (
+                  <div className="mt-3 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
+                        <thead>
+                          <tr className="bg-stone-900 border-b border-stone-800">
+                            {cols.map((col: string, ci: number) => (
+                              <th key={ci} className="relative px-3 py-2.5 select-none group/col" style={{ width: colWidths[ci] }}>
+                                <input type="text" value={col} onChange={e => setCols((p: string[]) => p.map((c: string, i: number) => i === ci ? e.target.value : c))}
+                                  className="w-full px-1 bg-transparent border border-transparent rounded text-overline uppercase tracking-widest font-bold text-stone-400 hover:border-stone-700 focus:border-stone-500 focus:outline-none focus:bg-stone-800" />
+                                <button onClick={() => { setCols((p: string[]) => p.filter((_: string, i: number) => i !== ci)); setColWidths((p: number[]) => p.filter((_: number, i: number) => i !== ci)); setRows((p: string[][]) => p.map((r: string[]) => r.filter((_: string, i: number) => i !== ci))); }}
+                                  className="absolute top-0.5 left-0.5 w-3.5 h-3.5 flex items-center justify-center rounded bg-red-500 text-white opacity-0 group-hover/col:opacity-100 transition-opacity" title="Excluir coluna"><X size={7} /></button>
+                                <div onMouseDown={(e: React.MouseEvent) => { e.preventDefault(); resizingRef.current = { colIdx: ci, startX: e.clientX, startWidth: colWidths[ci] }; }}
+                                  className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group/r">
+                                  <div className="w-px h-3 bg-stone-600 group-hover/r:bg-stone-400 rounded-full" />
                                 </div>
-                              ) : (
-                                <button
-                                  onClick={() => { setEditingQcoinSection(expandedQcoinCard); setQcoinEditContent(sectionData?.content || ''); }}
-                                  className="flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                >
-                                  <Pencil size={14} />
-                                  {sectionData?.content ? 'Editar conteúdo' : 'Adicionar conteúdo'}
-                                </button>
-                              )
-                            )}
+                              </th>
+                            ))}
+                            <th style={{ width: 28 }} />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map((row: string[], ri: number) => (
+                            <tr key={ri} className="border-b border-stone-100 hover:bg-stone-50/50">
+                              {row.map((cell: string, ci: number) => (
+                                <td key={ci} className="px-2 py-0.5 align-top">
+                                  <textarea value={cell} rows={1}
+                                    ref={(el: HTMLTextAreaElement | null) => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
+                                    onChange={e => setRows((p: string[][]) => p.map((r: string[], i: number) => i === ri ? r.map((c: string, j: number) => j === ci ? e.target.value : c) : r))}
+                                    onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }}
+                                    className="w-full bg-transparent border border-transparent rounded px-2 py-1 text-xs text-stone-700 resize-none overflow-hidden hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white"
+                                    placeholder="—" />
+                                </td>
+                              ))}
+                              <td style={{ width: 28 }} className="px-1 py-0.5 align-middle">
+                                <button onClick={() => setRows((p: string[][]) => p.filter((_: string[], i: number) => i !== ri))}
+                                  className="w-5 h-5 flex items-center justify-center rounded text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={10} /></button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="px-4 py-2.5 border-t border-stone-100 flex items-center justify-between">
+                      <div className="flex gap-2">
+                        <button onClick={() => setRows((p: string[][]) => [...p, new Array(cols.length).fill('')])}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"><Plus size={11} /> Linha</button>
+                        <button onClick={() => { setCols((p: string[]) => [...p, 'Nova coluna']); setColWidths((p: number[]) => [...p, 120]); setRows((p: string[][]) => p.map((r: string[]) => [...r, ''])); }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"><Plus size={11} /> Coluna</button>
+                      </div>
+                      <button onClick={() => handleSaveQcoinTable(sectionId)} disabled={savingQcoinSection}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600' : qcoinTableSaveStatus === 'error' ? 'bg-red-600' : 'bg-stone-900 hover:bg-primary/80'}`}>
+                        <Check size={11} />{savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Salva' : qcoinTableSaveStatus === 'error' ? 'Erro' : 'Salvar tabela'}
+                      </button>
+                    </div>
+                    {qcoinTableSaveStatus === 'error' && qcoinTableSaveError && (
+                      <p className="px-4 pb-2 text-xs text-red-500 break-all">Detalhe: {qcoinTableSaveError}</p>
+                    )}
+                  </div>
+                );
+
+                return (
+                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
+
+                    {/* ── 1. HERO ── */}
+                    <div className="bg-white rounded-xl border border-stone-100 shadow-sm px-5 pt-4 pb-5 space-y-4">
+                      {/* Linha 1: título + mês */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">QCoins</span>
+                        <span className="text-xs font-semibold text-stone-400 capitalize">{_monthLabel}</span>
+                      </div>
+                      {/* Linha 2: nome + saldo + semana + rank */}
+                      <div>
+                        <div className="flex items-baseline gap-x-4 gap-y-1 flex-wrap">
+                          <span className="text-sm font-semibold text-stone-500 self-center">{founderData?.name || user?.displayName || 'Você'}</span>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-4xl font-black text-stone-900 tabular-nums leading-none">{_totalPoints.toLocaleString('pt-BR')}</span>
+                            <span className="text-sm font-medium text-stone-400">QCoins</span>
                           </div>
-
-                          {/* Tabela de pontuação — editável, padronizada com os demais cards */}
-                          {expandedQcoinCard === 'pontuacao' && (
-                            <div className="mb-8 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
-                                  <thead>
-                                    <tr className="bg-stone-900 border-b border-stone-800">
-                                      {pontuacaoCols.map((col: string, colIdx: number) => (
-                                        <th
-                                          key={colIdx}
-                                          className="relative px-3 py-4 select-none group/col"
-                                          style={{ width: pontuacaoColWidths[colIdx] }}
-                                        >
-                                          <input
-                                            type="text"
-                                            value={col}
-                                            readOnly={!isAdmin}
-                                            onChange={e => {
-                                              const updated = pontuacaoCols.map((c: string, i: number) => i === colIdx ? e.target.value : c);
-                                              setPontuacaoCols(updated);
-                                            }}
-                                            className={`w-full px-2 py-1 bg-transparent border border-transparent rounded-lg text-overline uppercase tracking-widest font-bold text-stone-400 placeholder-stone-600 transition-all${isAdmin ? ' hover:border-stone-700 focus:border-stone-500 focus:outline-none focus:bg-stone-800' : ' cursor-default'}`}
-                                            placeholder="Título"
-                                          />
-                                          {isAdmin && (
-                                            <>
-                                              <button
-                                                onClick={() => {
-                                                  setPontuacaoCols((prev: string[]) => prev.filter((_: string, i: number) => i !== colIdx));
-                                                  setPontuacaoColWidths((prev: number[]) => prev.filter((_: number, i: number) => i !== colIdx));
-                                                  setPontuacaoRows((prev: string[][]) => prev.map((r: string[]) => r.filter((_: string, i: number) => i !== colIdx)));
-                                                }}
-                                                className="absolute top-1 left-1 w-4 h-4 flex items-center justify-center rounded bg-red-500 text-white transition-all opacity-0 group-hover/col:opacity-100"
-                                                title="Excluir coluna"
-                                              >
-                                                <X size={8} />
-                                              </button>
-                                              <div
-                                                title="Arraste para redimensionar"
-                                                onMouseDown={(e: React.MouseEvent) => {
-                                                  e.preventDefault();
-                                                  pontuacaoResizingRef.current = {
-                                                    colIdx,
-                                                    startX: e.clientX,
-                                                    startWidth: pontuacaoColWidths[colIdx],
-                                                  };
-                                                }}
-                                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
-                                              >
-                                                <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
-                                              </div>
-                                            </>
-                                          )}
-                                        </th>
-                                      ))}
-                                      {isAdmin && (
-                                        <th className="relative px-1 py-4 select-none" style={{ width: 32 }}></th>
-                                      )}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {pontuacaoRows.map((row, idx) => (
-                                      <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
-                                        {(row as string[]).map((cell, cellIdx) => (
-                                          <td key={cellIdx} className="px-3 py-1 align-top">
-                                            <textarea
-                                              value={cell}
-                                              rows={1}
-                                              readOnly={!isAdmin}
-                                              ref={(el: HTMLTextAreaElement | null) => {
-                                                if (el) {
-                                                  el.style.height = 'auto';
-                                                  el.style.height = el.scrollHeight + 'px';
-                                                }
-                                              }}
-                                              onChange={e => {
-                                                const updated = pontuacaoRows.map((r, i) =>
-                                                  i === idx ? (r as string[]).map((c, j) => j === cellIdx ? e.target.value : c) : r
-                                                );
-                                                setPontuacaoRows(updated);
-                                              }}
-                                              onInput={e => {
-                                                const t = e.target as HTMLTextAreaElement;
-                                                t.style.height = 'auto';
-                                                t.style.height = t.scrollHeight + 'px';
-                                              }}
-                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-md text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
-                                              placeholder="—"
-                                            />
-                                          </td>
-                                        ))}
-                                        {isAdmin && (
-                                          <td className="px-1 py-1 align-middle" style={{ width: 32 }}>
-                                            <button
-                                              onClick={() => setPontuacaoRows((prev: string[][]) => prev.filter((_: string[], i: number) => i !== idx))}
-                                              className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-all"
-                                              title="Excluir linha"
-                                            >
-                                              <Trash2 size={12} />
-                                            </button>
-                                          </td>
-                                        )}
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                              {isAdmin && (
-                                <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => setPontuacaoRows((prev: string[][]) => [...prev, new Array(pontuacaoCols.length).fill('')])}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                    >
-                                      <Plus size={14} />
-                                      Nova linha
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setPontuacaoCols((prev: string[]) => [...prev, 'Nova coluna']);
-                                        setPontuacaoColWidths((prev: number[]) => [...prev, 120]);
-                                        setPontuacaoRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
-                                      }}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                    >
-                                      <Plus size={14} />
-                                      Nova coluna
-                                    </button>
-                                  </div>
-                                  <button
-                                    onClick={() => handleSaveQcoinTable('pontuacao')}
-                                    disabled={savingQcoinSection}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-primary/80'}`}
-                                  >
-                                    <Check size={14} />
-                                    {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                          {_weekPoints > 0 && (
+                            <span className="text-sm font-semibold text-emerald-600 self-center">+{_weekPoints.toLocaleString('pt-BR')} esta semana</span>
                           )}
-
-                          {/* Tabela de estágios — sempre visível dentro da caixa "Estágios e Thresholds de Progressão" */}
-                          {expandedQcoinCard === 'estagios' && (
-                            <div className="mb-8 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
-                                  <thead>
-                                    <tr className="bg-stone-900 border-b border-stone-800">
-                                      {estagiosCols.map((col: string, colIdx: number) => (
-                                        <th
-                                          key={colIdx}
-                                          className="relative px-3 py-4 select-none group/col"
-                                          style={{ width: estagiosColWidths[colIdx] }}
-                                        >
-                                          <input
-                                            type="text"
-                                            value={col}
-                                            readOnly={!isAdmin}
-                                            onChange={e => {
-                                              const updated = estagiosCols.map((c: string, i: number) => i === colIdx ? e.target.value : c);
-                                              setEstagiosCols(updated);
-                                            }}
-                                            className={`w-full px-2 py-1 bg-transparent border border-transparent rounded-lg text-overline uppercase tracking-widest font-bold text-stone-400 placeholder-stone-600 transition-all${isAdmin ? ' hover:border-stone-700 focus:border-stone-500 focus:outline-none focus:bg-stone-800' : ' cursor-default'}`}
-                                            placeholder="Título"
-                                          />
-                                          {isAdmin && (
-                                            <>
-                                              <button
-                                                onClick={() => {
-                                                  setEstagiosCols((prev: string[]) => prev.filter((_: string, i: number) => i !== colIdx));
-                                                  setEstagiosColWidths((prev: number[]) => prev.filter((_: number, i: number) => i !== colIdx));
-                                                  setEstagiosRows((prev: string[][]) => prev.map((r: string[]) => r.filter((_: string, i: number) => i !== colIdx)));
-                                                }}
-                                                className="absolute top-1 left-1 w-4 h-4 flex items-center justify-center rounded bg-red-500 text-white transition-all opacity-0 group-hover/col:opacity-100"
-                                                title="Excluir coluna"
-                                              >
-                                                <X size={8} />
-                                              </button>
-                                              <div
-                                                title="Arraste para redimensionar"
-                                                onMouseDown={(e: React.MouseEvent) => {
-                                                  e.preventDefault();
-                                                  estagiosResizingRef.current = {
-                                                    colIdx,
-                                                    startX: e.clientX,
-                                                    startWidth: estagiosColWidths[colIdx],
-                                                  };
-                                                }}
-                                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
-                                              >
-                                                <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
-                                              </div>
-                                            </>
-                                          )}
-                                        </th>
-                                      ))}
-                                      {isAdmin && (
-                                        <th className="relative px-1 py-4 select-none" style={{ width: 32 }}></th>
-                                      )}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {estagiosRows.map((row, idx) => (
-                                      <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
-                                        {(row as string[]).map((cell, cellIdx) => (
-                                          <td key={cellIdx} className="px-3 py-1 align-top">
-                                            <textarea
-                                              value={cell}
-                                              rows={1}
-                                              readOnly={!isAdmin}
-                                              ref={(el: HTMLTextAreaElement | null) => {
-                                                if (el) {
-                                                  el.style.height = 'auto';
-                                                  el.style.height = el.scrollHeight + 'px';
-                                                }
-                                              }}
-                                              onChange={e => {
-                                                const updated = estagiosRows.map((r, i) =>
-                                                  i === idx ? (r as string[]).map((c, j) => j === cellIdx ? e.target.value : c) : r
-                                                );
-                                                setEstagiosRows(updated);
-                                              }}
-                                              onInput={e => {
-                                                const t = e.target as HTMLTextAreaElement;
-                                                t.style.height = 'auto';
-                                                t.style.height = t.scrollHeight + 'px';
-                                              }}
-                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-md text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
-                                              placeholder="—"
-                                            />
-                                          </td>
-                                        ))}
-                                        {isAdmin && (
-                                          <td className="px-1 py-1 align-middle" style={{ width: 32 }}>
-                                            <button
-                                              onClick={() => setEstagiosRows((prev: string[][]) => prev.filter((_: string[], i: number) => i !== idx))}
-                                              className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-all"
-                                              title="Excluir linha"
-                                            >
-                                              <Trash2 size={12} />
-                                            </button>
-                                          </td>
-                                        )}
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                              {isAdmin && (
-                                <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => setEstagiosRows((prev: string[][]) => [...prev, new Array(estagiosCols.length).fill('')])}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                    >
-                                      <Plus size={14} />
-                                      Nova linha
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setEstagiosCols((prev: string[]) => [...prev, 'Nova coluna']);
-                                        setEstagiosColWidths((prev: number[]) => [...prev, 120]);
-                                        setEstagiosRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
-                                      }}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                    >
-                                      <Plus size={14} />
-                                      Nova coluna
-                                    </button>
-                                  </div>
-                                  <button
-                                    onClick={() => handleSaveQcoinTable('estagios')}
-                                    disabled={savingQcoinSection}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-primary/80'}`}
-                                  >
-                                    <Check size={14} />
-                                    {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                          {_myRank > 0 && (
+                            <span className="text-sm font-semibold text-stone-400 self-center">#{_myRank} no ranking</span>
                           )}
-
-                          {/* Ranking Geral dinâmico */}
-                          {expandedQcoinCard === 'ranking' && (() => {
-                            const now = new Date();
-                            const monthLabel = format(now, 'MMMM yyyy', { locale: ptBR });
-
-                            // Ranking uses current-month points only
-                            const currentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-                            const fullRanking = allFounders
-                              .map((founder: any) => ({
-                                userId: founder.id,
-                                score: (founder.monthlyPoints?.[currentYM] ?? founder.monthlyPoints?.get?.(currentYM) ?? 0),
-                                name: founder.name || 'Founder',
-                                username: founder.username || founder.id?.slice(0, 6),
-                                photoURL: founder.photoURL || null,
-                              }))
-                              .sort((a: any, b: any) => b.score - a.score);
-
-                            return (
-                              <div className="mb-8 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
-                                {/* Header */}
-                                <div className="px-6 py-5 border-b border-stone-100 flex items-center gap-3">
-                                  <Crown className="text-primary" size={18} />
-                                  <h4 className="text-base font-sans text-stone-900">Ranking Geral</h4>
-                                  <span className="ml-auto text-overline font-bold uppercase tracking-widest text-stone-400 capitalize">
-                                    {monthLabel}
-                                  </span>
-                                </div>
-
-                                {/* List */}
-                                <div className="divide-y divide-stone-50">
-                                  {fullRanking.length === 0 ? (
-                                    <p className="text-stone-400 text-sm text-center py-10">Nenhum founder cadastrado.</p>
-                                  ) : (
-                                    fullRanking.map((item: any, idx: number) => (
-                                      <div key={item.userId} className="flex items-center justify-between px-6 py-3 hover:bg-stone-50/50 transition-colors group">
-                                        <div className="flex items-center gap-3">
-                                          <div className={cn(
-                                            "w-6 h-6 rounded-full flex items-center justify-center text-overline font-bold flex-shrink-0",
-                                            idx === 0 ? "bg-terracota-100 text-primary" :
-                                            idx === 1 ? "bg-stone-200 text-stone-600" :
-                                            idx === 2 ? "bg-orange-100 text-orange-600" :
-                                            "bg-stone-50 text-stone-400"
-                                          )}>
-                                            {idx + 1}
-                                          </div>
-                                          {item.photoURL ? (
-                                            <img
-                                              src={item.photoURL}
-                                              alt={item.name}
-                                              referrerPolicy="no-referrer"
-                                              onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
-                                              className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-stone-100"
-                                            />
-                                          ) : null}
-                                          <div className={cn("w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0 border border-stone-100", item.photoURL ? "hidden" : "")}>
-                                            <Users size={14} className="text-stone-400" />
-                                          </div>
-                                          <div>
-                                            <p className="text-sm font-bold text-stone-900 group-hover:text-primary transition-colors line-clamp-1">{item.name}</p>
-                                            <p className="text-xs text-stone-400">@{item.username?.replace(/^@/, '')}</p>
-                                          </div>
-                                        </div>
-                                        <div className="text-right shrink-0">
-                                          <span className="text-sm font-black text-stone-900">{item.score}</span>
-                                          <span className="text-overline text-stone-400 ml-1">QCoins</span>
-                                        </div>
-                                      </div>
-                                    ))
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })()}
-
-                          {/* Tabela de premiações */}
-                          {expandedQcoinCard === 'premiacoes' && (
-                            <div className="mb-8 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
-                                  <thead>
-                                    <tr className="bg-stone-900 border-b border-stone-800">
-                                      {premiacoesCols.map((col: string, colIdx: number) => (
-                                        <th
-                                          key={colIdx}
-                                          className="relative px-3 py-4 select-none group/col"
-                                          style={{ width: premiacoesColWidths[colIdx] }}
-                                        >
-                                          <input
-                                            type="text"
-                                            value={col}
-                                            readOnly={!isAdmin}
-                                            onChange={e => {
-                                              const updated = premiacoesCols.map((c: string, i: number) => i === colIdx ? e.target.value : c);
-                                              setPremiacoesCols(updated);
-                                            }}
-                                            className={`w-full px-2 py-1 bg-transparent border border-transparent rounded-lg text-overline uppercase tracking-widest font-bold text-stone-400 placeholder-stone-600 transition-all${isAdmin ? ' hover:border-stone-700 focus:border-stone-500 focus:outline-none focus:bg-stone-800' : ' cursor-default'}`}
-                                            placeholder="Título"
-                                          />
-                                          {isAdmin && (
-                                            <>
-                                              <button
-                                                onClick={() => {
-                                                  setPremiacoesCols((prev: string[]) => prev.filter((_: string, i: number) => i !== colIdx));
-                                                  setPremiacoesColWidths((prev: number[]) => prev.filter((_: number, i: number) => i !== colIdx));
-                                                  setPremiacoesRows((prev: string[][]) => prev.map((r: string[]) => r.filter((_: string, i: number) => i !== colIdx)));
-                                                }}
-                                                className="absolute top-1 left-1 w-4 h-4 flex items-center justify-center rounded bg-red-500 text-white transition-all opacity-0 group-hover/col:opacity-100"
-                                                title="Excluir coluna"
-                                              >
-                                                <X size={8} />
-                                              </button>
-                                              <div
-                                                title="Arraste para redimensionar"
-                                                onMouseDown={(e: React.MouseEvent) => {
-                                                  e.preventDefault();
-                                                  premiacoesResizingRef.current = {
-                                                    colIdx,
-                                                    startX: e.clientX,
-                                                    startWidth: premiacoesColWidths[colIdx],
-                                                  };
-                                                }}
-                                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
-                                              >
-                                                <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
-                                              </div>
-                                            </>
-                                          )}
-                                        </th>
-                                      ))}
-                                      {isAdmin && (
-                                        <th className="relative px-1 py-4 select-none" style={{ width: 32 }}></th>
-                                      )}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {premiacoesRows.map((row, idx) => (
-                                      <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
-                                        {(row as string[]).map((cell, cellIdx) => (
-                                          <td key={cellIdx} className="px-3 py-1 align-top">
-                                            <textarea
-                                              value={cell}
-                                              rows={1}
-                                              readOnly={!isAdmin}
-                                              ref={(el: HTMLTextAreaElement | null) => {
-                                                if (el) {
-                                                  el.style.height = 'auto';
-                                                  el.style.height = el.scrollHeight + 'px';
-                                                }
-                                              }}
-                                              onChange={e => {
-                                                const updated = premiacoesRows.map((r, i) =>
-                                                  i === idx ? (r as string[]).map((c, j) => j === cellIdx ? e.target.value : c) : r
-                                                );
-                                                setPremiacoesRows(updated);
-                                              }}
-                                              onInput={e => {
-                                                const t = e.target as HTMLTextAreaElement;
-                                                t.style.height = 'auto';
-                                                t.style.height = t.scrollHeight + 'px';
-                                              }}
-                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-md text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
-                                              placeholder="—"
-                                            />
-                                          </td>
-                                        ))}
-                                        {isAdmin && (
-                                          <td className="px-1 py-1 align-middle" style={{ width: 32 }}>
-                                            <button
-                                              onClick={() => setPremiacoesRows((prev: string[][]) => prev.filter((_: string[], i: number) => i !== idx))}
-                                              className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-all"
-                                              title="Excluir linha"
-                                            >
-                                              <Trash2 size={12} />
-                                            </button>
-                                          </td>
-                                        )}
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                              {isAdmin && (
-                                <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => setPremiacoesRows((prev: string[][]) => [...prev, new Array(premiacoesCols.length).fill('')])}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                    >
-                                      <Plus size={14} />
-                                      Nova linha
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setPremiacoesCols((prev: string[]) => [...prev, 'Nova coluna']);
-                                        setPremiacoesColWidths((prev: number[]) => [...prev, 120]);
-                                        setPremiacoesRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
-                                      }}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                    >
-                                      <Plus size={14} />
-                                      Nova coluna
-                                    </button>
-                                  </div>
-                                  <button
-                                    onClick={() => handleSaveQcoinTable('premiacoes')}
-                                    disabled={savingQcoinSection}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-primary/80'}`}
-                                  >
-                                    <Check size={14} />
-                                    {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
-                                  </button>
-                                </div>
-                              )}
+                        </div>
+                        {/* Linha 3: rival */}
+                        {_above && _coinsToNext > 0 && (
+                          <p className="text-sm text-stone-500 mt-2">
+                            Você está a{' '}
+                            <span className="font-semibold text-stone-800">{_coinsToNext.toLocaleString('pt-BR')} moedas</span>
+                            {' '}de ultrapassar{' '}
+                            <span className="font-semibold text-stone-800">{_above.name}</span>
+                            <span className="text-stone-400"> (#{_myRank - 1})</span>
+                          </p>
+                        )}
+                      </div>
+                      {/* Linha 4: barra de estágio */}
+                      {_nxtStage ? (
+                        <div className="pt-3 border-t border-stone-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-semibold text-stone-500 shrink-0">{_curStage?.name}</span>
+                            <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${Math.max(0, _stagePct)}%` }} />
                             </div>
-                          )}
+                            <span className="text-xs text-stone-500 shrink-0 tabular-nums">{Math.max(0, _stagePct)}% → {_nxtStage.name}</span>
+                            <span className="text-xs text-stone-400 shrink-0 hidden sm:inline">(faltam {_stageDelta} moedas)</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="pt-3 border-t border-stone-100">
+                          <p className="text-xs font-semibold text-primary">{_curStage?.name} — estágio máximo atingido</p>
+                        </div>
+                      )}
+                    </div>
 
-                          {/* Tabela de consequências */}
-                          {expandedQcoinCard === 'consequencias' && (
-                            <div className="mb-8 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
-                                  <thead>
-                                    <tr className="bg-stone-900 border-b border-stone-800">
-                                      {consequenciasCols.map((col: string, colIdx: number) => (
-                                        <th
-                                          key={colIdx}
-                                          className="relative px-3 py-4 select-none group/col"
-                                          style={{ width: consequenciasColWidths[colIdx] }}
-                                        >
-                                          <input
-                                            type="text"
-                                            value={col}
-                                            readOnly={!isAdmin}
-                                            onChange={e => {
-                                              const updated = consequenciasCols.map((c: string, i: number) => i === colIdx ? e.target.value : c);
-                                              setConsequenciasCols(updated);
-                                            }}
-                                            className={`w-full px-2 py-1 bg-transparent border border-transparent rounded-lg text-overline uppercase tracking-widest font-bold text-stone-400 placeholder-stone-600 transition-all${isAdmin ? ' hover:border-stone-700 focus:border-stone-500 focus:outline-none focus:bg-stone-800' : ' cursor-default'}`}
-                                            placeholder="Título"
-                                          />
-                                          {isAdmin && (
-                                            <>
-                                              <button
-                                                onClick={() => {
-                                                  setConsequenciasCols((prev: string[]) => prev.filter((_: string, i: number) => i !== colIdx));
-                                                  setConsequenciasColWidths((prev: number[]) => prev.filter((_: number, i: number) => i !== colIdx));
-                                                  setConsequenciasRows((prev: string[][]) => prev.map((r: string[]) => r.filter((_: string, i: number) => i !== colIdx)));
-                                                }}
-                                                className="absolute top-1 left-1 w-4 h-4 flex items-center justify-center rounded bg-red-500 text-white transition-all opacity-0 group-hover/col:opacity-100"
-                                                title="Excluir coluna"
-                                              >
-                                                <X size={8} />
-                                              </button>
-                                              <div
-                                                title="Arraste para redimensionar"
-                                                onMouseDown={(e: React.MouseEvent) => {
-                                                  e.preventDefault();
-                                                  consequenciasResizingRef.current = {
-                                                    colIdx,
-                                                    startX: e.clientX,
-                                                    startWidth: consequenciasColWidths[colIdx],
-                                                  };
-                                                }}
-                                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group"
-                                              >
-                                                <div className="w-px h-4 bg-stone-600 group-hover:bg-stone-300 transition-colors rounded-full" />
-                                              </div>
-                                            </>
-                                          )}
-                                        </th>
-                                      ))}
-                                      {isAdmin && (
-                                        <th className="relative px-1 py-4 select-none" style={{ width: 32 }}></th>
-                                      )}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {consequenciasRows.map((row, idx) => (
-                                      <tr key={idx} className="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
-                                        {(row as string[]).map((cell, cellIdx) => (
-                                          <td key={cellIdx} className="px-3 py-1 align-top">
-                                            <textarea
-                                              value={cell}
-                                              rows={1}
-                                              readOnly={!isAdmin}
-                                              ref={(el: HTMLTextAreaElement | null) => {
-                                                if (el) {
-                                                  el.style.height = 'auto';
-                                                  el.style.height = el.scrollHeight + 'px';
-                                                }
-                                              }}
-                                              onChange={e => {
-                                                const updated = consequenciasRows.map((r, i) =>
-                                                  i === idx ? (r as string[]).map((c, j) => j === cellIdx ? e.target.value : c) : r
-                                                );
-                                                setConsequenciasRows(updated);
-                                              }}
-                                              onInput={e => {
-                                                const t = e.target as HTMLTextAreaElement;
-                                                t.style.height = 'auto';
-                                                t.style.height = t.scrollHeight + 'px';
-                                              }}
-                                              className={`w-full px-3 py-1 bg-transparent border border-transparent rounded-md text-sm text-stone-700 placeholder-stone-300 transition-all resize-none overflow-hidden${isAdmin ? ' hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white' : ' cursor-default'}`}
-                                              placeholder="—"
-                                            />
-                                          </td>
-                                        ))}
-                                        {isAdmin && (
-                                          <td className="px-1 py-1 align-middle" style={{ width: 32 }}>
-                                            <button
-                                              onClick={() => setConsequenciasRows((prev: string[][]) => prev.filter((_: string[], i: number) => i !== idx))}
-                                              className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 transition-all"
-                                              title="Excluir linha"
-                                            >
-                                              <Trash2 size={12} />
-                                            </button>
-                                          </td>
-                                        )}
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                              {isAdmin && (
-                                <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => setConsequenciasRows((prev: string[][]) => [...prev, new Array(consequenciasCols.length).fill('')])}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                    >
-                                      <Plus size={14} />
-                                      Nova linha
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setConsequenciasCols((prev: string[]) => [...prev, 'Nova coluna']);
-                                        setConsequenciasColWidths((prev: number[]) => [...prev, 120]);
-                                        setConsequenciasRows((prev: string[][]) => prev.map((r: string[]) => [...r, '']));
-                                      }}
-                                      className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"
-                                    >
-                                      <Plus size={14} />
-                                      Nova coluna
-                                    </button>
+                    {/* ── 2. RANKING + SIDEBAR ── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+                      {/* Ranking — 2 colunas */}
+                      <div className="lg:col-span-2 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+                        <div className="px-5 py-3 border-b border-stone-100 flex items-center justify-between shrink-0">
+                          <div className="flex items-center gap-2">
+                            <Crown size={15} className="text-primary" />
+                            <span className="text-sm font-semibold text-stone-900">Ranking Geral</span>
+                          </div>
+                          <span className="text-xs font-bold uppercase tracking-widest text-stone-400 capitalize">{_monthLabel}</span>
+                        </div>
+                        <div className="overflow-y-auto max-h-[460px]">
+                          {_ranking.length === 0 ? (
+                            <p className="text-sm text-stone-400 text-center py-10">Nenhum founder cadastrado.</p>
+                          ) : (
+                            _displayRows.map(({ item, rIdx, sep }, di) => {
+                              if (sep) return (
+                                <div key={`sep-${di}`} className="py-1.5 text-center text-xs text-stone-300 select-none border-b border-stone-50">···</div>
+                              );
+                              const isMe = item?.id === _myId;
+                              const medal = rIdx === 0 ? '🥇' : rIdx === 1 ? '🥈' : rIdx === 2 ? '🥉' : null;
+                              return (
+                                <div key={item?.id || di} className={cn(
+                                  "flex items-center gap-3 px-5 py-2.5 border-b border-stone-50 transition-colors",
+                                  isMe ? "bg-terracota-100/20 border-l-2 border-l-primary" : "hover:bg-stone-50/50"
+                                )}>
+                                  <div className={cn(
+                                    "w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0",
+                                    rIdx === 0 ? "bg-amber-100 text-amber-700" :
+                                    rIdx === 1 ? "bg-stone-200 text-stone-500" :
+                                    rIdx === 2 ? "bg-orange-100 text-orange-600" :
+                                    "bg-stone-50 text-stone-400"
+                                  )}>
+                                    {medal || rIdx + 1}
                                   </div>
-                                  <button
-                                    onClick={() => handleSaveQcoinTable('consequencias')}
-                                    disabled={savingQcoinSection}
-                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600 hover:bg-green-700' : qcoinTableSaveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-primary/80'}`}
-                                  >
-                                    <Check size={14} />
-                                    {savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Tabela salva' : qcoinTableSaveStatus === 'error' ? 'Erro ao salvar tabela' : 'Salvar tabela'}
-                                  </button>
+                                  {item?.photoURL ? (
+                                    <img src={item.photoURL} alt={item.name} referrerPolicy="no-referrer"
+                                      className="w-7 h-7 rounded-full object-cover shrink-0 border border-stone-100"
+                                      onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove('hidden'); }} />
+                                  ) : null}
+                                  <div className={cn("w-7 h-7 rounded-full bg-stone-100 flex items-center justify-center shrink-0", item?.photoURL ? "hidden" : "")}>
+                                    <Users size={12} className="text-stone-400" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                      <p className={cn("text-sm font-semibold truncate", isMe ? "text-primary" : "text-stone-900")}>{item?.name}</p>
+                                      {isMe && <span className="text-xs text-primary/60 shrink-0 font-normal">você</span>}
+                                    </div>
+                                    <p className="text-xs text-stone-400 truncate">@{item?.username}</p>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <span className={cn("text-sm font-black tabular-nums", isMe ? "text-primary" : "text-stone-900")}>{(item?.coins ?? 0).toLocaleString('pt-BR')}</span>
+                                    <span className="text-xs text-stone-400 ml-1">Q</span>
+                                  </div>
                                 </div>
-                              )}
-                            </div>
+                              );
+                            })
                           )}
+                        </div>
+                      </div>
 
-                          {/* Área de edição (admin) */}
-                          {editingQcoinSection === expandedQcoinCard ? (
+                      {/* Sidebar — 1 coluna */}
+                      <div className="flex flex-col gap-4">
+
+                        {/* Próximo Objetivo */}
+                        <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">Próximo Objetivo</p>
+                          {_myRank === 1 ? (
                             <div>
-                              <p className="text-overline uppercase tracking-widest font-bold text-stone-400 mb-3">
-                                {expandedQcoinCard === 'pontuacao' ? 'Conteúdo adicional' : 'Conteúdo'}
-                              </p>
-                              <textarea
-                                value={qcoinEditContent}
-                                onChange={e => setQcoinEditContent(e.target.value)}
-                                rows={12}
-                                className="w-full px-5 py-4 bg-stone-50 border border-stone-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all resize-none"
-                                placeholder="Digite o conteúdo desta seção..."
-                              />
+                              <p className="text-sm font-semibold text-stone-900">Você lidera o ranking 🏆</p>
+                              <p className="text-xs text-stone-400 mt-1 leading-relaxed">Continue acumulando para manter a primeira posição.</p>
                             </div>
-                          ) : sectionData?.content ? (
+                          ) : _above && _coinsToNext > 0 ? (
                             <div>
-                              {expandedQcoinCard === 'pontuacao' && (
-                                <p className="text-overline uppercase tracking-widest font-bold text-stone-400 mb-3">Conteúdo adicional</p>
+                              <p className="text-3xl font-black text-stone-900 tabular-nums">{_coinsToNext}</p>
+                              <p className="text-xs text-stone-500 mt-0.5">moedas para ultrapassar</p>
+                              <p className="text-sm font-semibold text-stone-800 mt-1.5">{_above.name}<span className="text-stone-400 font-normal ml-2">#{_myRank - 1}</span></p>
+                              {_suggestedAction && (
+                                <div className="mt-4 pt-3 border-t border-stone-100">
+                                  <p className="text-xs text-stone-400 mb-1">Sugestão de ação</p>
+                                  <p className="text-sm font-semibold text-stone-800">{_suggestedAction.title}</p>
+                                  <p className="text-xs font-bold text-primary mt-0.5">+{_suggestedAction.pts} moedas</p>
+                                </div>
                               )}
-                              <p className="text-stone-600 leading-relaxed whitespace-pre-wrap">{sectionData.content}</p>
                             </div>
                           ) : (
-                            isAdmin ? (
-                              <div
-                                onClick={() => { setEditingQcoinSection(expandedQcoinCard); setQcoinEditContent(''); }}
-                                className="text-center py-14 border-2 border-dashed border-stone-200 rounded-xl cursor-pointer hover:border-stone-400 hover:bg-stone-50 transition-all group"
-                              >
-                                <div className="w-12 h-12 bg-stone-100 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:bg-stone-200 transition-all">
-                                  <Plus size={22} className="text-stone-400" />
-                                </div>
-                                <p className="text-stone-400 font-bold text-sm uppercase tracking-widest">Adicionar conteúdo</p>
-                              </div>
-                            ) : expandedQcoinCard !== 'pontuacao' ? (
-                              <div className="text-center py-12">
-                                <p className="text-stone-400">Nenhum conteúdo disponível no momento.</p>
-                              </div>
-                            ) : null
+                            <p className="text-sm text-stone-400 leading-relaxed">Continue acumulando moedas para avançar no ranking.</p>
                           )}
-                          {qcoinTableSaveStatus === 'error' && qcoinTableSaveError && (
-                            <p className="mt-2 text-xs text-red-500 break-all">Detalhe: {qcoinTableSaveError}</p>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {QCOIN_SECTIONS.map(section => {
-                      const Icon = section.icon;
-                      const sectionData = qcoinSections.find(s => s.id === section.id);
-                      const hasContent = !!(sectionData?.content) || section.id === 'pontuacao';
-
-                      return (
-                        <div
-                          key={section.id}
-                          onClick={() => { window.history.pushState({}, '', `/qcoin/${section.id}`); setExpandedQcoinCard(section.id); }}
-                          className="bg-white rounded-xl border border-stone-100 shadow-sm hover:shadow-md hover:border-stone-300 transition-all cursor-pointer group"
-                        >
-                          <div className="p-6">
-                            <div className="flex items-start justify-between mb-5">
-                              <div className="w-10 h-10 rounded-md bg-terracota-100 flex items-center justify-center group-hover:bg-terracota-500 transition-all">
-                                <Icon size={18} className="text-primary group-hover:text-white transition-all" />
-                              </div>
-                              <ArrowRight size={16} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-1 transition-all mt-1" />
+                          {_nxtStage && (
+                            <div className="mt-4 pt-3 border-t border-stone-100">
+                              <p className="text-xs text-stone-400 mb-1">Próximo estágio</p>
+                              <p className="text-sm font-semibold text-stone-800">{_nxtStage.name}</p>
+                              <p className="text-xs text-stone-400 mt-0.5">{_stageDelta} moedas restantes</p>
                             </div>
-                            <h3 className="font-bold text-stone-900 text-base mb-1">{section.title}</h3>
-                            {hasContent ? (
-                              <p className="text-xs text-stone-400">
-                                {section.id === 'pontuacao' ? '17 ações pontuadas' : 'Clique para ver'}
-                              </p>
-                            ) : isAdmin ? (
-                              <p className="text-xs text-stone-400 flex items-center gap-1">
-                                <Plus size={11} />
-                                Adicionar conteúdo
-                              </p>
-                            ) : (
-                              <p className="text-xs text-stone-400">Em breve</p>
-                            )}
-                          </div>
+                          )}
                         </div>
-                      );
-                    })}
+
+                        {/* Atividade Recente */}
+                        <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">Atividade Recente</p>
+                          {_recentCheckins.length > 0 ? (
+                            <div className="space-y-3">
+                              {_recentCheckins.map((c: any) => {
+                                const d = (() => { const t = c.checkinTime || c.date; if (!t) return new Date(0); if (typeof t === 'number') return new Date(t); if (t?.toDate) return t.toDate(); if (t?.seconds) return new Date(t.seconds * 1000); return new Date(t); })();
+                                const today = new Date();
+                                const diffDays = Math.floor((today.getTime() - d.getTime()) / 86400000);
+                                const label = diffDays === 0 ? 'Hoje' : diffDays === 1 ? 'Ontem' : `${diffDays} dias atrás`;
+                                return (
+                                  <div key={c.id} className="flex items-start gap-2.5">
+                                    <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                                      <Check size={9} className="text-emerald-600" />
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-stone-400">{label}</p>
+                                      <p className="text-xs font-medium text-stone-700">Check-in no QDDO</p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-stone-400 leading-relaxed">Nenhuma atividade recente registrada.</p>
+                          )}
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* ── 3. COMO GANHAR QCOINS ── */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Como ganhar QCoins</p>
+                        {isAdmin && (
+                          <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'pontuacao' ? null : 'pontuacao')}
+                            className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
+                            <Pencil size={11} />{editingQcoinSection === 'pontuacao' ? 'Fechar editor' : 'Editar dados'}
+                          </button>
+                        )}
+                      </div>
+                      {_actions.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                          {_actions.map((action: any, idx: number) => (
+                            <div key={idx} className="bg-white rounded-xl border border-stone-100 shadow-sm p-4 flex flex-col justify-between">
+                              <p className="text-sm font-semibold text-stone-900 leading-snug mb-3">{action.title}</p>
+                              <div>
+                                <span className="text-xl font-black text-primary tabular-nums">+{action.pts}</span>
+                                <span className="text-xs text-stone-400 ml-1">moedas</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-stone-400">{isAdmin ? 'Clique em "Editar dados" para adicionar ações.' : 'Nenhuma ação cadastrada ainda.'}</p>
+                      )}
+                      {isAdmin && editingQcoinSection === 'pontuacao' && (
+                        <AdminTableEditor sectionId="pontuacao" cols={pontuacaoCols} colWidths={pontuacaoColWidths} rows={pontuacaoRows}
+                          setCols={setPontuacaoCols} setColWidths={setPontuacaoColWidths} setRows={setPontuacaoRows} resizingRef={pontuacaoResizingRef} />
+                      )}
+                    </div>
+
+                    {/* ── 4. PROGRESSÃO + PREMIAÇÕES ── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+                      {/* Progressão — 3 colunas */}
+                      <div className="lg:col-span-3 bg-white rounded-xl border border-stone-100 shadow-sm p-5">
+                        <div className="flex items-center justify-between mb-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Progressão de Estágios</p>
+                          {isAdmin && (
+                            <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'estagios' ? null : 'estagios')}
+                              className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
+                              <Pencil size={11} />{editingQcoinSection === 'estagios' ? 'Fechar' : 'Editar dados'}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Roadmap */}
+                        <div className="flex items-start">
+                          {_stages.map((stage: any, idx: number) => {
+                            const isActive = idx === _curIdx;
+                            const isPast = idx < _curIdx;
+                            const isExpanded = expandedQcoinCard === stage.name;
+                            return (
+                              <div key={idx} className="flex items-center flex-1 min-w-0">
+                                <div className="flex flex-col items-center min-w-0">
+                                  <button
+                                    onClick={() => setExpandedQcoinCard(isExpanded ? null : stage.name)}
+                                    className={cn(
+                                      "w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all shrink-0",
+                                      isActive ? "border-primary bg-primary text-white shadow-sm shadow-primary/20" :
+                                      isPast ? "border-stone-300 bg-stone-200 text-stone-500" :
+                                      "border-stone-200 bg-white text-stone-300 hover:border-stone-300"
+                                    )}
+                                    title={stage.fullName}
+                                  >
+                                    {isPast ? '✓' : idx + 1}
+                                  </button>
+                                  <span className={cn(
+                                    "text-xs mt-1.5 font-medium text-center truncate max-w-[60px]",
+                                    isActive ? "text-primary" : isPast ? "text-stone-500" : "text-stone-300"
+                                  )}>{stage.name}</span>
+                                  {isActive && <span className="text-overline text-primary/60 uppercase tracking-widest font-bold mt-0.5" style={{ fontSize: '9px' }}>atual</span>}
+                                </div>
+                                {idx < _stages.length - 1 && (
+                                  <div className={cn("flex-1 h-0.5 mx-1 mb-6", isPast ? "bg-stone-300" : "bg-stone-100")} />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Stage detail (expandido ao clicar) */}
+                        {expandedQcoinCard && (() => {
+                          const stage = _stages.find((s: any) => s.name === expandedQcoinCard);
+                          if (!stage) return null;
+                          const hasDetail = stage.row && stage.row.some((c: string) => c?.trim());
+                          return (
+                            <div className="mt-4 pt-4 border-t border-stone-100 animate-in fade-in duration-200">
+                              <div className="flex items-center justify-between mb-3">
+                                <p className="text-xs font-bold uppercase tracking-widest text-stone-400">{stage.fullName || stage.name}</p>
+                                <button onClick={() => setExpandedQcoinCard(null)} className="text-stone-300 hover:text-stone-600 transition-colors"><X size={13} /></button>
+                              </div>
+                              {hasDetail ? (
+                                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                                  {estagiosCols.slice(1).map((col: string, ci: number) => {
+                                    const val = stage.row[ci + 1]?.trim();
+                                    if (!val) return null;
+                                    return (
+                                      <div key={ci}>
+                                        <p className="text-xs text-stone-400 mb-0.5">{col}</p>
+                                        <p className="text-xs text-stone-700 leading-relaxed whitespace-pre-wrap">{val}</p>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-stone-400">Detalhes deste estágio não cadastrados ainda.</p>
+                              )}
+                            </div>
+                          );
+                        })()}
+
+                        {isAdmin && editingQcoinSection === 'estagios' && (
+                          <AdminTableEditor sectionId="estagios" cols={estagiosCols} colWidths={estagiosColWidths} rows={estagiosRows}
+                            setCols={setEstagiosCols} setColWidths={setEstagiosColWidths} setRows={setEstagiosRows} resizingRef={estagiosResizingRef} />
+                        )}
+                      </div>
+
+                      {/* Premiações — 2 colunas */}
+                      <div className="lg:col-span-2 bg-white rounded-xl border border-stone-100 shadow-sm p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Premiações</p>
+                          {isAdmin && (
+                            <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'premiacoes' ? null : 'premiacoes')}
+                              className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
+                              <Pencil size={11} />{editingQcoinSection === 'premiacoes' ? 'Fechar' : 'Editar dados'}
+                            </button>
+                          )}
+                        </div>
+                        {_premios.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-3">
+                            {_premios.map((p: any, idx: number) => (
+                              <div key={idx} className="border border-stone-100 rounded-lg p-3 hover:border-stone-200 transition-colors">
+                                <p className="text-sm font-semibold text-stone-900 leading-snug">{p.name}</p>
+                                {p.desc && p.desc !== p.cost && <p className="text-xs text-stone-400 mt-0.5 leading-relaxed line-clamp-2">{p.desc}</p>}
+                                {p.cost && <p className="text-xs font-bold text-primary mt-2">{p.cost} moedas</p>}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-stone-400">{isAdmin ? 'Clique em "Editar dados" para cadastrar premiações.' : 'Premiações em breve.'}</p>
+                        )}
+                        {isAdmin && editingQcoinSection === 'premiacoes' && (
+                          <AdminTableEditor sectionId="premiacoes" cols={premiacoesCols} colWidths={premiacoesColWidths} rows={premiacoesRows}
+                            setCols={setPremiacoesCols} setColWidths={setPremiacoesColWidths} setRows={setPremiacoesRows} resizingRef={premiacoesResizingRef} />
+                        )}
+                      </div>
+
+                    </div>
+
+                    {/* ── 5. GUIA DA QCOIN ── */}
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Guia da QCoin</p>
+                      <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden divide-y divide-stone-100">
+                        {([
+                          { id: 'guide_estagios',      label: 'Estágios — detalhes e benefícios', rows: estagiosRows,     cols: estagiosCols       },
+                          { id: 'guide_premiacoes',    label: 'Catálogo de premiações',          rows: premiacoesRows,     cols: premiacoesCols     },
+                          { id: 'guide_consequencias', label: 'Consequências por inatividade',   rows: consequenciasRows,  cols: consequenciasCols  },
+                        ] as const).map(({ id, label, rows, cols }) => {
+                          const isOpen = editingQcoinSection === id;
+                          return (
+                            <div key={id}>
+                              <button
+                                onClick={() => setEditingQcoinSection(isOpen ? null : id)}
+                                className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-stone-50/50 transition-colors"
+                              >
+                                <span className="text-sm font-medium text-stone-700">{label}</span>
+                                <ChevronDown size={14} className={cn("text-stone-400 transition-transform duration-200 shrink-0", isOpen && "rotate-180")} />
+                              </button>
+                              {isOpen && (
+                                <div className="border-t border-stone-100 overflow-x-auto max-h-72">
+                                  <table className="w-full text-left border-collapse text-xs">
+                                    <thead>
+                                      <tr className="bg-stone-900 sticky top-0">
+                                        {(cols as readonly string[]).map((col: string, ci: number) => (
+                                          <th key={ci} className="px-4 py-2.5 font-bold uppercase tracking-widest text-stone-400 whitespace-nowrap">{col}</th>
+                                        ))}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {(rows as string[][]).filter((row: string[]) => row.some((c: string) => c?.trim())).map((row: string[], ri: number) => (
+                                        <tr key={ri} className="border-b border-stone-50 hover:bg-stone-50/50">
+                                          {row.map((cell: string, ci: number) => (
+                                            <td key={ci} className="px-4 py-2 text-stone-700 text-xs whitespace-pre-wrap align-top">{cell}</td>
+                                          ))}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {/* Admin: editor de consequências */}
+                      {isAdmin && (
+                        <div className="mt-3">
+                          <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'consequencias' ? null : 'consequencias')}
+                            className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
+                            <Pencil size={11} />{editingQcoinSection === 'consequencias' ? 'Fechar editor de consequências' : 'Editar consequências'}
+                          </button>
+                          {editingQcoinSection === 'consequencias' && (
+                            <AdminTableEditor sectionId="consequencias" cols={consequenciasCols} colWidths={consequenciasColWidths} rows={consequenciasRows}
+                              setCols={setConsequenciasCols} setColWidths={setConsequenciasColWidths} setRows={setConsequenciasRows} resizingRef={consequenciasResizingRef} />
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                   </div>
-                )}
-              </div>
+                );
+              })()
             ) : view === 'regras' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="mb-8 flex items-start justify-between">
@@ -2635,7 +2405,7 @@ export default function App() {
                               <div className="bg-white rounded-xl px-3 py-4 border border-amber-200 shadow-sm">
                                 <div className="flex items-center gap-2 mb-3">
                                   <Cake className="text-amber-500 shrink-0" size={18} />
-                                  <h4 className="text-base font-sans text-stone-900">Aniversariantes da Semana</h4>
+                                  <h4 className="text-sm font-sans font-semibold text-stone-900">Aniversariantes da Semana</h4>
                                   <span className="ml-auto text-overline font-bold uppercase tracking-widest text-amber-400">
                                     {(() => {
                                       const sat = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + 6);
@@ -2689,7 +2459,7 @@ export default function App() {
                                 >
                                   <div className="flex items-center gap-2 mb-3">
                                     <AlertTriangle className="text-primary shrink-0" size={18} />
-                                    <h4 className="text-base font-sans text-stone-900">Aviso</h4>
+                                    <h4 className="text-sm font-sans font-semibold text-stone-900">Aviso</h4>
                                     {isAdmin && isHiddenFromNews && (
                                       <span className="text-overline font-bold uppercase tracking-widest text-stone-300 text-xs">Oculto da News</span>
                                     )}
