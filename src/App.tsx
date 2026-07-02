@@ -2032,7 +2032,6 @@ export default function App() {
                       <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Guia da QCoin</p>
                       <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden divide-y divide-stone-100">
                         {([
-                          { id: 'guide_pontuacao',     label: 'Sistema completo de pontuação',  rows: pontuacaoRows,      cols: pontuacaoCols      },
                           { id: 'guide_estagios',      label: 'Estágios — detalhes e benefícios', rows: estagiosRows,     cols: estagiosCols       },
                           { id: 'guide_premiacoes',    label: 'Catálogo de premiações',          rows: premiacoesRows,     cols: premiacoesCols     },
                           { id: 'guide_consequencias', label: 'Consequências por inatividade',   rows: consequenciasRows,  cols: consequenciasCols  },
