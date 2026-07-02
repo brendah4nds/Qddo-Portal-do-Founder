@@ -1588,17 +1588,8 @@ export default function App() {
                 const _actions = pontuacaoRows.filter((r: string[]) => r[0]?.trim()).map((r: string[]) => ({ title: r[0]?.trim() || '', pts: r[1]?.trim() || '' }));
                 const _premios = premiacoesRows.filter((r: string[]) => r[0]?.trim()).map((r: string[]) => ({ name: r[0]?.trim() || '', desc: r[1]?.trim() || '', cost: r[2]?.trim() || r[1]?.trim() || '' }));
 
-                const SHOW_TOP = 7;
                 const _displayRows: Array<{item: any; rIdx: number; sep?: boolean}> =
-                  _myIdx < 0 || _myIdx < SHOW_TOP + 2
-                    ? _ranking.slice(0, Math.max(SHOW_TOP, _myIdx >= 0 ? _myIdx + 3 : SHOW_TOP)).map((item: any, rIdx: number) => ({ item, rIdx }))
-                    : [
-                        ..._ranking.slice(0, SHOW_TOP).map((item: any, rIdx: number) => ({ item, rIdx })),
-                        { item: null, rIdx: -1, sep: true },
-                        ...(_myIdx > 0 ? [{ item: _ranking[_myIdx - 1], rIdx: _myIdx - 1 }] : []),
-                        { item: _ranking[_myIdx], rIdx: _myIdx },
-                        ...(_myIdx + 1 < _ranking.length ? [{ item: _ranking[_myIdx + 1], rIdx: _myIdx + 1 }] : []),
-                      ];
+                  _ranking.map((item: any, rIdx: number) => ({ item, rIdx }));
 
                 const _toMs = (t: any): number => {
                   if (!t) return 0;
