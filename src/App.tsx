@@ -1054,7 +1054,7 @@ export default function App() {
                     }`}>
                       <LayoutGrid size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'general' ? 'text-white font-semibold' : 'text-stone-900'}`}>Geral</span>
+                    <span className={`text-lg transition-colors ${view === 'general' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Geral</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1084,7 +1084,7 @@ export default function App() {
                     }`}>
                       <Calendar size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'booking' ? 'text-white font-semibold' : 'text-stone-900'}`}>Agendamento</span>
+                    <span className={`text-lg transition-colors ${view === 'booking' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Agendamento</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1114,7 +1114,7 @@ export default function App() {
                     }`}>
                       <CheckSquare size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'portal' && activeSubTab === 'checkin' ? 'text-white font-semibold' : 'text-stone-900'}`}>Check-in</span>
+                    <span className={`text-lg transition-colors ${view === 'portal' && activeSubTab === 'checkin' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Check-in</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1144,7 +1144,7 @@ export default function App() {
                     }`}>
                       <Building2 size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'portal' && activeSubTab === 'empresa' ? 'text-white font-semibold' : 'text-stone-900'}`}>Empresa</span>
+                    <span className={`text-lg transition-colors ${view === 'portal' && activeSubTab === 'empresa' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Empresa</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1174,7 +1174,7 @@ export default function App() {
                     }`}>
                       <Globe size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'text-white font-semibold' : 'text-stone-900'}`}>Desafios</span>
+                    <span className={`text-lg transition-colors ${view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Desafios</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1204,7 +1204,7 @@ export default function App() {
                     }`}>
                       <Newspaper size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'news' ? 'text-white font-semibold' : 'text-stone-900'}`}>Notícias</span>
+                    <span className={`text-lg transition-colors ${view === 'news' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Notícias</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1234,7 +1234,7 @@ export default function App() {
                     }`}>
                       <Trophy size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'qcoin' ? 'text-white font-semibold' : 'text-stone-900'}`}>QCoin</span>
+                    <span className={`text-lg transition-colors ${view === 'qcoin' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>QCoin</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1293,7 +1293,7 @@ export default function App() {
                   }`}>
                     <LayoutDashboard size={18} />
                   </div>
-                  <span className={`text-lg ${view === 'dashboard' ? 'text-white font-semibold' : 'text-stone-900'}`}>Dashboard</span>
+                  <span className={`text-lg transition-colors ${view === 'dashboard' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Dashboard</span>
                 </button>
               </div>
             )}
@@ -1313,7 +1313,7 @@ export default function App() {
                     }`}>
                       <ShieldCheck size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'regras' ? 'text-white font-semibold' : 'text-stone-900'}`}>Regras</span>
+                    <span className={`text-lg transition-colors ${view === 'regras' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Regras</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1778,7 +1778,7 @@ export default function App() {
                               return (
                                 <div key={item?.id || di} className={cn(
                                   "flex items-center gap-3 px-5 py-2.5 border-b border-stone-50 transition-colors",
-                                  isMe ? "bg-terracota-100/20 border-l-2 border-l-primary" : "hover:bg-stone-50/50"
+                                  isMe ? "bg-terracota-100/20 border-l-2 border-l-primary" : "hover:bg-primary/5"
                                 )}>
                                   <div className={cn(
                                     "w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0",
@@ -1896,7 +1896,7 @@ export default function App() {
                       {_actions.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                           {_actions.map((action: any, idx: number) => (
-                            <div key={idx} className="bg-white rounded-xl border border-stone-100 shadow-sm p-4 flex flex-col justify-between">
+                            <div key={idx} className="bg-white rounded-xl border border-stone-100 shadow-sm p-4 flex flex-col justify-between hover:border-primary/30 hover:shadow-md transition-all">
                               <p className="text-sm font-semibold text-stone-900 leading-snug mb-3">{action.title}</p>
                               <div>
                                 <span className="text-xl font-black text-primary tabular-nums">+{action.pts}</span>
@@ -2035,7 +2035,7 @@ export default function App() {
 
                     {/* ── 5. GUIA DA QCOIN ── */}
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Guia da QCoin</p>
+                      <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Guia da QCoin</p>
                       <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden divide-y divide-stone-100">
                         {([
                           { id: 'guide_estagios',      label: 'Estágios — detalhes e benefícios', rows: estagiosRows,     cols: estagiosCols       },
@@ -2047,10 +2047,10 @@ export default function App() {
                             <div key={id}>
                               <button
                                 onClick={() => setEditingQcoinSection(isOpen ? null : id)}
-                                className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-stone-50/50 transition-colors"
+                                className="w-full group flex items-center justify-between px-5 py-3.5 text-left hover:bg-stone-50/50 transition-colors"
                               >
-                                <span className="text-sm font-semibold text-primary">{label}</span>
-                                <ChevronDown size={14} className={cn("text-primary/60 transition-transform duration-200 shrink-0", isOpen && "rotate-180")} />
+                                <span className="text-sm font-medium text-stone-700 group-hover:text-primary transition-colors">{label}</span>
+                                <ChevronDown size={14} className={cn("text-stone-400 group-hover:text-primary/70 transition-transform duration-200 shrink-0", isOpen && "rotate-180")} />
                               </button>
                               {isOpen && (
                                 <div className="border-t border-stone-100 overflow-x-auto max-h-72">
