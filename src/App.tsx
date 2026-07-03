@@ -1054,7 +1054,7 @@ export default function App() {
                     }`}>
                       <LayoutGrid size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'general' ? 'text-white font-semibold' : 'text-stone-900'}`}>Geral</span>
+                    <span className={`text-lg transition-colors ${view === 'general' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Geral</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1084,7 +1084,7 @@ export default function App() {
                     }`}>
                       <Calendar size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'booking' ? 'text-white font-semibold' : 'text-stone-900'}`}>Agendamento</span>
+                    <span className={`text-lg transition-colors ${view === 'booking' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Agendamento</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1114,7 +1114,7 @@ export default function App() {
                     }`}>
                       <CheckSquare size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'portal' && activeSubTab === 'checkin' ? 'text-white font-semibold' : 'text-stone-900'}`}>Check-in</span>
+                    <span className={`text-lg transition-colors ${view === 'portal' && activeSubTab === 'checkin' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Check-in</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1144,7 +1144,7 @@ export default function App() {
                     }`}>
                       <Building2 size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'portal' && activeSubTab === 'empresa' ? 'text-white font-semibold' : 'text-stone-900'}`}>Empresa</span>
+                    <span className={`text-lg transition-colors ${view === 'portal' && activeSubTab === 'empresa' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Empresa</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1174,7 +1174,7 @@ export default function App() {
                     }`}>
                       <Globe size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'text-white font-semibold' : 'text-stone-900'}`}>Desafios</span>
+                    <span className={`text-lg transition-colors ${view === 'portal' && (activeSubTab === 'desafios-publicos' || activeSubTab === 'desafios-privados') ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Desafios</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1204,7 +1204,7 @@ export default function App() {
                     }`}>
                       <Newspaper size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'news' ? 'text-white font-semibold' : 'text-stone-900'}`}>Notícias</span>
+                    <span className={`text-lg transition-colors ${view === 'news' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Notícias</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1234,7 +1234,7 @@ export default function App() {
                     }`}>
                       <Trophy size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'qcoin' ? 'text-white font-semibold' : 'text-stone-900'}`}>QCoin</span>
+                    <span className={`text-lg transition-colors ${view === 'qcoin' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>QCoin</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1293,7 +1293,7 @@ export default function App() {
                   }`}>
                     <LayoutDashboard size={18} />
                   </div>
-                  <span className={`text-lg ${view === 'dashboard' ? 'text-white font-semibold' : 'text-stone-900'}`}>Dashboard</span>
+                  <span className={`text-lg transition-colors ${view === 'dashboard' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Dashboard</span>
                 </button>
               </div>
             )}
@@ -1313,7 +1313,7 @@ export default function App() {
                     }`}>
                       <ShieldCheck size={18} />
                     </div>
-                    <span className={`text-lg ${view === 'regras' ? 'text-white font-semibold' : 'text-stone-900'}`}>Regras</span>
+                    <span className={`text-lg transition-colors ${view === 'regras' ? 'text-white font-semibold' : 'text-stone-900 group-hover:text-primary'}`}>Regras</span>
                   </button>
                   {isAdmin && (
                     <button
@@ -1558,8 +1558,16 @@ export default function App() {
                 const _myRank = _myIdx + 1;
                 const _me = _myIdx >= 0 ? _ranking[_myIdx] : { id: _myFounderId, name: founderData?.name || user?.name || user?.displayName || 'Você', username: founderData?.username || '', photoURL: founderData?.photoURL || null, coins: 0, totalPoints: founderData?.totalPoints || 0 };
                 const _totalPoints: number = founderData?.monthlyPoints?.[_ym] ?? founderData?.monthlyPoints?.get?.(_ym) ?? _me.coins ?? 0;
-                const _above = _myIdx > 0 ? _ranking[_myIdx - 1] : null;
-                const _coinsToNext = _above ? Math.max(0, _above.coins - _me.coins) : 0;
+                // Pula empates: encontra o primeiro acima com coins > minha pontuação
+                const _above = (() => {
+                  if (_myIdx <= 0) return null;
+                  for (let i = _myIdx - 1; i >= 0; i--) {
+                    if (_ranking[i].coins > (_me.coins ?? 0)) return _ranking[i];
+                  }
+                  return null;
+                })();
+                const _aboveRank = _above ? _ranking.findIndex((r: any) => r.id === _above.id) + 1 : 0;
+                const _coinsToNext = _above ? Math.max(0, _above.coins - (_me.coins ?? 0)) : 0;
 
                 const _thrIdx = estagiosCols.findIndex((c: string) => /thr/i.test(c.trim()));
                 const _stagesRaw: any[] = estagiosRows
@@ -1616,9 +1624,16 @@ export default function App() {
                 const _dayOfWeek = _weekStart.getDay();
                 _weekStart.setDate(_weekStart.getDate() - (_dayOfWeek === 0 ? 6 : _dayOfWeek - 1));
                 _weekStart.setHours(0, 0, 0, 0);
-                const _weekPoints = _myCheckins
-                  .filter((c: any) => _toMs(c.checkinTime || c.date) >= _weekStart.getTime())
-                  .reduce((sum: number, c: any) => sum + Number(c.points || c.pts || 0), 0);
+                const _monthStart = new Date(_now.getFullYear(), _now.getMonth(), 1);
+                const _monthCheckins = _myCheckins.filter((c: any) => _toMs(c.checkinTime || c.date) >= _monthStart.getTime());
+                const _weekCheckins = _monthCheckins.filter((c: any) => _toMs(c.checkinTime || c.date) >= _weekStart.getTime());
+                const _weekPtsFromField = _weekCheckins.reduce((s: number, c: any) => s + Number(c.points || c.pts || 0), 0);
+                // Se check-ins não têm campo points, apura proporcionalmente ao total mensal
+                const _weekPoints = _weekPtsFromField > 0
+                  ? _weekPtsFromField
+                  : (_weekCheckins.length > 0 && _monthCheckins.length > 0)
+                    ? Math.round(_totalPoints * (_weekCheckins.length / _monthCheckins.length))
+                    : 0;
 
                 const _suggestedAction = _actions.find((a: any) => { const n = parseInt(a.pts); return !isNaN(n) && n >= _coinsToNext; }) || _actions[0];
 
@@ -1684,14 +1699,17 @@ export default function App() {
                 );
 
                 return (
-                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
+                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col gap-6">
 
                     {/* ── 1. HERO ── */}
-                    <div className="bg-white rounded-xl border border-stone-100 shadow-sm px-5 pt-4 pb-5 space-y-4">
+                    <div className="bg-white rounded-2xl border border-stone-100 px-5 pt-4 pb-5 space-y-4">
                       {/* Linha 1: título + mês */}
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">QCoins</span>
-                        <span className="text-xs font-semibold text-stone-400 capitalize">{_monthLabel}</span>
+                        <div className="flex items-center gap-1.5">
+                          <Trophy size={11} className="text-stone-400" />
+                          <span className="text-overline font-bold uppercase tracking-widest text-stone-400">QCoins</span>
+                        </div>
+                        <span className="text-overline font-semibold text-stone-400 capitalize">{_monthLabel}</span>
                       </div>
                       {/* Linha 2: nome + saldo + semana + rank */}
                       <div>
@@ -1710,12 +1728,12 @@ export default function App() {
                         </div>
                         {/* Linha 3: rival */}
                         {_above && _coinsToNext > 0 && (
-                          <p className="text-sm text-stone-500 mt-2">
+                          <p className="text-sm text-stone-400 mt-2">
                             Você está a{' '}
-                            <span className="font-semibold text-stone-800">{_coinsToNext.toLocaleString('pt-BR')} moedas</span>
+                            <span className="font-bold text-primary">{_coinsToNext.toLocaleString('pt-BR')} moedas</span>
                             {' '}de ultrapassar{' '}
-                            <span className="font-semibold text-stone-800">{_above.name}</span>
-                            <span className="text-stone-400"> (#{_myRank - 1})</span>
+                            <span className="font-semibold text-stone-700">{_above.name}</span>
+                            <span className="text-stone-300"> (#{_aboveRank})</span>
                           </p>
                         )}
                       </div>
@@ -1742,7 +1760,7 @@ export default function App() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
                       {/* Ranking — 2 colunas */}
-                      <div className="lg:col-span-2 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+                      <div className="lg:col-span-2 bg-white rounded-2xl border border-stone-100 overflow-hidden">
                         <div className="px-5 py-3 border-b border-stone-100 flex items-center justify-between shrink-0">
                           <div className="flex items-center gap-2">
                             <Crown size={15} className="text-primary" />
@@ -1763,7 +1781,7 @@ export default function App() {
                               return (
                                 <div key={item?.id || di} className={cn(
                                   "flex items-center gap-3 px-5 py-2.5 border-b border-stone-50 transition-colors",
-                                  isMe ? "bg-terracota-100/20 border-l-2 border-l-primary" : "hover:bg-stone-50/50"
+                                  isMe ? "bg-terracota-100/20 border-l-2 border-l-primary" : "hover:bg-primary/5"
                                 )}>
                                   <div className={cn(
                                     "w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0",
@@ -1804,8 +1822,11 @@ export default function App() {
                       <div className="flex flex-col gap-4">
 
                         {/* Próximo Objetivo */}
-                        <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">Próximo Objetivo</p>
+                        <div className="bg-white rounded-2xl border border-stone-100 p-5">
+                          <div className="flex items-center gap-1.5 mb-4">
+                            <TrendingUp size={11} className="text-stone-400" />
+                            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Próximo Objetivo</span>
+                          </div>
                           {_myRank === 1 ? (
                             <div>
                               <p className="text-sm font-semibold text-stone-900">Você lidera o ranking 🏆</p>
@@ -1815,7 +1836,7 @@ export default function App() {
                             <div>
                               <p className="text-3xl font-black text-stone-900 tabular-nums">{_coinsToNext}</p>
                               <p className="text-xs text-stone-500 mt-0.5">moedas para ultrapassar</p>
-                              <p className="text-sm font-semibold text-stone-800 mt-1.5">{_above.name}<span className="text-stone-400 font-normal ml-2">#{_myRank - 1}</span></p>
+                              <p className="text-sm font-semibold text-stone-800 mt-1.5">{_above.name}<span className="text-stone-400 font-normal ml-2">#{_aboveRank}</span></p>
                               {_suggestedAction && (
                                 <div className="mt-4 pt-3 border-t border-stone-100">
                                   <p className="text-xs text-stone-400 mb-1">Sugestão de ação</p>
@@ -1837,8 +1858,11 @@ export default function App() {
                         </div>
 
                         {/* Atividade Recente */}
-                        <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">Atividade Recente</p>
+                        <div className="bg-white rounded-2xl border border-stone-100 p-5">
+                          <div className="flex items-center gap-1.5 mb-4">
+                            <Clock size={11} className="text-stone-400" />
+                            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Atividade Recente</span>
+                          </div>
                           {_recentCheckins.length > 0 ? (
                             <div className="space-y-3">
                               {_recentCheckins.map((c: any) => {
@@ -1870,7 +1894,10 @@ export default function App() {
                     {/* ── 3. COMO GANHAR QCOINS ── */}
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Como ganhar QCoins</p>
+                        <div className="flex items-center gap-2">
+                          <Award size={12} className="text-stone-400" />
+                          <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Como ganhar QCoins</span>
+                        </div>
                         {isAdmin && (
                           <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'pontuacao' ? null : 'pontuacao')}
                             className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
@@ -1881,7 +1908,7 @@ export default function App() {
                       {_actions.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                           {_actions.map((action: any, idx: number) => (
-                            <div key={idx} className="bg-white rounded-xl border border-stone-100 shadow-sm p-4 flex flex-col justify-between">
+                            <div key={idx} className="bg-white rounded-xl border border-stone-100 p-4 flex flex-col justify-between hover:bg-primary/5 hover:border-primary/20 transition-colors">
                               <p className="text-sm font-semibold text-stone-900 leading-snug mb-3">{action.title}</p>
                               <div>
                                 <span className="text-xl font-black text-primary tabular-nums">+{action.pts}</span>
@@ -1903,9 +1930,12 @@ export default function App() {
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
                       {/* Progressão — 3 colunas */}
-                      <div className="lg:col-span-3 bg-white rounded-xl border border-stone-100 shadow-sm p-5">
+                      <div className="lg:col-span-3 bg-white rounded-2xl border border-stone-100 p-5">
                         <div className="flex items-center justify-between mb-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Progressão de Estágios</p>
+                          <div className="flex items-center gap-2">
+                            <TrendingUp size={12} className="text-stone-400" />
+                            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Progressão de Estágios</span>
+                          </div>
                           {isAdmin && (
                             <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'estagios' ? null : 'estagios')}
                               className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
@@ -1987,9 +2017,12 @@ export default function App() {
                       </div>
 
                       {/* Premiações — 2 colunas */}
-                      <div className="lg:col-span-2 bg-white rounded-xl border border-stone-100 shadow-sm p-5">
+                      <div className="lg:col-span-2 bg-white rounded-2xl border border-stone-100 p-5">
                         <div className="flex items-center justify-between mb-4">
-                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Premiações</p>
+                          <div className="flex items-center gap-2">
+                            <Trophy size={12} className="text-stone-400" />
+                            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Premiações</span>
+                          </div>
                           {isAdmin && (
                             <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'premiacoes' ? null : 'premiacoes')}
                               className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
@@ -2020,8 +2053,11 @@ export default function App() {
 
                     {/* ── 5. GUIA DA QCOIN ── */}
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Guia da QCoin</p>
-                      <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden divide-y divide-stone-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckSquare size={12} className="text-stone-400" />
+                        <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Guia da QCoin</span>
+                      </div>
+                      <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden divide-y divide-stone-100">
                         {([
                           { id: 'guide_estagios',      label: 'Estágios — detalhes e benefícios', rows: estagiosRows,     cols: estagiosCols       },
                           { id: 'guide_premiacoes',    label: 'Catálogo de premiações',          rows: premiacoesRows,     cols: premiacoesCols     },
@@ -2032,10 +2068,10 @@ export default function App() {
                             <div key={id}>
                               <button
                                 onClick={() => setEditingQcoinSection(isOpen ? null : id)}
-                                className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-stone-50/50 transition-colors"
+                                className="w-full group flex items-center justify-between px-5 py-3.5 text-left hover:bg-stone-50/50 transition-colors"
                               >
-                                <span className="text-sm font-medium text-stone-700">{label}</span>
-                                <ChevronDown size={14} className={cn("text-stone-400 transition-transform duration-200 shrink-0", isOpen && "rotate-180")} />
+                                <span className="text-sm font-medium text-stone-700 group-hover:text-primary transition-colors">{label}</span>
+                                <ChevronDown size={14} className={cn("text-stone-400 group-hover:text-primary/70 transition-transform duration-200 shrink-0", isOpen && "rotate-180")} />
                               </button>
                               {isOpen && (
                                 <div className="border-t border-stone-100 overflow-x-auto max-h-72">
