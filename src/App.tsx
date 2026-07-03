@@ -1699,14 +1699,17 @@ export default function App() {
                 );
 
                 return (
-                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
+                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col gap-6">
 
                     {/* ── 1. HERO ── */}
-                    <div className="bg-white rounded-xl border border-stone-100 shadow-sm px-5 pt-4 pb-5 space-y-4">
+                    <div className="bg-white rounded-2xl border border-stone-100 px-5 pt-4 pb-5 space-y-4">
                       {/* Linha 1: título + mês */}
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">QCoins</span>
-                        <span className="text-xs font-semibold text-stone-400 capitalize">{_monthLabel}</span>
+                        <div className="flex items-center gap-1.5">
+                          <Trophy size={11} className="text-stone-400" />
+                          <span className="text-overline font-bold uppercase tracking-widest text-stone-400">QCoins</span>
+                        </div>
+                        <span className="text-overline font-semibold text-stone-400 capitalize">{_monthLabel}</span>
                       </div>
                       {/* Linha 2: nome + saldo + semana + rank */}
                       <div>
@@ -1757,7 +1760,7 @@ export default function App() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
                       {/* Ranking — 2 colunas */}
-                      <div className="lg:col-span-2 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+                      <div className="lg:col-span-2 bg-white rounded-2xl border border-stone-100 overflow-hidden">
                         <div className="px-5 py-3 border-b border-stone-100 flex items-center justify-between shrink-0">
                           <div className="flex items-center gap-2">
                             <Crown size={15} className="text-primary" />
@@ -1819,8 +1822,11 @@ export default function App() {
                       <div className="flex flex-col gap-4">
 
                         {/* Próximo Objetivo */}
-                        <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">Próximo Objetivo</p>
+                        <div className="bg-white rounded-2xl border border-stone-100 p-5">
+                          <div className="flex items-center gap-1.5 mb-4">
+                            <TrendingUp size={11} className="text-stone-400" />
+                            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Próximo Objetivo</span>
+                          </div>
                           {_myRank === 1 ? (
                             <div>
                               <p className="text-sm font-semibold text-stone-900">Você lidera o ranking 🏆</p>
@@ -1852,8 +1858,11 @@ export default function App() {
                         </div>
 
                         {/* Atividade Recente */}
-                        <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">Atividade Recente</p>
+                        <div className="bg-white rounded-2xl border border-stone-100 p-5">
+                          <div className="flex items-center gap-1.5 mb-4">
+                            <Clock size={11} className="text-stone-400" />
+                            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Atividade Recente</span>
+                          </div>
                           {_recentCheckins.length > 0 ? (
                             <div className="space-y-3">
                               {_recentCheckins.map((c: any) => {
@@ -1885,7 +1894,10 @@ export default function App() {
                     {/* ── 3. COMO GANHAR QCOINS ── */}
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Como ganhar QCoins</p>
+                        <div className="flex items-center gap-2">
+                          <Award size={12} className="text-stone-400" />
+                          <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Como ganhar QCoins</span>
+                        </div>
                         {isAdmin && (
                           <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'pontuacao' ? null : 'pontuacao')}
                             className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
@@ -1896,7 +1908,7 @@ export default function App() {
                       {_actions.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                           {_actions.map((action: any, idx: number) => (
-                            <div key={idx} className="bg-white rounded-xl border border-stone-100 shadow-sm p-4 flex flex-col justify-between hover:border-primary/30 hover:shadow-md transition-all">
+                            <div key={idx} className="bg-white rounded-xl border border-stone-100 p-4 flex flex-col justify-between hover:bg-primary/5 hover:border-primary/20 transition-colors">
                               <p className="text-sm font-semibold text-stone-900 leading-snug mb-3">{action.title}</p>
                               <div>
                                 <span className="text-xl font-black text-primary tabular-nums">+{action.pts}</span>
@@ -1918,9 +1930,12 @@ export default function App() {
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
                       {/* Progressão — 3 colunas */}
-                      <div className="lg:col-span-3 bg-white rounded-xl border border-stone-100 shadow-sm p-5">
+                      <div className="lg:col-span-3 bg-white rounded-2xl border border-stone-100 p-5">
                         <div className="flex items-center justify-between mb-5">
-                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Progressão de Estágios</p>
+                          <div className="flex items-center gap-2">
+                            <TrendingUp size={12} className="text-stone-400" />
+                            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Progressão de Estágios</span>
+                          </div>
                           {isAdmin && (
                             <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'estagios' ? null : 'estagios')}
                               className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
@@ -2002,9 +2017,12 @@ export default function App() {
                       </div>
 
                       {/* Premiações — 2 colunas */}
-                      <div className="lg:col-span-2 bg-white rounded-xl border border-stone-100 shadow-sm p-5">
+                      <div className="lg:col-span-2 bg-white rounded-2xl border border-stone-100 p-5">
                         <div className="flex items-center justify-between mb-4">
-                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Premiações</p>
+                          <div className="flex items-center gap-2">
+                            <Trophy size={12} className="text-stone-400" />
+                            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Premiações</span>
+                          </div>
                           {isAdmin && (
                             <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'premiacoes' ? null : 'premiacoes')}
                               className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
@@ -2035,8 +2053,11 @@ export default function App() {
 
                     {/* ── 5. GUIA DA QCOIN ── */}
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Guia da QCoin</p>
-                      <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden divide-y divide-stone-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckSquare size={12} className="text-stone-400" />
+                        <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Guia da QCoin</span>
+                      </div>
+                      <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden divide-y divide-stone-100">
                         {([
                           { id: 'guide_estagios',      label: 'Estágios — detalhes e benefícios', rows: estagiosRows,     cols: estagiosCols       },
                           { id: 'guide_premiacoes',    label: 'Catálogo de premiações',          rows: premiacoesRows,     cols: premiacoesCols     },
