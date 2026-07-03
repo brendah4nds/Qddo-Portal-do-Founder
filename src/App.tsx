@@ -1558,8 +1558,16 @@ export default function App() {
                 const _myRank = _myIdx + 1;
                 const _me = _myIdx >= 0 ? _ranking[_myIdx] : { id: _myFounderId, name: founderData?.name || user?.name || user?.displayName || 'Você', username: founderData?.username || '', photoURL: founderData?.photoURL || null, coins: 0, totalPoints: founderData?.totalPoints || 0 };
                 const _totalPoints: number = founderData?.monthlyPoints?.[_ym] ?? founderData?.monthlyPoints?.get?.(_ym) ?? _me.coins ?? 0;
-                const _above = _myIdx > 0 ? _ranking[_myIdx - 1] : null;
-                const _coinsToNext = _above ? Math.max(0, _above.coins - _me.coins) : 0;
+                // Pula empates: encontra o primeiro acima com coins > minha pontuação
+                const _above = (() => {
+                  if (_myIdx <= 0) return null;
+                  for (let i = _myIdx - 1; i >= 0; i--) {
+                    if (_ranking[i].coins > (_me.coins ?? 0)) return _ranking[i];
+                  }
+                  return null;
+                })();
+                const _aboveRank = _above ? _ranking.findIndex((r: any) => r.id === _above.id) + 1 : 0;
+                const _coinsToNext = _above ? Math.max(0, _above.coins - (_me.coins ?? 0)) : 0;
 
                 const _thrIdx = estagiosCols.findIndex((c: string) => /thr/i.test(c.trim()));
                 const _stagesRaw: any[] = estagiosRows
@@ -1616,9 +1624,16 @@ export default function App() {
                 const _dayOfWeek = _weekStart.getDay();
                 _weekStart.setDate(_weekStart.getDate() - (_dayOfWeek === 0 ? 6 : _dayOfWeek - 1));
                 _weekStart.setHours(0, 0, 0, 0);
-                const _weekPoints = _myCheckins
-                  .filter((c: any) => _toMs(c.checkinTime || c.date) >= _weekStart.getTime())
-                  .reduce((sum: number, c: any) => sum + Number(c.points || c.pts || 0), 0);
+                const _monthStart = new Date(_now.getFullYear(), _now.getMonth(), 1);
+                const _monthCheckins = _myCheckins.filter((c: any) => _toMs(c.checkinTime || c.date) >= _monthStart.getTime());
+                const _weekCheckins = _monthCheckins.filter((c: any) => _toMs(c.checkinTime || c.date) >= _weekStart.getTime());
+                const _weekPtsFromField = _weekCheckins.reduce((s: number, c: any) => s + Number(c.points || c.pts || 0), 0);
+                // Se check-ins não têm campo points, apura proporcionalmente ao total mensal
+                const _weekPoints = _weekPtsFromField > 0
+                  ? _weekPtsFromField
+                  : (_weekCheckins.length > 0 && _monthCheckins.length > 0)
+                    ? Math.round(_totalPoints * (_weekCheckins.length / _monthCheckins.length))
+                    : 0;
 
                 const _suggestedAction = _actions.find((a: any) => { const n = parseInt(a.pts); return !isNaN(n) && n >= _coinsToNext; }) || _actions[0];
 
@@ -1710,12 +1725,12 @@ export default function App() {
                         </div>
                         {/* Linha 3: rival */}
                         {_above && _coinsToNext > 0 && (
-                          <p className="text-sm text-stone-500 mt-2">
+                          <p className="text-sm text-stone-400 mt-2">
                             Você está a{' '}
-                            <span className="font-semibold text-stone-800">{_coinsToNext.toLocaleString('pt-BR')} moedas</span>
+                            <span className="font-bold text-primary">{_coinsToNext.toLocaleString('pt-BR')} moedas</span>
                             {' '}de ultrapassar{' '}
-                            <span className="font-semibold text-stone-800">{_above.name}</span>
-                            <span className="text-stone-400"> (#{_myRank - 1})</span>
+                            <span className="font-semibold text-stone-700">{_above.name}</span>
+                            <span className="text-stone-300"> (#{_aboveRank})</span>
                           </p>
                         )}
                       </div>
@@ -1815,7 +1830,7 @@ export default function App() {
                             <div>
                               <p className="text-3xl font-black text-stone-900 tabular-nums">{_coinsToNext}</p>
                               <p className="text-xs text-stone-500 mt-0.5">moedas para ultrapassar</p>
-                              <p className="text-sm font-semibold text-stone-800 mt-1.5">{_above.name}<span className="text-stone-400 font-normal ml-2">#{_myRank - 1}</span></p>
+                              <p className="text-sm font-semibold text-stone-800 mt-1.5">{_above.name}<span className="text-stone-400 font-normal ml-2">#{_aboveRank}</span></p>
                               {_suggestedAction && (
                                 <div className="mt-4 pt-3 border-t border-stone-100">
                                   <p className="text-xs text-stone-400 mb-1">Sugestão de ação</p>
@@ -2020,7 +2035,7 @@ export default function App() {
 
                     {/* ── 5. GUIA DA QCOIN ── */}
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Guia da QCoin</p>
+                      <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Guia da QCoin</p>
                       <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden divide-y divide-stone-100">
                         {([
                           { id: 'guide_estagios',      label: 'Estágios — detalhes e benefícios', rows: estagiosRows,     cols: estagiosCols       },
@@ -2034,8 +2049,8 @@ export default function App() {
                                 onClick={() => setEditingQcoinSection(isOpen ? null : id)}
                                 className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-stone-50/50 transition-colors"
                               >
-                                <span className="text-sm font-medium text-stone-700">{label}</span>
-                                <ChevronDown size={14} className={cn("text-stone-400 transition-transform duration-200 shrink-0", isOpen && "rotate-180")} />
+                                <span className="text-sm font-semibold text-primary">{label}</span>
+                                <ChevronDown size={14} className={cn("text-primary/60 transition-transform duration-200 shrink-0", isOpen && "rotate-180")} />
                               </button>
                               {isOpen && (
                                 <div className="border-t border-stone-100 overflow-x-auto max-h-72">
