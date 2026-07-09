@@ -205,6 +205,17 @@ export default function App() {
   const [allCheckins, setAllCheckins] = useState<any[]>([]);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [showIndicarFounderModal, setShowIndicarFounderModal] = useState(false);
+  const [showSolicitarQcoinModal, setShowSolicitarQcoinModal] = useState(false);
+  const [qcoinRequests, setQcoinRequests] = useState<any[]>([]);
+  const [solicitarAcao, setSolicitarAcao] = useState('');
+  const [solicitarObservacao, setSolicitarObservacao] = useState('');
+  const [solicitarParaFounder, setSolicitarParaFounder] = useState<any>(null);
+  const [solicitarFounderSearch, setSolicitarFounderSearch] = useState('');
+  const [solicitarSubmitting, setSolicitarSubmitting] = useState(false);
+  const [solicitarSuccess, setSolicitarSuccess] = useState(false);
+  const [solicitarSuccessRequerFounder, setSolicitarSuccessRequerFounder] = useState(false);
+  const [showMyQcoinRequests, setShowMyQcoinRequests] = useState(false);
+  const [confirmingQcoinRequestId, setConfirmingQcoinRequestId] = useState<string | null>(null);
   const [showAddNewsModal, setShowAddNewsModal] = useState(false);
   const [eventCheckinLoading, setEventCheckinLoading] = useState(false);
   const [eventCheckinError, setEventCheckinError] = useState<string | null>(null);
@@ -275,27 +286,27 @@ export default function App() {
     ['', '', '', '', ''],
     ['', '', '', '', ''],
   ]);
-  const [pontuacaoCols, setPontuacaoCols] = useState(['Ação', 'Pontuação']);
-  const [pontuacaoColWidths, setPontuacaoColWidths] = useState([400, 150]);
+  const [pontuacaoCols, setPontuacaoCols] = useState(['Ação', 'Pontuação', 'Tipo', 'Requer Founder']);
+  const [pontuacaoColWidths, setPontuacaoColWidths] = useState([320, 100, 110, 110]);
   const pontuacaoResizingRef = useRef<{ colIdx: number; startX: number; startWidth: number } | null>(null);
   const [pontuacaoRows, setPontuacaoRows] = useState<string[][]>([
-    ['Check-in diário', '10'],
-    ['Evento interno QDDO', '20'],
-    ['Streak 5 dias consecutivos', '30 (bônus)'],
-    ['Resolução de desafio aberto de outro founder', '50'],
-    ['Indicação founder com fit para o hub', '50'],
-    ['Aprovação de founder indicado por você', '100'],
-    ['Mentoria espontânea (mín. 30 min)', '50'],
-    ['Contribuição técnica ao app/site/infra QDDO', '80'],
-    ['Realização do Desafio Mensal', '100'],
-    ['Avançar estágio', '250'],
-    ['Crescimento de faturamento MoM', '50'],
-    ['Completar desafio de Mantenedor', '150'],
-    ['Participar de hackathon corporativo', '100'],
-    ['Vencer hackathon', '300 (bônus)'],
-    ['Relatório mensal para mantenedor de sala', '80'],
-    ['Convidado no podcast QDDO', '80'],
-    ['Pitch no Demo Day', '100'],
+    ['Check-in diário', '10', 'Automático', ''],
+    ['Evento interno QDDO', '20', 'Automático', ''],
+    ['Streak 5 dias consecutivos (seg a sex)', '30 (bônus)', 'Automático', ''],
+    ['Resolução de desafio aberto de outro founder', '50', 'Manual', 'Sim'],
+    ['Indicação founder com fit para o hub', '50', 'Automático', ''],
+    ['Aprovação de founder indicado por você', '100', 'Automático', ''],
+    ['Mentoria espontânea (mín. 30 min)', '50', 'Manual', ''],
+    ['Contribuição técnica ao app/site/infra QDDO', '80', 'Manual', 'Sim'],
+    ['Realização do Desafio Mensal', '100', 'Manual', ''],
+    ['Avançar estágio', '250', 'Manual', ''],
+    ['Crescimento de faturamento MoM', '50', 'Manual', ''],
+    ['Completar desafio de Mantenedor', '150', 'Manual', ''],
+    ['Participar de hackathon corporativo', '100', 'Manual', ''],
+    ['Vencer hackathon', '300 (bônus)', 'Manual', ''],
+    ['Relatório mensal para mantenedor de sala', '80', 'Manual', ''],
+    ['Convidado no podcast QDDO', '80', 'Manual', ''],
+    ['Pitch no Demo Day', '100', 'Manual', ''],
   ]);
 
   const [indicarNome, setIndicarNome] = useState('');
@@ -487,6 +498,46 @@ export default function App() {
     }
   };
 
+  const handleSolicitarQcoinSubmit = async (e: React.FormEvent, acaoOptions: Array<{ title: string; pts: string; requerFounder?: boolean }>) => {
+    e.preventDefault();
+    if (!solicitarAcao || !solicitarObservacao.trim()) return;
+    const acao = acaoOptions.find(a => a.title === solicitarAcao);
+    if (!acao) return;
+    if (acao.requerFounder && !solicitarParaFounder) return;
+    setSolicitarSubmitting(true);
+    try {
+      const { data } = await api.post('/api/qcoin-requests', {
+        acao: acao.title,
+        pontos: parseInt(acao.pts) || 0,
+        observacao: solicitarObservacao.trim(),
+        ...(acao.requerFounder && solicitarParaFounder ? { paraFounderId: solicitarParaFounder.id } : {}),
+      });
+      setQcoinRequests((prev: any[]) => [{ ...data, id: data._id || data.id }, ...prev]);
+      setSolicitarSuccessRequerFounder(!!acao.requerFounder);
+      setSolicitarSuccess(true);
+      setSolicitarAcao('');
+      setSolicitarObservacao('');
+      setSolicitarParaFounder(null);
+      setSolicitarFounderSearch('');
+    } catch (error) {
+      console.error('Erro ao enviar solicitação de QCoins:', error);
+    } finally {
+      setSolicitarSubmitting(false);
+    }
+  };
+
+  const handleConfirmarQcoinRequest = async (id: string, action: 'confirmar' | 'recusar') => {
+    setConfirmingQcoinRequestId(id);
+    try {
+      const { data } = await api.put(`/api/qcoin-requests/${id}/confirm`, { action });
+      setQcoinRequests((prev: any[]) => prev.map((x: any) => x.id === id ? { ...data, id: data._id || data.id } : x));
+    } catch (error) {
+      console.error('Erro ao confirmar solicitação de QCoins:', error);
+    } finally {
+      setConfirmingQcoinRequestId(null);
+    }
+  };
+
   const toggleTopic = (topic: string) => {
     setExpandedTopics(prev => 
       prev.includes(topic) ? prev.filter(t => t !== topic) : [...prev, topic]
@@ -597,9 +648,21 @@ export default function App() {
       const hydrate = (sectionId: string, s: any) => {
         if (!s) return;
         if (sectionId === 'pontuacao') {
-          if (s.tableRows) setPontuacaoRows(parseRows(s.tableRows));
-          if (s.tableCols) setPontuacaoCols(s.tableCols);
-          if (s.tableColWidths) setPontuacaoColWidths(s.tableColWidths);
+          let cols: string[] = s.tableCols || pontuacaoCols;
+          let rows: string[][] = s.tableRows ? parseRows(s.tableRows) : pontuacaoRows;
+          let colWidths: number[] = s.tableColWidths || pontuacaoColWidths;
+          // Migração estrutural: tabelas salvas antes das colunas Tipo/Requer Founder existirem
+          // ganham essas colunas de volta (vazias), sem perder o que o admin já cadastrou.
+          ['Tipo', 'Requer Founder'].forEach((colName) => {
+            if (!cols.some((c: string) => c.trim().toLowerCase() === colName.toLowerCase())) {
+              cols = [...cols, colName];
+              colWidths = [...colWidths, 110];
+              rows = rows.map((r: string[]) => [...r, '']);
+            }
+          });
+          setPontuacaoCols(cols);
+          setPontuacaoRows(rows);
+          setPontuacaoColWidths(colWidths);
         } else if (sectionId === 'estagios') {
           if (s.tableRows) setEstagiosRows(parseRows(s.tableRows));
           if (s.tableCols) setEstagiosCols(s.tableCols);
@@ -632,7 +695,8 @@ export default function App() {
       api.get('/api/qcoin-sections').catch(() => ({ data: {} })),
       api.get('/api/settings/qcoin_tables').catch(() => ({ data: null })),
       api.get('/api/checkins').catch(() => ({ data: [] })),
-    ]).then(([rooms, bookings, settings, founders, challenges, news, qcoinSections, qcoinTables, checkins]) => {
+      api.get('/api/qcoin-requests').catch(() => ({ data: [] })),
+    ]).then(([rooms, bookings, settings, founders, challenges, news, qcoinSections, qcoinTables, checkins, qcoinRequestsRes]) => {
       setRooms(rooms.data.map((r: any) => ({ ...r, id: r._id || r.id })));
       setBookings(bookings.data.map((b: any) => ({ ...b, id: b._id || b.id })));
       if (settings.data?.businessHours) setBusinessHours(settings.data.businessHours);
@@ -646,6 +710,7 @@ export default function App() {
         setQcoinSections(sections);
       }
       if (qcoinTables.data) hydrateQcoinTables(qcoinTables.data);
+      setQcoinRequests(qcoinRequestsRes.data.map((r: any) => ({ ...r, id: r._id || r.id })));
       const checkinsData = checkins.data.map((c: any) => ({ ...c, id: c._id || c.id }));
       setAllCheckins(checkinsData);
       setUserCheckins(checkinsData.filter((c: any) => c.userId === user._id || c.userId === user.uid));
@@ -685,6 +750,8 @@ export default function App() {
       setAllCheckins(prev => prev.map(x => x.id === ci.id ? ci : x));
       if (ci.userId === user._id || ci.userId === user.uid) setUserCheckins(prev => prev.map(x => x.id === ci.id ? ci : x));
     });
+    socket.on('qcoin-request:new',    (r: any) => setQcoinRequests((prev: any[]) => [{ ...r, id: r._id || r.id }, ...prev.filter((x: any) => x.id !== (r._id || r.id))]));
+    socket.on('qcoin-request:update', (r: any) => setQcoinRequests((prev: any[]) => prev.map((x: any) => x.id === (r._id || r.id) ? { ...r, id: r._id || r.id } : x)));
     socket.on('settings:update', ({ key, data }: any) => {
       if (key === 'global' && data?.businessHours) setBusinessHours(data.businessHours);
       if (key === 'global' && data?.hiddenMenuItems !== undefined) setHiddenMenuItems(data.hiddenMenuItems || []);
@@ -704,6 +771,7 @@ export default function App() {
       socket.off('news:new'); socket.off('news:update'); socket.off('news:delete');
       socket.off('booking:new'); socket.off('booking:delete');
       socket.off('checkin:new'); socket.off('checkin:update');
+      socket.off('qcoin-request:new'); socket.off('qcoin-request:update');
       socket.off('settings:update'); socket.off('qcoin_sections:update');
     };
   }, [user?._id]);
@@ -1419,6 +1487,7 @@ export default function App() {
                 onEditNewsConsumed={() => setAdminInitialEditNewsItem(null)}
                 hiddenMenuItems={hiddenMenuItems}
                 onRestoreMenuItem={toggleHideMenuItem}
+                qcoinActions={pontuacaoRows}
               />
             ) : view === 'portal' ? (
               <FounderPortal
@@ -1593,7 +1662,17 @@ export default function App() {
                   : 100;
                 const _stageDelta = _nxtStage ? Math.max(0, _nxtStage.thr - _totalPoints) : 0;
 
-                const _actions = pontuacaoRows.filter((r: string[]) => r[0]?.trim()).map((r: string[]) => ({ title: r[0]?.trim() || '', pts: r[1]?.trim() || '' }));
+                const _tipoIdx = pontuacaoCols.findIndex((c: string) => c.trim().toLowerCase() === 'tipo');
+                const _requerFounderIdx = pontuacaoCols.findIndex((c: string) => c.trim().toLowerCase().includes('requer'));
+                const _actions = pontuacaoRows.filter((r: string[]) => r[0]?.trim()).map((r: string[]) => ({
+                  title: r[0]?.trim() || '',
+                  pts: r[1]?.trim() || '',
+                  tipo: (_tipoIdx >= 0 ? r[_tipoIdx]?.trim() : '') || 'Manual',
+                  requerFounder: _requerFounderIdx >= 0 && /^sim$/i.test(r[_requerFounderIdx]?.trim() || ''),
+                }));
+                const _manualActions = _actions.filter((a: any) => a.tipo.toLowerCase() !== 'automático' && a.tipo.toLowerCase() !== 'automatico');
+                const _myQcoinRequests = qcoinRequests.filter((r: any) => r.founderEmail === user?.email).sort((a: any, b: any) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
+                const _pendingConfirmations = qcoinRequests.filter((r: any) => r.paraFounderEmail === user?.email && r.status === 'aguardando_confirmacao');
                 const _premios = premiacoesRows.filter((r: string[]) => r[0]?.trim()).map((r: string[]) => ({ name: r[0]?.trim() || '', desc: r[1]?.trim() || '', cost: r[2]?.trim() || r[1]?.trim() || '' }));
 
                 const _displayRows: Array<{item: any; rIdx: number; sep?: boolean}> =
@@ -1700,6 +1779,44 @@ export default function App() {
 
                 return (
                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col gap-6">
+
+                    {/* ── AGUARDANDO SUA CONFIRMAÇÃO ── */}
+                    {_pendingConfirmations.length > 0 && (
+                      <div className="bg-terracota-50 border border-terracota-200 rounded-xl p-5 flex flex-col gap-3 animate-in slide-in-from-top-4 duration-500">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle size={18} className="text-primary" />
+                          <h4 className="font-bold text-terracota-900">
+                            {_pendingConfirmations.length === 1 ? 'Você tem 1 solicitação aguardando sua confirmação' : `Você tem ${_pendingConfirmations.length} solicitações aguardando sua confirmação`}
+                          </h4>
+                        </div>
+                        {_pendingConfirmations.map((r: any) => (
+                          <div key={r.id} className="bg-white rounded-lg border border-terracota-100 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm text-stone-900">
+                                <span className="font-bold">{r.founderNome}</span> diz ter ajudado você em: <span className="font-semibold">{r.acao}</span>
+                              </p>
+                              <p className="text-xs text-stone-400 mt-0.5">"{r.observacao}"</p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                disabled={confirmingQcoinRequestId === r.id}
+                                onClick={() => handleConfirmarQcoinRequest(r.id, 'confirmar')}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-all font-bold text-xs disabled:opacity-60"
+                              >
+                                <Check size={14} />Confirmar
+                              </button>
+                              <button
+                                disabled={confirmingQcoinRequestId === r.id}
+                                onClick={() => handleConfirmarQcoinRequest(r.id, 'recusar')}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-md transition-all font-bold text-xs disabled:opacity-60"
+                              >
+                                <X size={14} />Recusar
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* ── 1. HERO ── */}
                     <div className="bg-white rounded-2xl border border-stone-100 px-5 pt-4 pb-5 space-y-4">
@@ -1898,21 +2015,31 @@ export default function App() {
                           <Award size={12} className="text-stone-400" />
                           <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Como ganhar QCoins</span>
                         </div>
-                        {isAdmin && (
-                          <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'pontuacao' ? null : 'pontuacao')}
-                            className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
-                            <Pencil size={11} />{editingQcoinSection === 'pontuacao' ? 'Fechar editor' : 'Editar dados'}
-                          </button>
-                        )}
+                        <div className="flex items-center gap-3">
+                          {_manualActions.length > 0 && (
+                            <button onClick={() => { setSolicitarSuccess(false); setSolicitarAcao(''); setSolicitarObservacao(''); setSolicitarParaFounder(null); setSolicitarFounderSearch(''); setShowSolicitarQcoinModal(true); }}
+                              className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors">
+                              <Plus size={13} />Solicitar QCoins
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'pontuacao' ? null : 'pontuacao')}
+                              className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
+                              <Pencil size={11} />{editingQcoinSection === 'pontuacao' ? 'Fechar editor' : 'Editar dados'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                       {_actions.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                           {_actions.map((action: any, idx: number) => (
                             <div key={idx} className="bg-white rounded-xl border border-stone-100 p-4 flex flex-col justify-between hover:bg-primary/5 hover:border-primary/20 transition-colors">
                               <p className="text-sm font-semibold text-stone-900 leading-snug mb-3">{action.title}</p>
-                              <div>
-                                <span className="text-xl font-black text-primary tabular-nums">+{action.pts}</span>
-                                <span className="text-xs text-stone-400 ml-1">moedas</span>
+                              <div className="flex items-end justify-between">
+                                <div>
+                                  <span className="text-xl font-black text-primary tabular-nums">+{action.pts}</span>
+                                  <span className="text-xs text-stone-400 ml-1">moedas</span>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -1923,6 +2050,36 @@ export default function App() {
                       {isAdmin && editingQcoinSection === 'pontuacao' && (
                         <AdminTableEditor sectionId="pontuacao" cols={pontuacaoCols} colWidths={pontuacaoColWidths} rows={pontuacaoRows}
                           setCols={setPontuacaoCols} setColWidths={setPontuacaoColWidths} setRows={setPontuacaoRows} resizingRef={pontuacaoResizingRef} />
+                      )}
+                      {_myQcoinRequests.length > 0 && (
+                        <div className="mt-4">
+                          <button onClick={() => setShowMyQcoinRequests((v: boolean) => !v)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-stone-900 transition-colors">
+                            Minhas solicitações recentes
+                            <ChevronDown size={13} className={cn("transition-transform", showMyQcoinRequests && "rotate-180")} />
+                          </button>
+                          {showMyQcoinRequests && (
+                            <div className="mt-2 flex flex-col gap-2">
+                              {_myQcoinRequests.map((r: any) => (
+                                <div key={r.id} className="flex items-center justify-between bg-white rounded-lg border border-stone-100 px-4 py-2.5">
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <span className="text-sm font-medium text-stone-900 truncate">{r.acao}</span>
+                                    <span className="text-xs text-primary font-bold shrink-0">+{r.pontos}</span>
+                                  </div>
+                                  <span className={cn(
+                                    "shrink-0 ml-3 px-2.5 py-1 rounded-full text-overline font-bold uppercase tracking-widest",
+                                    r.status === 'aprovada' ? "bg-emerald-100 text-emerald-600"
+                                      : r.status === 'rejeitada' ? "bg-red-100 text-red-500"
+                                      : r.status === 'aguardando_confirmacao' ? "bg-stone-100 text-stone-500"
+                                      : "bg-terracota-100 text-primary"
+                                  )}>
+                                    {r.status === 'aprovada' ? 'Aprovada' : r.status === 'rejeitada' ? 'Rejeitada' : r.status === 'aguardando_confirmacao' ? `Aguardando ${r.paraFounderNome || 'confirmação'}` : 'Pendente'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -2051,55 +2208,42 @@ export default function App() {
 
                     </div>
 
-                    {/* ── 5. GUIA DA QCOIN ── */}
+                    {/* ── 5. CONSEQUÊNCIAS POR INATIVIDADE ── */}
                     <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <CheckSquare size={12} className="text-stone-400" />
-                        <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Guia da QCoin</span>
-                      </div>
-                      <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden divide-y divide-stone-100">
-                        {([
-                          { id: 'guide_estagios',      label: 'Estágios — detalhes e benefícios', rows: estagiosRows,     cols: estagiosCols       },
-                          { id: 'guide_premiacoes',    label: 'Catálogo de premiações',          rows: premiacoesRows,     cols: premiacoesCols     },
-                          { id: 'guide_consequencias', label: 'Consequências por inatividade',   rows: consequenciasRows,  cols: consequenciasCols  },
-                        ] as const).map(({ id, label, rows, cols }) => {
-                          const isOpen = editingQcoinSection === id;
-                          return (
-                            <div key={id}>
-                              <button
-                                onClick={() => setEditingQcoinSection(isOpen ? null : id)}
-                                className="w-full group flex items-center justify-between px-5 py-3.5 text-left hover:bg-stone-50/50 transition-colors"
-                              >
-                                <span className="text-sm font-medium text-stone-700 group-hover:text-primary transition-colors">{label}</span>
-                                <ChevronDown size={14} className={cn("text-stone-400 group-hover:text-primary/70 transition-transform duration-200 shrink-0", isOpen && "rotate-180")} />
-                              </button>
-                              {isOpen && (
-                                <div className="border-t border-stone-100 overflow-x-auto max-h-72">
-                                  <table className="w-full text-left border-collapse text-xs">
-                                    <thead>
-                                      <tr className="bg-stone-900 sticky top-0">
-                                        {(cols as readonly string[]).map((col: string, ci: number) => (
-                                          <th key={ci} className="px-4 py-2.5 font-bold uppercase tracking-widest text-stone-400 whitespace-nowrap">{col}</th>
-                                        ))}
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {(rows as string[][]).filter((row: string[]) => row.some((c: string) => c?.trim())).map((row: string[], ri: number) => (
-                                        <tr key={ri} className="border-b border-stone-50 hover:bg-stone-50/50">
-                                          {row.map((cell: string, ci: number) => (
-                                            <td key={ci} className="px-4 py-2 text-stone-700 text-xs whitespace-pre-wrap align-top">{cell}</td>
-                                          ))}
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {/* Admin: editor de consequências */}
+                      <button
+                        onClick={() => setEditingQcoinSection(editingQcoinSection === 'guide_consequencias' ? null : 'guide_consequencias')}
+                        className="w-full flex items-center justify-between mb-3 group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <CheckSquare size={12} className="text-stone-400 group-hover:text-primary/70 transition-colors" />
+                          <span className="text-overline font-bold uppercase tracking-widest text-stone-400 group-hover:text-primary transition-colors">Consequências por Inatividade</span>
+                        </div>
+                        <ChevronDown size={14} className={cn("text-stone-400 group-hover:text-primary/70 transition-transform duration-200 shrink-0", editingQcoinSection === 'guide_consequencias' && "rotate-180")} />
+                      </button>
+                      {editingQcoinSection === 'guide_consequencias' && (
+                        <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden animate-in fade-in duration-200">
+                          <div className="overflow-x-auto max-h-72">
+                            <table className="w-full text-left border-collapse text-xs">
+                              <thead>
+                                <tr className="bg-stone-900 sticky top-0">
+                                  {consequenciasCols.map((col: string, ci: number) => (
+                                    <th key={ci} className="px-4 py-2.5 font-bold uppercase tracking-widest text-stone-400 whitespace-nowrap">{col}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {consequenciasRows.filter((row: string[]) => row.some((c: string) => c?.trim())).map((row: string[], ri: number) => (
+                                  <tr key={ri} className="border-b border-stone-50 hover:bg-stone-50/50">
+                                    {row.map((cell: string, ci: number) => (
+                                      <td key={ci} className="px-4 py-2 text-stone-700 text-xs whitespace-pre-wrap align-top">{cell}</td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
                       {isAdmin && (
                         <div className="mt-3">
                           <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'consequencias' ? null : 'consequencias')}
@@ -3298,6 +3442,154 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {showSolicitarQcoinModal && (() => {
+        const tipoIdx = pontuacaoCols.findIndex((c: string) => c.trim().toLowerCase() === 'tipo');
+        const requerFounderIdx = pontuacaoCols.findIndex((c: string) => c.trim().toLowerCase().includes('requer'));
+        const manualActions = pontuacaoRows
+          .filter((r: string[]) => r[0]?.trim())
+          .map((r: string[]) => ({
+            title: r[0]?.trim() || '',
+            pts: r[1]?.trim() || '',
+            tipo: (tipoIdx >= 0 ? r[tipoIdx]?.trim() : '') || 'Manual',
+            requerFounder: requerFounderIdx >= 0 && /^sim$/i.test(r[requerFounderIdx]?.trim() || ''),
+          }))
+          .filter((a: any) => a.tipo.toLowerCase() !== 'automático' && a.tipo.toLowerCase() !== 'automatico');
+        const selectedAction = manualActions.find((a: any) => a.title === solicitarAcao);
+        const founderMatches = selectedAction?.requerFounder && solicitarFounderSearch.trim().length > 0
+          ? allFounders
+              .filter((f: any) => (f.id || f._id) !== (founderData?.id || founderData?._id))
+              .filter((f: any) => {
+                const q = solicitarFounderSearch.trim().toLowerCase();
+                return (f.name || '').toLowerCase().includes(q) || (f.username || '').replace(/^@/, '').toLowerCase().includes(q);
+              })
+              .slice(0, 6)
+          : [];
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowSolicitarQcoinModal(false)}>
+            <div className="bg-white rounded-xl w-full max-w-md p-8 relative shadow-2xl" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+              <button
+                onClick={() => setShowSolicitarQcoinModal(false)}
+                className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-stone-900 p-3 rounded-lg">
+                  <Award size={22} className="text-white" />
+                </div>
+                <h2 className="text-h2 font-sans text-stone-900">Solicitar QCoins</h2>
+              </div>
+
+              {solicitarSuccess ? (
+                <div className="text-center py-8">
+                  <div className="bg-green-50 text-green-700 rounded-lg p-6 mb-4">
+                    <p className="font-bold text-lg mb-1">Solicitação enviada!</p>
+                    <p className="text-sm text-green-600">
+                      {solicitarSuccessRequerFounder
+                        ? 'O founder marcado vai confirmar a ajuda antes dos pontos serem creditados.'
+                        : 'Um admin vai revisar e aprovar em breve.'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowSolicitarQcoinModal(false)}
+                    className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-primary/80 transition-all"
+                  >
+                    Fechar
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={(e: React.FormEvent) => handleSolicitarQcoinSubmit(e, manualActions)} className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                      Qual ação você realizou?
+                    </label>
+                    <select
+                      value={solicitarAcao}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setSolicitarAcao(e.target.value); setSolicitarParaFounder(null); setSolicitarFounderSearch(''); }}
+                      required
+                      className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition appearance-none cursor-pointer"
+                    >
+                      <option value="">Selecione...</option>
+                      {manualActions.map((a: any, idx: number) => (
+                        <option key={idx} value={a.title}>{a.title} (+{a.pts})</option>
+                      ))}
+                    </select>
+                  </div>
+                  {selectedAction && (
+                    <div className="bg-terracota-50 border border-terracota-100 rounded-lg px-4 py-3 flex items-center justify-between">
+                      <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">Pontuação</span>
+                      <span className="text-lg font-black text-primary tabular-nums">+{selectedAction.pts} moedas</span>
+                    </div>
+                  )}
+                  {selectedAction?.requerFounder && (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                        Quem você ajudou?
+                      </label>
+                      {solicitarParaFounder ? (
+                        <div className="flex items-center justify-between bg-stone-50 border border-stone-100 rounded-lg px-4 py-3">
+                          <span className="text-sm font-semibold text-stone-900">{solicitarParaFounder.name} <span className="text-stone-400 font-normal">@{(solicitarParaFounder.username || '').replace(/^@/, '')}</span></span>
+                          <button type="button" onClick={() => setSolicitarParaFounder(null)} className="text-stone-400 hover:text-stone-700">
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={solicitarFounderSearch}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSolicitarFounderSearch(e.target.value)}
+                            placeholder="Busque por nome ou @usuário..."
+                            className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                          />
+                          {founderMatches.length > 0 && (
+                            <div className="absolute z-10 mt-1 w-full bg-white border border-stone-100 rounded-lg shadow-lg overflow-hidden">
+                              {founderMatches.map((f: any) => (
+                                <button
+                                  key={f.id || f._id}
+                                  type="button"
+                                  onClick={() => { setSolicitarParaFounder({ id: f.id || f._id, name: f.name, username: f.username }); setSolicitarFounderSearch(''); }}
+                                  className="w-full text-left px-4 py-2.5 hover:bg-stone-50 transition-colors flex items-center gap-2"
+                                >
+                                  <span className="text-sm font-semibold text-stone-900">{f.name}</span>
+                                  <span className="text-xs text-stone-400">@{(f.username || '').replace(/^@/, '')}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                      Observação para o admin
+                    </label>
+                    <textarea
+                      value={solicitarObservacao}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setSolicitarObservacao(e.target.value)}
+                      placeholder="Conte um pouco de contexto para o admin avaliar sua solicitação..."
+                      required
+                      rows={4}
+                      className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={solicitarSubmitting || !solicitarAcao || !solicitarObservacao.trim() || (!!selectedAction?.requerFounder && !solicitarParaFounder)}
+                    className="mt-2 bg-primary text-white px-8 py-4 rounded-lg font-bold hover:bg-primary/80 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    <Send size={18} />
+                    {solicitarSubmitting ? 'Enviando...' : 'Enviar solicitação'}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Profile Modal */}
       {showProfileModal && user && (
