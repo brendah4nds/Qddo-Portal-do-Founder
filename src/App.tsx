@@ -1479,7 +1479,7 @@ export default function App() {
 
         {/* Main Content */}
         <main className={`flex-1 w-full min-w-0 ${view === 'chat' ? 'overflow-hidden p-2 md:p-4' : 'overflow-y-auto overflow-x-hidden p-4 md:p-6'}`}>
-          <div className={view === 'chat' ? 'h-full' : 'max-w-7xl mx-auto'}>
+          <div className={view === 'chat' ? 'h-full' : 'max-w-[1600px] mx-auto'}>
             {view === 'admin' ? (
               <AdminPanel
                 user={user}
