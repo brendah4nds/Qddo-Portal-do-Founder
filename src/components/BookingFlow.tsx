@@ -365,7 +365,7 @@ export function BookingFlow({
 
   return (
     <>
-    <div className="max-w-4xl mx-auto relative">
+    <div className="relative">
       {/* Settings button — admin only */}
       {isAdmin && (
         <button
@@ -414,7 +414,10 @@ export function BookingFlow({
         {step === 1 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-base sm:text-h1 font-sans mb-4 sm:mb-8 text-center">Qual sala você deseja reservar?</h2>
-            <div className="flex flex-col gap-3 sm:grid sm:grid-cols-3 sm:gap-6">
+            <div
+              className="flex flex-col gap-3 sm:grid sm:gap-6"
+              style={{ gridTemplateColumns: `repeat(${rooms.length}, minmax(0, 1fr))` }}
+            >
               {rooms.map(room => (
                 <div key={room.id} className="relative">
                   <button
