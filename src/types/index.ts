@@ -40,6 +40,22 @@ export interface Founder {
   totalPoints?: number;
 }
 
+export interface QCoinRequest {
+  id: string;
+  founderId: string;
+  founderNome: string;
+  founderEmail: string;
+  acao: string;
+  pontos: number;
+  observacao: string;
+  paraFounderId?: string;
+  paraFounderNome?: string;
+  paraFounderEmail?: string;
+  status: 'pendente' | 'aguardando_confirmacao' | 'aprovada' | 'rejeitada';
+  criadoEm: string;
+  revisadoEm?: string;
+}
+
 export interface Challenge {
   id: string;
   founderId: string;

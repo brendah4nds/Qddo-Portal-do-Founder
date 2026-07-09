@@ -63,7 +63,8 @@ export function AdminPanel({
   onEditNewsConsumed,
   hiddenMenuItems = [],
   onRestoreMenuItem,
-  isMasterAdmin = false
+  isMasterAdmin = false,
+  qcoinActions = []
 }: {
   user: any | null;
   onLogin: () => void;
@@ -72,15 +73,22 @@ export function AdminPanel({
   businessHours: string[];
   isAdmin: boolean;
   founders?: any[];
-  initialTab?: 'founders' | 'challenges' | 'news' | 'indicacoes' | 'hidden-items' | 'admins';
+  initialTab?: 'founders' | 'challenges' | 'news' | 'indicacoes' | 'hidden-items' | 'admins' | 'qcoin';
   initialEditNewsItem?: any;
   onEditNewsConsumed?: () => void;
   hiddenMenuItems?: string[];
   onRestoreMenuItem?: (key: string) => void;
   isMasterAdmin?: boolean;
+  qcoinActions?: string[][];
 }) {
-  const [adminTab, setAdminTab] = useState<'founders' | 'challenges' | 'news' | 'indicacoes' | 'hidden-items' | 'admins'>(initialTab);
+  const [adminTab, setAdminTab] = useState<'founders' | 'challenges' | 'news' | 'indicacoes' | 'hidden-items' | 'admins' | 'qcoin'>(initialTab);
   const [indicacoes, setIndicacoes] = useState<any[]>([]);
+  const [qcoinRequests, setQcoinRequests] = useState<any[]>([]);
+  const [lancarFounderId, setLancarFounderId] = useState('');
+  const [lancarAcao, setLancarAcao] = useState('');
+  const [lancarCustomPontos, setLancarCustomPontos] = useState('');
+  const [lancarSubmitting, setLancarSubmitting] = useState(false);
+  const [lancarSuccess, setLancarSuccess] = useState(false);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [newsItems, setNewsItems] = useState<any[]>([]);
   const [newNews, setNewNews] = useState({
@@ -220,6 +228,13 @@ export function AdminPanel({
       setIndicacoes(sorted);
     }).catch(console.error);
 
+    api.get('/api/qcoin-requests').then(r => {
+      const sorted = r.data
+        .map((i: any) => ({ ...i, id: i._id || i.id }))
+        .sort((a: any, b: any) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
+      setQcoinRequests(sorted);
+    }).catch(console.error);
+
     const socket = getSocket();
 
     const onChallengeNew = (c: any) => {
@@ -251,6 +266,15 @@ export function AdminPanel({
       setIndicacoes(prev => prev.map(x => x.id === norm.id ? norm : x));
     };
 
+    const onQcoinRequestNew = (r: any) => {
+      const norm = { ...r, id: r._id || r.id };
+      setQcoinRequests(prev => [norm, ...prev.filter(x => x.id !== norm.id)]);
+    };
+    const onQcoinRequestUpdate = (r: any) => {
+      const norm = { ...r, id: r._id || r.id };
+      setQcoinRequests(prev => prev.map(x => x.id === norm.id ? norm : x));
+    };
+
     socket.on('challenge:new', onChallengeNew);
     socket.on('challenge:update', onChallengeUpdate);
     socket.on('challenge:delete', onChallengeDelete);
@@ -259,6 +283,8 @@ export function AdminPanel({
     socket.on('news:delete', onNewsDelete);
     socket.on('indicacao:new', onIndicacaoNew);
     socket.on('indicacao:update', onIndicacaoUpdate);
+    socket.on('qcoin-request:new', onQcoinRequestNew);
+    socket.on('qcoin-request:update', onQcoinRequestUpdate);
 
     return () => {
       socket.off('challenge:new', onChallengeNew);
@@ -269,6 +295,8 @@ export function AdminPanel({
       socket.off('news:delete', onNewsDelete);
       socket.off('indicacao:new', onIndicacaoNew);
       socket.off('indicacao:update', onIndicacaoUpdate);
+      socket.off('qcoin-request:new', onQcoinRequestNew);
+      socket.off('qcoin-request:update', onQcoinRequestUpdate);
     };
   }, [isAdmin]);
 
@@ -296,6 +324,51 @@ export function AdminPanel({
         }
       }
     });
+  };
+
+  const handleAprovarQcoinRequest = async (id: string) => {
+    try {
+      await api.put(`/api/qcoin-requests/${id}`, { status: 'aprovada' });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleRejeitarQcoinRequest = (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Rejeitar Solicitação',
+      message: 'Tem certeza que deseja rejeitar esta solicitação de QCoins?',
+      variant: 'danger',
+      confirmText: 'Rejeitar',
+      onConfirm: async () => {
+        try {
+          await api.put(`/api/qcoin-requests/${id}`, { status: 'rejeitada' });
+          setModalConfig(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
+  };
+
+  const handleLancarQcoinManual = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const pontos = lancarAcao === '__custom__' ? parseInt(lancarCustomPontos) : parseInt(lancarAcao.split('|')[1] || '0');
+    if (!lancarFounderId || !pontos) return;
+    setLancarSubmitting(true);
+    try {
+      await api.put(`/api/founders/${lancarFounderId}/points`, { points: pontos });
+      setLancarSuccess(true);
+      setLancarFounderId('');
+      setLancarAcao('');
+      setLancarCustomPontos('');
+      setTimeout(() => setLancarSuccess(false), 3000);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLancarSubmitting(false);
+    }
   };
 
   const handleDeleteFounder = (founder: any) => {
@@ -538,6 +611,21 @@ export function AdminPanel({
           {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length > 0 && (
             <span className="bg-primary text-white text-overline font-bold rounded-full w-5 h-5 flex items-center justify-center">
               {indicacoes.filter((i: any) => !i.status || i.status === 'pendente').length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setAdminTab('qcoin')}
+          className={cn(
+            "pb-4 text-xs md:text-sm font-bold uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap shrink-0",
+            adminTab === 'qcoin' ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400 hover:text-stone-600"
+          )}
+        >
+          <Trophy size={14} />
+          QCoins
+          {qcoinRequests.filter((r: any) => r.status === 'pendente').length > 0 && (
+            <span className="bg-primary text-white text-overline font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {qcoinRequests.filter((r: any) => r.status === 'pendente').length}
             </span>
           )}
         </button>
@@ -1140,6 +1228,184 @@ export function AdminPanel({
           )}
         </section>
       )}
+
+      {adminTab === 'qcoin' && (() => {
+        const pendentes = qcoinRequests.filter((r: any) => r.status === 'pendente');
+        const aprovadas = qcoinRequests.filter((r: any) => r.status === 'aprovada');
+        const launchableActions = qcoinActions
+          .filter((r: string[]) => r[0]?.trim())
+          .map((r: string[]) => ({ title: r[0]?.trim() || '', pts: r[1]?.trim() || '' }))
+          .filter((a: any) => /^\d+$/.test(a.pts));
+        return (
+        <section className="space-y-6 animate-in fade-in duration-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-h3 md:text-h2 font-sans">Solicitações de QCoins</h3>
+              <p className="text-stone-500 text-sm mt-1">Revise e aprove ou rejeite as solicitações enviadas pelos founders.</p>
+            </div>
+            <div className="flex gap-3 shrink-0">
+              <div className="bg-terracota-50 border border-terracota-200 px-4 py-2.5 rounded-lg flex flex-col items-center">
+                <span className="text-overline uppercase tracking-widest font-bold text-primary">Pendentes</span>
+                <span className="text-h3 md:text-h2 font-sans text-primary">{pendentes.length}</span>
+              </div>
+              <div className="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-lg flex flex-col items-center">
+                <span className="text-overline uppercase tracking-widest font-bold text-emerald-500">Aprovadas</span>
+                <span className="text-h3 md:text-h2 font-sans text-emerald-600">{aprovadas.length}</span>
+              </div>
+            </div>
+          </div>
+
+          {qcoinRequests.length === 0 ? (
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-12 md:p-20 text-center">
+              <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trophy size={28} className="text-stone-400" />
+              </div>
+              <p className="text-stone-400">Nenhuma solicitação recebida ainda.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-stone-50 border-b border-stone-100">
+                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Founder</th>
+                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Ação</th>
+                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Pontos</th>
+                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Observação</th>
+                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Founder Marcado</th>
+                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Status</th>
+                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {qcoinRequests.map((r: any) => {
+                      const isPendente = r.status === 'pendente';
+                      const isAprovada = r.status === 'aprovada';
+                      return (
+                        <tr key={r.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                          <td className="px-8 py-6">
+                            <div className="font-bold text-stone-900">{r.founderNome}</div>
+                            <div className="text-xs text-stone-400">{r.founderEmail}</div>
+                          </td>
+                          <td className="px-8 py-6">
+                            <div className="font-sans text-stone-700">{r.acao}</div>
+                          </td>
+                          <td className="px-8 py-6">
+                            <span className="font-bold text-primary">+{r.pontos}</span>
+                          </td>
+                          <td className="px-8 py-6 max-w-xs">
+                            <div className="text-sm text-stone-600 truncate" title={r.observacao}>{r.observacao}</div>
+                          </td>
+                          <td className="px-8 py-6">
+                            <div className="text-sm text-stone-600">{r.paraFounderNome || '—'}</div>
+                          </td>
+                          <td className="px-8 py-6">
+                            <span className={cn(
+                              "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-overline font-bold uppercase tracking-widest",
+                              isAprovada
+                                ? "bg-emerald-100 text-emerald-600"
+                                : r.status === 'rejeitada'
+                                ? "bg-red-100 text-red-500"
+                                : r.status === 'aguardando_confirmacao'
+                                ? "bg-stone-100 text-stone-500"
+                                : "bg-terracota-100 text-primary"
+                            )}>
+                              {isAprovada ? 'Aprovada' : r.status === 'rejeitada' ? 'Rejeitada' : r.status === 'aguardando_confirmacao' ? 'Aguardando founder' : 'Pendente'}
+                            </span>
+                          </td>
+                          <td className="px-8 py-6 text-right">
+                            {isPendente && (
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleAprovarQcoinRequest(r.id)}
+                                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-all font-bold text-xs"
+                                >
+                                  <CheckCircle2 size={14} />
+                                  Aprovar
+                                </button>
+                                <button
+                                  onClick={() => handleRejeitarQcoinRequest(r.id)}
+                                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-md transition-all font-bold text-xs"
+                                >
+                                  <X size={14} />
+                                  Rejeitar
+                                </button>
+                              </div>
+                            )}
+                            {!isPendente && (
+                              <span className="text-xs text-stone-300">{r.status === 'aguardando_confirmacao' ? 'Aguardando founder' : 'Revisado'}</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-6 md:p-8">
+            <h3 className="text-h3 font-sans mb-1">Lançar QCoins manualmente</h3>
+            <p className="text-stone-500 text-sm mb-6">Credite pontos diretamente para um founder, com base numa ação da tabela ou um valor personalizado.</p>
+            <form onSubmit={handleLancarQcoinManual} className="flex flex-col gap-4 max-w-lg">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Founder</label>
+                <select
+                  value={lancarFounderId}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLancarFounderId(e.target.value)}
+                  required
+                  className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition appearance-none cursor-pointer"
+                >
+                  <option value="">Selecione um founder...</option>
+                  {founders.map((f: any) => (
+                    <option key={f._id || f.id} value={f._id || f.id}>{f.name} (@{(f.username || '').replace(/@/g, '')})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Ação</label>
+                <select
+                  value={lancarAcao}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLancarAcao(e.target.value)}
+                  required
+                  className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition appearance-none cursor-pointer"
+                >
+                  <option value="">Selecione uma ação...</option>
+                  {launchableActions.map((a: any, idx: number) => (
+                    <option key={idx} value={`${a.title}|${a.pts}`}>{a.title} (+{a.pts})</option>
+                  ))}
+                  <option value="__custom__">Personalizado...</option>
+                </select>
+              </div>
+              {lancarAcao === '__custom__' && (
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Pontos</label>
+                  <input
+                    type="number"
+                    value={lancarCustomPontos}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLancarCustomPontos(e.target.value)}
+                    placeholder="Ex: 25"
+                    required
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                  />
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={lancarSubmitting || !lancarFounderId || !lancarAcao}
+                className="mt-2 bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-primary/80 transition-all disabled:opacity-60 self-start"
+              >
+                {lancarSubmitting ? 'Lançando...' : 'Lançar QCoins'}
+              </button>
+              {lancarSuccess && (
+                <p className="text-sm text-emerald-600 font-bold">QCoins lançados com sucesso!</p>
+              )}
+            </form>
+          </div>
+        </section>
+        );
+      })()}
 
       {adminTab === 'hidden-items' && (
         <section className="animate-in fade-in duration-500">
