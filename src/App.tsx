@@ -792,6 +792,14 @@ export default function App() {
     setRooms((prev: Room[]) => prev.map((r: Room) => r.id === roomId ? { ...r, ...updates } : r));
   };
 
+  const handleRoomCreate = async (data: { name: string; description?: string }) => {
+    const res = await api.post('/api/rooms', data);
+    const created = res.data;
+    const newRoom: Room = { ...created, id: created._id || created.id };
+    setRooms((prev: Room[]) => [...prev, newRoom]);
+    return newRoom;
+  };
+
   const handleEventCheckin = async (event: any) => {
     if (!user?._id || !founderData) return;
     // Synchronous guard — prevents concurrent calls even before React re-renders
@@ -2961,6 +2969,7 @@ export default function App() {
                 }}
                 isAdmin={isAdmin}
                 onRoomUpdate={handleRoomUpdate}
+                onRoomCreate={handleRoomCreate}
               />
             )}
           </div>

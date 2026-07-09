@@ -65,7 +65,8 @@ export function BookingFlow({
   activeSubTab,
   onStepChange,
   isAdmin,
-  onRoomUpdate
+  onRoomUpdate,
+  onRoomCreate
 }: {
   rooms: Room[];
   bookings: Booking[];
@@ -80,6 +81,7 @@ export function BookingFlow({
   onStepChange?: (step: number) => void;
   isAdmin?: boolean;
   onRoomUpdate?: (roomId: string, updates: Partial<Room>) => Promise<void>;
+  onRoomCreate?: (data: { name: string; description?: string }) => Promise<Room>;
 }) {
   const [step, setStep] = useState(1);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
@@ -116,6 +118,24 @@ export function BookingFlow({
   const handleSettingsRemoveHour = async (hour: string) => {
     const updated = businessHours.filter(h => h !== hour);
     await api.put('/api/settings/global', { businessHours: updated });
+  };
+
+  const [showAddRoomModal, setShowAddRoomModal] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
+  const [newRoomDescription, setNewRoomDescription] = useState('');
+  const [addRoomLoading, setAddRoomLoading] = useState(false);
+
+  const handleAddRoom = async () => {
+    if (!newRoomName.trim() || !onRoomCreate) return;
+    setAddRoomLoading(true);
+    try {
+      await onRoomCreate({ name: newRoomName.trim(), description: newRoomDescription.trim() || undefined });
+      setNewRoomName('');
+      setNewRoomDescription('');
+      setShowAddRoomModal(false);
+    } finally {
+      setAddRoomLoading(false);
+    }
   };
 
   // Sync internal step with external activeSubTab
@@ -847,7 +867,16 @@ export function BookingFlow({
 
             {/* Booking Links */}
             <div>
-              <h4 className="font-sans text-base text-stone-900 mb-2">Links de Agendamento</h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-sans text-base text-stone-900">Links de Agendamento</h4>
+                <button
+                  onClick={() => setShowAddRoomModal(true)}
+                  className="text-overline bg-primary text-white px-3 py-1.5 rounded-lg font-bold hover:bg-primary/90 transition-colors flex items-center gap-1.5"
+                >
+                  <Plus size={14} />
+                  Adicionar Espaço
+                </button>
+              </div>
               <p className="text-stone-500 text-sm mb-4">Compartilhe estes links para que os usuários acessem diretamente o agendamento de cada sala.</p>
               <div className="space-y-3">
                 {rooms.map(room => {
@@ -869,6 +898,74 @@ export function BookingFlow({
                 })}
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Add Room Modal */}
+    {showAddRoomModal && (
+      <div
+        className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+        onClick={() => !addRoomLoading && setShowAddRoomModal(false)}
+      >
+        <div
+          className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-8 py-6 border-b border-stone-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center">
+                <RoomIcon size={20} className="text-stone-600" />
+              </div>
+              <h3 className="text-lg font-sans text-stone-900">Adicionar Novo Espaço</h3>
+            </div>
+            <button
+              onClick={() => setShowAddRoomModal(false)}
+              className="p-2 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-8 space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-2">Nome da sala *</label>
+              <input
+                type="text"
+                value={newRoomName}
+                onChange={e => setNewRoomName(e.target.value)}
+                placeholder="Ex: Sala de Reunião 4"
+                className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md focus:outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-2">Descrição / Capacidade</label>
+              <input
+                type="text"
+                value={newRoomDescription}
+                onChange={e => setNewRoomDescription(e.target.value)}
+                placeholder="Ex: Sala para 2 a 4 pessoas"
+                className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md focus:outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 px-8 py-6 border-t border-stone-100">
+            <button
+              onClick={() => setShowAddRoomModal(false)}
+              disabled={addRoomLoading}
+              className="px-5 py-2.5 rounded-md text-stone-600 hover:bg-stone-100 transition-colors font-medium disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleAddRoom}
+              disabled={!newRoomName.trim() || addRoomLoading}
+              className="bg-primary text-white px-5 py-2.5 rounded-md hover:bg-primary/90 transition-all font-medium disabled:opacity-50"
+            >
+              {addRoomLoading ? 'Criando...' : 'Criar'}
+            </button>
           </div>
         </div>
       </div>
