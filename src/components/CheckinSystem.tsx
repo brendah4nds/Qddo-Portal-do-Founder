@@ -258,6 +258,10 @@ export function CheckinSystem({
   const diff = currentMonthCheckins - prevMonthCheckins;
   const percentChange = prevMonthCheckins === 0 ? 100 : Math.round((diff / prevMonthCheckins) * 100);
 
+  const sortedFounders = useMemo(() => {
+    return [...founders].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+  }, [founders]);
+
   const checkinStatus = todayCheckin?.status === 'active'
     ? 'present'
     : todayCheckin?.status === 'completed'
@@ -277,7 +281,7 @@ export function CheckinSystem({
             className="bg-transparent border-none focus:ring-0 font-bold text-stone-900 flex-1 text-sm"
           >
             <option value={user._id}>Meu Calendário ({user.name || user.displayName || 'Eu'})</option>
-            {founders.map(f => (
+            {sortedFounders.map(f => (
               <option key={f._id || f.id} value={f._id || f.id}>{f.name} (@{f.username})</option>
             ))}
           </select>
