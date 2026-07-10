@@ -439,10 +439,6 @@ export function BookingFlow({
                       )}
                     </div>
                     <div className="p-3 sm:p-6 flex flex-col flex-1 justify-center">
-                      <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-stone-100 flex items-center justify-center mb-2 sm:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <RoomIcon size={14} className="sm:hidden" />
-                        <RoomIcon size={20} className="hidden sm:block" />
-                      </div>
                       <h3 className="font-sans text-sm sm:text-h3 leading-tight mb-1 sm:mb-2">{room.name}</h3>
                       <p className="text-xs text-stone-400 line-clamp-2 sm:line-clamp-none">{room.description}</p>
                     </div>
