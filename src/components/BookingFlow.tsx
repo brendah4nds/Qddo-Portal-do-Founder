@@ -423,7 +423,7 @@ export function BookingFlow({
                   <button
                     onClick={() => {
                       setSelectedRoomId(room.id);
-                      window.history.pushState({}, '', `/sala/${room.id}`);
+                      window.history.pushState({}, '', `/agendamento/${room.id}`);
                       setStep(2);
                     }}
                     className="w-full rounded-xl border border-stone-100 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group overflow-hidden flex flex-row sm:flex-col"
@@ -879,7 +879,7 @@ export function BookingFlow({
               <p className="text-stone-500 text-sm mb-4">Compartilhe estes links para que os usuários acessem diretamente o agendamento de cada sala.</p>
               <div className="space-y-3">
                 {rooms.map(room => {
-                  const link = `${window.location.origin}/sala/${room.id}`;
+                  const link = `${window.location.origin}/agendamento/${room.id}`;
                   return (
                     <div key={room.id} className="p-4 bg-stone-50 border border-stone-100 rounded-lg flex items-center justify-between">
                       <div>
