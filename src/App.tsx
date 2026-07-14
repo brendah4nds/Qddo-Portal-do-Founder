@@ -546,8 +546,12 @@ export default function App() {
 
   // URL → state mapping
   const applyPath = (path: string) => {
-    const salaMatch = path.match(/\/sala\/([^\/]+)/);
-    if (salaMatch) { setSelectedRoomId(salaMatch[1]); return; }
+    const agendamentoRoomMatch = path.match(/^\/agendamento\/([^\/]+)/);
+    if (agendamentoRoomMatch) {
+      setView('booking'); setActiveSubTab('escolha-sala');
+      setSelectedRoomId(agendamentoRoomMatch[1]);
+      return;
+    }
 
     const qcoinMatch = path.match(/^\/qcoin\/(.+)$/);
     if (qcoinMatch) {
