@@ -215,7 +215,9 @@ export default function App() {
   const [solicitarSuccess, setSolicitarSuccess] = useState(false);
   const [solicitarSuccessRequerFounder, setSolicitarSuccessRequerFounder] = useState(false);
   const [showMyQcoinRequests, setShowMyQcoinRequests] = useState(false);
+  const [showQcoinApprovalQueue, setShowQcoinApprovalQueue] = useState(false);
   const [confirmingQcoinRequestId, setConfirmingQcoinRequestId] = useState<string | null>(null);
+  const [reviewingQcoinRequestId, setReviewingQcoinRequestId] = useState<string | null>(null);
   const [showAddNewsModal, setShowAddNewsModal] = useState(false);
   const [eventCheckinLoading, setEventCheckinLoading] = useState(false);
   const [eventCheckinError, setEventCheckinError] = useState<string | null>(null);
@@ -536,6 +538,19 @@ export default function App() {
       console.error('Erro ao confirmar solicitação de QCoins:', error);
     } finally {
       setConfirmingQcoinRequestId(null);
+    }
+  };
+
+  const handleReviewQcoinRequest = async (id: string, status: 'aprovada' | 'rejeitada') => {
+    if (status === 'rejeitada' && !window.confirm('Tem certeza que deseja rejeitar esta solicitação de QCoins?')) return;
+    setReviewingQcoinRequestId(id);
+    try {
+      const { data } = await api.put(`/api/qcoin-requests/${id}`, { status });
+      setQcoinRequests((prev: any[]) => prev.map((x: any) => x.id === id ? { ...data, id: data._id || data.id } : x));
+    } catch (error) {
+      console.error('Erro ao revisar solicitação de QCoins:', error);
+    } finally {
+      setReviewingQcoinRequestId(null);
     }
   };
 
@@ -1694,8 +1709,10 @@ export default function App() {
                   requerFounder: _requerFounderIdx >= 0 && /^sim$/i.test(r[_requerFounderIdx]?.trim() || ''),
                 }));
                 const _manualActions = _actions.filter((a: any) => a.tipo.toLowerCase() !== 'automático' && a.tipo.toLowerCase() !== 'automatico');
-                const _myQcoinRequests = qcoinRequests.filter((r: any) => r.founderEmail === user?.email).sort((a: any, b: any) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
-                const _pendingConfirmations = qcoinRequests.filter((r: any) => r.paraFounderEmail === user?.email && r.status === 'aguardando_confirmacao');
+                // Muitas contas migradas do Firestore não têm e-mail salvo no Mongo — casa por ID primeiro, e-mail como fallback
+                const _myQcoinRequests = qcoinRequests.filter((r: any) => r.founderId === _myFounderId || r.founderEmail === user?.email).sort((a: any, b: any) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
+                const _pendingConfirmations = qcoinRequests.filter((r: any) => (r.paraFounderId === _myFounderId || r.paraFounderEmail === user?.email) && r.status === 'aguardando_confirmacao');
+                const _pendingApprovalQueue = qcoinRequests.filter((r: any) => r.status === 'pendente').sort((a: any, b: any) => new Date(a.criadoEm).getTime() - new Date(b.criadoEm).getTime());
                 const _premios = premiacoesRows.filter((r: string[]) => r[0]?.trim()).map((r: string[]) => ({ name: r[0]?.trim() || '', desc: r[1]?.trim() || '', cost: r[2]?.trim() || r[1]?.trim() || '' }));
 
                 const _displayRows: Array<{item: any; rIdx: number; sep?: boolean}> =
@@ -2071,6 +2088,20 @@ export default function App() {
                               <Plus size={13} />Solicitar QCoins
                             </button>
                           )}
+                          {isAdmin ? (
+                            <button onClick={() => setShowQcoinApprovalQueue(true)}
+                              className="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-stone-900 transition-colors">
+                              Solicitações para aprovação
+                              {_pendingApprovalQueue.length > 0 && (
+                                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-black">{_pendingApprovalQueue.length}</span>
+                              )}
+                            </button>
+                          ) : _myQcoinRequests.length > 0 && (
+                            <button onClick={() => setShowMyQcoinRequests(true)}
+                              className="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-stone-900 transition-colors">
+                              Minhas Solicitações
+                            </button>
+                          )}
                           {isAdmin && (
                             <button onClick={() => setEditingQcoinSection(editingQcoinSection === 'pontuacao' ? null : 'pontuacao')}
                               className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-900 transition-colors">
@@ -2100,17 +2131,26 @@ export default function App() {
                         <AdminTableEditor sectionId="pontuacao" cols={pontuacaoCols} colWidths={pontuacaoColWidths} rows={pontuacaoRows}
                           setCols={setPontuacaoCols} setColWidths={setPontuacaoColWidths} setRows={setPontuacaoRows} resizingRef={pontuacaoResizingRef} />
                       )}
-                      {_myQcoinRequests.length > 0 && (
-                        <div className="mt-4">
-                          <button onClick={() => setShowMyQcoinRequests((v: boolean) => !v)}
-                            className="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-stone-900 transition-colors">
-                            Minhas solicitações recentes
-                            <ChevronDown size={13} className={cn("transition-transform", showMyQcoinRequests && "rotate-180")} />
+                    </div>
+
+                    {!isAdmin && showMyQcoinRequests && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowMyQcoinRequests(false)}>
+                        <div className="bg-white rounded-xl w-full max-w-lg p-8 relative shadow-2xl max-h-[85vh] flex flex-col" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                          <button onClick={() => setShowMyQcoinRequests(false)} className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 transition-colors">
+                            <X size={20} />
                           </button>
-                          {showMyQcoinRequests && (
-                            <div className="mt-2 flex flex-col gap-2">
-                              {_myQcoinRequests.map((r: any) => (
-                                <div key={r.id} className="flex items-center justify-between bg-white rounded-lg border border-stone-100 px-4 py-2.5">
+                          <div className="flex items-center gap-3 mb-6 shrink-0">
+                            <div className="bg-stone-900 p-3 rounded-lg">
+                              <FileText size={22} className="text-white" />
+                            </div>
+                            <h2 className="text-h2 font-sans text-stone-900">Minhas Solicitações</h2>
+                          </div>
+                          <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+                            {_myQcoinRequests.length === 0 ? (
+                              <p className="text-sm text-stone-400 text-center py-10">Você ainda não enviou nenhuma solicitação de QCoins.</p>
+                            ) : (
+                              _myQcoinRequests.map((r: any) => (
+                                <div key={r.id} className="flex items-center justify-between bg-stone-50 rounded-lg border border-stone-100 px-4 py-2.5">
                                   <div className="flex items-center gap-3 min-w-0">
                                     <span className="text-sm font-medium text-stone-900 truncate">{r.acao}</span>
                                     <span className="text-xs text-primary font-bold shrink-0">+{r.pontos}</span>
@@ -2125,12 +2165,61 @@ export default function App() {
                                     {r.status === 'aprovada' ? 'Aprovada' : r.status === 'rejeitada' ? 'Rejeitada' : r.status === 'aguardando_confirmacao' ? `Aguardando ${r.paraFounderNome || 'confirmação'}` : 'Pendente'}
                                   </span>
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                              ))
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+
+                    {isAdmin && showQcoinApprovalQueue && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowQcoinApprovalQueue(false)}>
+                        <div className="bg-white rounded-xl w-full max-w-lg p-8 relative shadow-2xl max-h-[85vh] flex flex-col" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                          <button onClick={() => setShowQcoinApprovalQueue(false)} className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 transition-colors">
+                            <X size={20} />
+                          </button>
+                          <div className="flex items-center gap-3 mb-6 shrink-0">
+                            <div className="bg-stone-900 p-3 rounded-lg">
+                              <CheckSquare size={22} className="text-white" />
+                            </div>
+                            <h2 className="text-h2 font-sans text-stone-900">Solicitações para aprovação</h2>
+                          </div>
+                          <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+                            {_pendingApprovalQueue.length === 0 ? (
+                              <p className="text-sm text-stone-400 text-center py-10">Nenhuma solicitação pendente no momento.</p>
+                            ) : (
+                              _pendingApprovalQueue.map((r: any) => (
+                                <div key={r.id} className="bg-stone-50 rounded-lg border border-stone-100 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <p className="text-sm text-stone-900">
+                                      <span className="font-bold">{r.founderNome}</span> · <span className="font-semibold">{r.acao}</span>
+                                      <span className="text-xs text-primary font-bold ml-2">+{r.pontos}</span>
+                                    </p>
+                                    {r.observacao && <p className="text-xs text-stone-400 mt-0.5">"{r.observacao}"</p>}
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <button
+                                      disabled={reviewingQcoinRequestId === r.id}
+                                      onClick={() => handleReviewQcoinRequest(r.id, 'aprovada')}
+                                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-all font-bold text-xs disabled:opacity-60"
+                                    >
+                                      <CheckCircle2 size={14} />Aprovar
+                                    </button>
+                                    <button
+                                      disabled={reviewingQcoinRequestId === r.id}
+                                      onClick={() => handleReviewQcoinRequest(r.id, 'rejeitada')}
+                                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-md transition-all font-bold text-xs disabled:opacity-60"
+                                    >
+                                      <X size={14} />Rejeitar
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* ── 4. PROGRESSÃO + PREMIAÇÕES ── */}
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
