@@ -243,6 +243,7 @@ export default function App() {
   const [settingsSocialSite, setSettingsSocialSite] = useState('');
   const [socialSaving, setSocialSaving] = useState(false);
   const [selectedFounderDetail, setSelectedFounderDetail] = useState<any | null>(null);
+  const [qcoinViewingFounderId, setQcoinViewingFounderId] = useState<string | null>(null);
   const [qcoinSections, setQcoinSections] = useState<any[]>([]);
   const [expandedQcoinCard, setExpandedQcoinCard] = useState<string | null>(null);
   const [editingQcoinSection, setEditingQcoinSection] = useState<string | null>(null);
@@ -1638,17 +1639,27 @@ export default function App() {
                 const _myIdx = _ranking.findIndex((f: any) => f.id === _myFounderId);
                 const _myRank = _myIdx + 1;
                 const _me = _myIdx >= 0 ? _ranking[_myIdx] : { id: _myFounderId, name: founderData?.name || user?.name || user?.displayName || 'Você', username: founderData?.username || '', photoURL: founderData?.photoURL || null, coins: 0, totalPoints: founderData?.totalPoints || 0 };
-                const _totalPoints: number = founderData?.monthlyPoints?.[_ym] ?? founderData?.monthlyPoints?.get?.(_ym) ?? _me.coins ?? 0;
-                // Pula empates: encontra o primeiro acima com coins > minha pontuação
+
+                // Admin pode selecionar outro founder na lista de ranking para inspecionar seus dados
+                const _viewingOther = isAdmin && !!qcoinViewingFounderId && qcoinViewingFounderId !== _myFounderId;
+                const _viewIdx = _viewingOther ? _ranking.findIndex((f: any) => f.id === qcoinViewingFounderId) : _myIdx;
+                const _viewRank = _viewIdx + 1;
+                const _view = _viewingOther && _viewIdx >= 0 ? _ranking[_viewIdx] : _me;
+                const _heroName = _viewingOther ? _view.name : (founderData?.name || user?.displayName || 'Você');
+
+                const _totalPoints: number = _viewingOther
+                  ? (_view.coins ?? 0)
+                  : (founderData?.monthlyPoints?.[_ym] ?? founderData?.monthlyPoints?.get?.(_ym) ?? _me.coins ?? 0);
+                // Pula empates: encontra o primeiro acima com coins > a pontuação de quem está sendo exibido
                 const _above = (() => {
-                  if (_myIdx <= 0) return null;
-                  for (let i = _myIdx - 1; i >= 0; i--) {
-                    if (_ranking[i].coins > (_me.coins ?? 0)) return _ranking[i];
+                  if (_viewIdx <= 0) return null;
+                  for (let i = _viewIdx - 1; i >= 0; i--) {
+                    if (_ranking[i].coins > (_view.coins ?? 0)) return _ranking[i];
                   }
                   return null;
                 })();
                 const _aboveRank = _above ? _ranking.findIndex((r: any) => r.id === _above.id) + 1 : 0;
-                const _coinsToNext = _above ? Math.max(0, _above.coins - (_me.coins ?? 0)) : 0;
+                const _coinsToNext = _above ? Math.max(0, _above.coins - (_view.coins ?? 0)) : 0;
 
                 const _thrIdx = estagiosCols.findIndex((c: string) => /thr/i.test(c.trim()));
                 const _stagesRaw: any[] = estagiosRows
@@ -1707,7 +1718,12 @@ export default function App() {
                     c.userId === _fId || c.userId === user?._id || c.userId === user?.uid
                   );
                 })();
-                const _recentCheckins = [..._myCheckins]
+                // Quando um admin está inspecionando outro founder, os check-ins vêm de allCheckins (não há fallback userCheckins para terceiros)
+                const _targetCheckins = _viewingOther
+                  ? allCheckins.filter((c: any) => c.userId === qcoinViewingFounderId)
+                  : _myCheckins;
+
+                const _recentCheckins = [..._targetCheckins]
                   .sort((a: any, b: any) => _toMs(b.checkinTime || b.date) - _toMs(a.checkinTime || a.date))
                   .slice(0, 4);
 
@@ -1716,7 +1732,7 @@ export default function App() {
                 _weekStart.setDate(_weekStart.getDate() - (_dayOfWeek === 0 ? 6 : _dayOfWeek - 1));
                 _weekStart.setHours(0, 0, 0, 0);
                 const _monthStart = new Date(_now.getFullYear(), _now.getMonth(), 1);
-                const _monthCheckins = _myCheckins.filter((c: any) => _toMs(c.checkinTime || c.date) >= _monthStart.getTime());
+                const _monthCheckins = _targetCheckins.filter((c: any) => _toMs(c.checkinTime || c.date) >= _monthStart.getTime());
                 const _weekCheckins = _monthCheckins.filter((c: any) => _toMs(c.checkinTime || c.date) >= _weekStart.getTime());
                 const _weekPtsFromField = _weekCheckins.reduce((s: number, c: any) => s + Number(c.points || c.pts || 0), 0);
                 // Se check-ins não têm campo points, apura proporcionalmente ao total mensal
@@ -1830,6 +1846,22 @@ export default function App() {
                       </div>
                     )}
 
+                    {/* ── VISUALIZANDO OUTRO FOUNDER (admin) ── */}
+                    {_viewingOther && (
+                      <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-primary/10 border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Eye size={14} className="text-primary shrink-0" />
+                          <span className="text-sm font-semibold text-primary truncate">Visualizando dados de {_view.name}</span>
+                        </div>
+                        <button
+                          onClick={() => setQcoinViewingFounderId(null)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest text-primary hover:bg-primary/10 transition-all shrink-0"
+                        >
+                          <X size={12} />Voltar para meus dados
+                        </button>
+                      </div>
+                    )}
+
                     {/* ── 1. HERO ── */}
                     <div className="bg-white rounded-2xl border border-stone-100 px-5 pt-4 pb-5 space-y-4">
                       {/* Linha 1: título + mês */}
@@ -1843,7 +1875,7 @@ export default function App() {
                       {/* Linha 2: nome + saldo + semana + rank */}
                       <div>
                         <div className="flex items-baseline gap-x-4 gap-y-1 flex-wrap">
-                          <span className="text-sm font-semibold text-stone-500 self-center">{founderData?.name || user?.displayName || 'Você'}</span>
+                          <span className="text-sm font-semibold text-stone-500 self-center">{_heroName}</span>
                           <div className="flex items-baseline gap-2">
                             <span className="text-4xl font-black text-stone-900 tabular-nums leading-none">{_totalPoints.toLocaleString('pt-BR')}</span>
                             <span className="text-sm font-medium text-stone-400">QCoins</span>
@@ -1851,14 +1883,14 @@ export default function App() {
                           {_weekPoints > 0 && (
                             <span className="text-sm font-semibold text-emerald-600 self-center">+{_weekPoints.toLocaleString('pt-BR')} esta semana</span>
                           )}
-                          {_myRank > 0 && (
-                            <span className="text-sm font-semibold text-stone-400 self-center">#{_myRank} no ranking</span>
+                          {_viewRank > 0 && (
+                            <span className="text-sm font-semibold text-stone-400 self-center">#{_viewRank} no ranking</span>
                           )}
                         </div>
                         {/* Linha 3: rival */}
                         {_above && _coinsToNext > 0 && (
                           <p className="text-sm text-stone-400 mt-2">
-                            Você está a{' '}
+                            {_viewingOther ? _view.name : 'Você'} está a{' '}
                             <span className="font-bold text-primary">{_coinsToNext.toLocaleString('pt-BR')} moedas</span>
                             {' '}de ultrapassar{' '}
                             <span className="font-semibold text-stone-700">{_above.name}</span>
@@ -1906,12 +1938,16 @@ export default function App() {
                                 <div key={`sep-${di}`} className="py-1.5 text-center text-xs text-stone-300 select-none border-b border-stone-50">···</div>
                               );
                               const isMe = item?.id === _myId;
+                              const isSelected = _viewingOther && item?.id === qcoinViewingFounderId;
                               const medal = rIdx === 0 ? '🥇' : rIdx === 1 ? '🥈' : rIdx === 2 ? '🥉' : null;
                               return (
-                                <div key={item?.id || di} className={cn(
-                                  "flex items-center gap-3 px-5 py-2.5 border-b border-stone-50 transition-colors",
-                                  isMe ? "bg-terracota-100/20 border-l-2 border-l-primary" : "hover:bg-primary/5"
-                                )}>
+                                <div key={item?.id || di}
+                                  onClick={isAdmin && !isMe ? () => setQcoinViewingFounderId(item?.id) : undefined}
+                                  className={cn(
+                                    "flex items-center gap-3 px-5 py-2.5 border-b border-stone-50 transition-colors",
+                                    isAdmin && !isMe ? "cursor-pointer" : "",
+                                    isSelected ? "bg-primary/10 border-l-2 border-l-primary" : isMe ? "bg-terracota-100/20 border-l-2 border-l-primary" : "hover:bg-primary/5"
+                                  )}>
                                   <div className={cn(
                                     "w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0",
                                     rIdx === 0 ? "bg-amber-100 text-amber-700" :
@@ -1931,13 +1967,14 @@ export default function App() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5">
-                                      <p className={cn("text-sm font-semibold truncate", isMe ? "text-primary" : "text-stone-900")}>{item?.name}</p>
+                                      <p className={cn("text-sm font-semibold truncate", isMe || isSelected ? "text-primary" : "text-stone-900")}>{item?.name}</p>
                                       {isMe && <span className="text-xs text-primary/60 shrink-0 font-normal">você</span>}
+                                      {isSelected && <span className="text-xs text-primary/60 shrink-0 font-normal">visualizando</span>}
                                     </div>
                                     <p className="text-xs text-stone-400 truncate">@{item?.username}</p>
                                   </div>
                                   <div className="text-right shrink-0">
-                                    <span className={cn("text-sm font-black tabular-nums", isMe ? "text-primary" : "text-stone-900")}>{(item?.coins ?? 0).toLocaleString('pt-BR')}</span>
+                                    <span className={cn("text-sm font-black tabular-nums", isMe || isSelected ? "text-primary" : "text-stone-900")}>{(item?.coins ?? 0).toLocaleString('pt-BR')}</span>
                                     <span className="text-xs text-stone-400 ml-1">Q</span>
                                   </div>
                                 </div>
@@ -1956,9 +1993,9 @@ export default function App() {
                             <TrendingUp size={11} className="text-stone-400" />
                             <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Próximo Objetivo</span>
                           </div>
-                          {_myRank === 1 ? (
+                          {_viewRank === 1 ? (
                             <div>
-                              <p className="text-sm font-semibold text-stone-900">Você lidera o ranking 🏆</p>
+                              <p className="text-sm font-semibold text-stone-900">{_viewingOther ? `${_view.name} lidera` : 'Você lidera'} o ranking 🏆</p>
                               <p className="text-xs text-stone-400 mt-1 leading-relaxed">Continue acumulando para manter a primeira posição.</p>
                             </div>
                           ) : _above && _coinsToNext > 0 ? (
