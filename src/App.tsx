@@ -1650,7 +1650,8 @@ export default function App() {
                   }))
                   .sort((a: any, b: any) => b.coins - a.coins);
 
-                const _myFounderId = founderData?.id || founderData?._id || _myId;
+                // founderData.id pode conter lixo de migração do Firestore (o antigo doc ID, == firebase UID) — _id do Mongo é sempre confiável
+                const _myFounderId = founderData?._id || founderData?.id || _myId;
                 const _myIdx = _ranking.findIndex((f: any) => f.id === _myFounderId);
                 const _myRank = _myIdx + 1;
                 const _me = _myIdx >= 0 ? _ranking[_myIdx] : { id: _myFounderId, name: founderData?.name || user?.name || user?.displayName || 'Você', username: founderData?.username || '', photoURL: founderData?.photoURL || null, coins: 0, totalPoints: founderData?.totalPoints || 0 };
@@ -1727,7 +1728,7 @@ export default function App() {
                 };
                 // userCheckins pode estar vazio por race condition (filtrado antes de user._id ser atualizado)
                 // fallback: usa allCheckins filtrado pelo founderData._id que é confiável
-                const _fId = founderData?.id || founderData?._id;
+                const _fId = founderData?._id || founderData?.id;
                 const _myCheckins = (() => {
                   if (userCheckins.length > 0) return userCheckins;
                   if (!_fId) return [];
@@ -2688,7 +2689,7 @@ export default function App() {
                         .sort((a: any, b: any) => b.score - a.score);
 
                       const ranking = fullRanking.slice(0, 5);
-                      const userRankPosition = fullRanking.findIndex((r: any) => r.userId === (founderData?.id || founderData?._id)) + 1;
+                      const userRankPosition = fullRanking.findIndex((r: any) => r.userId === (founderData?._id || founderData?.id)) + 1;
 
                       const today = new Date();
                       const sunday = new Date(today);
@@ -3597,7 +3598,7 @@ export default function App() {
         const selectedAction = manualActions.find((a: any) => a.title === solicitarAcao);
         const founderMatches = selectedAction?.requerFounder && solicitarFounderSearch.trim().length > 0
           ? allFounders
-              .filter((f: any) => (f.id || f._id) !== (founderData?.id || founderData?._id))
+              .filter((f: any) => (f.id || f._id) !== (founderData?._id || founderData?.id))
               .filter((f: any) => {
                 const q = solicitarFounderSearch.trim().toLowerCase();
                 return (f.name || '').toLowerCase().includes(q) || (f.username || '').replace(/^@/, '').toLowerCase().includes(q);
