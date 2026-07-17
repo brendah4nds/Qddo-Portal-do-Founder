@@ -481,13 +481,29 @@ export function BookingFlow({
 
             {(() => {
               const today = startOfToday();
-              const thisMonthBookings = [...bookings]
-                .filter(b => isSameMonth(parse(b.date, 'yyyy-MM-dd', new Date()), today))
-                .sort((a, b) => {
-                  const dtA = `${a.date} ${a.startTime}`;
-                  const dtB = `${b.date} ${b.startTime}`;
-                  return dtB.localeCompare(dtA);
-                });
+              const monthBookings = bookings.filter(b => isSameMonth(parse(b.date, 'yyyy-MM-dd', new Date()), today));
+
+              // Merge contiguous slots (same room/date/user, back-to-back times) into a single entry.
+              const sortedForMerge = [...monthBookings].sort((a, b) =>
+                `${a.roomId}|${a.date}|${a.userEmail}|${a.startTime}`.localeCompare(
+                  `${b.roomId}|${b.date}|${b.userEmail}|${b.startTime}`
+                )
+              );
+              const mergedBookings: Booking[] = [];
+              for (const b of sortedForMerge) {
+                const last = mergedBookings[mergedBookings.length - 1];
+                if (last && last.roomId === b.roomId && last.date === b.date && last.userEmail === b.userEmail && last.endTime === b.startTime) {
+                  last.endTime = b.endTime;
+                } else {
+                  mergedBookings.push({ ...b });
+                }
+              }
+
+              const thisMonthBookings = mergedBookings.sort((a, b) => {
+                const dtA = `${a.date} ${a.startTime}`;
+                const dtB = `${b.date} ${b.startTime}`;
+                return dtB.localeCompare(dtA);
+              });
 
               if (thisMonthBookings.length === 0) return null;
 
