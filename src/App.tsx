@@ -318,6 +318,7 @@ export default function App() {
   const [indicarContato, setIndicarContato] = useState('');
   const [indicarSubmitting, setIndicarSubmitting] = useState(false);
   const [indicarSuccess, setIndicarSuccess] = useState(false);
+  const [indicarError, setIndicarError] = useState('');
   const [showEmailCopy, setShowEmailCopy] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
 
@@ -480,6 +481,7 @@ export default function App() {
     e.preventDefault();
     if (!indicarNome.trim() || !indicarEmpresa.trim() || !indicarArea.trim() || !indicarContato.trim()) return;
     setIndicarSubmitting(true);
+    setIndicarError('');
     try {
       await api.post('/api/indicacoes', {
         nomeIndicado: indicarNome.trim(),
@@ -494,8 +496,13 @@ export default function App() {
       setIndicarEmpresa('');
       setIndicarArea('');
       setIndicarContato('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao enviar indicação:', error);
+      if (error?.response?.status === 401) {
+        setIndicarError('Sua sessão expirou. Faça login novamente e tente enviar a indicação de novo.');
+      } else {
+        setIndicarError(error?.response?.data?.error || 'Não foi possível enviar a indicação. Tente novamente.');
+      }
     } finally {
       setIndicarSubmitting(false);
     }
@@ -3063,6 +3070,7 @@ export default function App() {
                   onClick={() => {
                     setShowIndicarFounderModal(true);
                     setIndicarSuccess(false);
+                    setIndicarError('');
                     setIndicarNome('');
                     setIndicarEmpresa('');
                     setIndicarArea('');
@@ -3569,6 +3577,9 @@ export default function App() {
                     className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
                   />
                 </div>
+                {indicarError && (
+                  <p className="text-red-500 text-xs text-center">{indicarError}</p>
+                )}
                 <button
                   type="submit"
                   disabled={indicarSubmitting}
