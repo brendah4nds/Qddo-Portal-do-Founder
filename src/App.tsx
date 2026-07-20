@@ -106,6 +106,67 @@ const DEFAULT_BUSINESS_HOURS = Array.from({ length: 21 }, (_, i) => {
   return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 });
 
+const AdminTableEditor = ({ sectionId, cols, colWidths, rows, setCols, setColWidths, setRows, resizingRef, savingQcoinSection, qcoinTableSaveStatus, qcoinTableSaveError, onSave }: any) => (
+  <div className="mt-3 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
+        <thead>
+          <tr className="bg-stone-900 border-b border-stone-800">
+            {cols.map((col: string, ci: number) => (
+              <th key={ci} className="relative px-3 py-2.5 select-none group/col" style={{ width: colWidths[ci] }}>
+                <input type="text" value={col} onChange={e => setCols((p: string[]) => p.map((c: string, i: number) => i === ci ? e.target.value : c))}
+                  className="w-full px-1 bg-transparent border border-transparent rounded text-overline uppercase tracking-widest font-bold text-stone-400 hover:border-stone-700 focus:border-stone-500 focus:outline-none focus:bg-stone-800" />
+                <button onClick={() => { setCols((p: string[]) => p.filter((_: string, i: number) => i !== ci)); setColWidths((p: number[]) => p.filter((_: number, i: number) => i !== ci)); setRows((p: string[][]) => p.map((r: string[]) => r.filter((_: string, i: number) => i !== ci))); }}
+                  className="absolute top-0.5 left-0.5 w-3.5 h-3.5 flex items-center justify-center rounded bg-red-500 text-white opacity-0 group-hover/col:opacity-100 transition-opacity" title="Excluir coluna"><X size={7} /></button>
+                <div onMouseDown={(e: React.MouseEvent) => { e.preventDefault(); resizingRef.current = { colIdx: ci, startX: e.clientX, startWidth: colWidths[ci] }; }}
+                  className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group/r">
+                  <div className="w-px h-3 bg-stone-600 group-hover/r:bg-stone-400 rounded-full" />
+                </div>
+              </th>
+            ))}
+            <th style={{ width: 28 }} />
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row: string[], ri: number) => (
+            <tr key={ri} className="border-b border-stone-100 hover:bg-stone-50/50">
+              {row.map((cell: string, ci: number) => (
+                <td key={ci} className="px-2 py-0.5 align-top">
+                  <textarea value={cell} rows={1}
+                    ref={(el: HTMLTextAreaElement | null) => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
+                    onChange={e => setRows((p: string[][]) => p.map((r: string[], i: number) => i === ri ? r.map((c: string, j: number) => j === ci ? e.target.value : c) : r))}
+                    onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }}
+                    className="w-full bg-transparent border border-transparent rounded px-2 py-1 text-xs text-stone-700 resize-none overflow-hidden hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white"
+                    placeholder="—" />
+                </td>
+              ))}
+              <td style={{ width: 28 }} className="px-1 py-0.5 align-middle">
+                <button onClick={() => setRows((p: string[][]) => p.filter((_: string[], i: number) => i !== ri))}
+                  className="w-5 h-5 flex items-center justify-center rounded text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={10} /></button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div className="px-4 py-2.5 border-t border-stone-100 flex items-center justify-between">
+      <div className="flex gap-2">
+        <button onClick={() => setRows((p: string[][]) => [...p, new Array(cols.length).fill('')])}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"><Plus size={11} /> Linha</button>
+        <button onClick={() => { setCols((p: string[]) => [...p, 'Nova coluna']); setColWidths((p: number[]) => [...p, 120]); setRows((p: string[][]) => p.map((r: string[]) => [...r, ''])); }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"><Plus size={11} /> Coluna</button>
+      </div>
+      <button onClick={() => onSave(sectionId)} disabled={savingQcoinSection}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600' : qcoinTableSaveStatus === 'error' ? 'bg-red-600' : 'bg-stone-900 hover:bg-primary/80'}`}>
+        <Check size={11} />{savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Salva' : qcoinTableSaveStatus === 'error' ? 'Erro' : 'Salvar tabela'}
+      </button>
+    </div>
+    {qcoinTableSaveStatus === 'error' && qcoinTableSaveError && (
+      <p className="px-4 pb-2 text-xs text-red-500 break-all">Detalhe: {qcoinTableSaveError}</p>
+    )}
+  </div>
+);
+
 export default function App() {
   const [user, setUser] = useState<any | null>(null);
   const [activeGeneralCategory, setActiveGeneralCategory] = useState<string | null>(null);
@@ -1769,67 +1830,6 @@ export default function App() {
 
                 const _suggestedAction = _actions.find((a: any) => { const n = parseInt(a.pts); return !isNaN(n) && n >= _coinsToNext; }) || _actions[0];
 
-                const AdminTableEditor = ({ sectionId, cols, colWidths, rows, setCols, setColWidths, setRows, resizingRef }: any) => (
-                  <div className="mt-3 bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
-                        <thead>
-                          <tr className="bg-stone-900 border-b border-stone-800">
-                            {cols.map((col: string, ci: number) => (
-                              <th key={ci} className="relative px-3 py-2.5 select-none group/col" style={{ width: colWidths[ci] }}>
-                                <input type="text" value={col} onChange={e => setCols((p: string[]) => p.map((c: string, i: number) => i === ci ? e.target.value : c))}
-                                  className="w-full px-1 bg-transparent border border-transparent rounded text-overline uppercase tracking-widest font-bold text-stone-400 hover:border-stone-700 focus:border-stone-500 focus:outline-none focus:bg-stone-800" />
-                                <button onClick={() => { setCols((p: string[]) => p.filter((_: string, i: number) => i !== ci)); setColWidths((p: number[]) => p.filter((_: number, i: number) => i !== ci)); setRows((p: string[][]) => p.map((r: string[]) => r.filter((_: string, i: number) => i !== ci))); }}
-                                  className="absolute top-0.5 left-0.5 w-3.5 h-3.5 flex items-center justify-center rounded bg-red-500 text-white opacity-0 group-hover/col:opacity-100 transition-opacity" title="Excluir coluna"><X size={7} /></button>
-                                <div onMouseDown={(e: React.MouseEvent) => { e.preventDefault(); resizingRef.current = { colIdx: ci, startX: e.clientX, startWidth: colWidths[ci] }; }}
-                                  className="absolute top-0 right-0 h-full w-2 cursor-col-resize flex items-center justify-center group/r">
-                                  <div className="w-px h-3 bg-stone-600 group-hover/r:bg-stone-400 rounded-full" />
-                                </div>
-                              </th>
-                            ))}
-                            <th style={{ width: 28 }} />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {rows.map((row: string[], ri: number) => (
-                            <tr key={ri} className="border-b border-stone-100 hover:bg-stone-50/50">
-                              {row.map((cell: string, ci: number) => (
-                                <td key={ci} className="px-2 py-0.5 align-top">
-                                  <textarea value={cell} rows={1}
-                                    ref={(el: HTMLTextAreaElement | null) => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
-                                    onChange={e => setRows((p: string[][]) => p.map((r: string[], i: number) => i === ri ? r.map((c: string, j: number) => j === ci ? e.target.value : c) : r))}
-                                    onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }}
-                                    className="w-full bg-transparent border border-transparent rounded px-2 py-1 text-xs text-stone-700 resize-none overflow-hidden hover:border-stone-200 focus:border-stone-400 focus:outline-none focus:bg-white"
-                                    placeholder="—" />
-                                </td>
-                              ))}
-                              <td style={{ width: 28 }} className="px-1 py-0.5 align-middle">
-                                <button onClick={() => setRows((p: string[][]) => p.filter((_: string[], i: number) => i !== ri))}
-                                  className="w-5 h-5 flex items-center justify-center rounded text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={10} /></button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="px-4 py-2.5 border-t border-stone-100 flex items-center justify-between">
-                      <div className="flex gap-2">
-                        <button onClick={() => setRows((p: string[][]) => [...p, new Array(cols.length).fill('')])}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"><Plus size={11} /> Linha</button>
-                        <button onClick={() => { setCols((p: string[]) => [...p, 'Nova coluna']); setColWidths((p: number[]) => [...p, 120]); setRows((p: string[][]) => p.map((r: string[]) => [...r, ''])); }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all"><Plus size={11} /> Coluna</button>
-                      </div>
-                      <button onClick={() => handleSaveQcoinTable(sectionId)} disabled={savingQcoinSection}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest text-white transition-all disabled:opacity-50 ${qcoinTableSaveStatus === 'success' ? 'bg-green-600' : qcoinTableSaveStatus === 'error' ? 'bg-red-600' : 'bg-stone-900 hover:bg-primary/80'}`}>
-                        <Check size={11} />{savingQcoinSection ? 'Salvando...' : qcoinTableSaveStatus === 'success' ? 'Salva' : qcoinTableSaveStatus === 'error' ? 'Erro' : 'Salvar tabela'}
-                      </button>
-                    </div>
-                    {qcoinTableSaveStatus === 'error' && qcoinTableSaveError && (
-                      <p className="px-4 pb-2 text-xs text-red-500 break-all">Detalhe: {qcoinTableSaveError}</p>
-                    )}
-                  </div>
-                );
-
                 return (
                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col gap-6">
 
@@ -2137,7 +2137,8 @@ export default function App() {
                       )}
                       {isAdmin && editingQcoinSection === 'pontuacao' && (
                         <AdminTableEditor sectionId="pontuacao" cols={pontuacaoCols} colWidths={pontuacaoColWidths} rows={pontuacaoRows}
-                          setCols={setPontuacaoCols} setColWidths={setPontuacaoColWidths} setRows={setPontuacaoRows} resizingRef={pontuacaoResizingRef} />
+                          setCols={setPontuacaoCols} setColWidths={setPontuacaoColWidths} setRows={setPontuacaoRows} resizingRef={pontuacaoResizingRef}
+                          savingQcoinSection={savingQcoinSection} qcoinTableSaveStatus={qcoinTableSaveStatus} qcoinTableSaveError={qcoinTableSaveError} onSave={handleSaveQcoinTable} />
                       )}
                     </div>
 
@@ -2315,7 +2316,8 @@ export default function App() {
 
                         {isAdmin && editingQcoinSection === 'estagios' && (
                           <AdminTableEditor sectionId="estagios" cols={estagiosCols} colWidths={estagiosColWidths} rows={estagiosRows}
-                            setCols={setEstagiosCols} setColWidths={setEstagiosColWidths} setRows={setEstagiosRows} resizingRef={estagiosResizingRef} />
+                            setCols={setEstagiosCols} setColWidths={setEstagiosColWidths} setRows={setEstagiosRows} resizingRef={estagiosResizingRef}
+                            savingQcoinSection={savingQcoinSection} qcoinTableSaveStatus={qcoinTableSaveStatus} qcoinTableSaveError={qcoinTableSaveError} onSave={handleSaveQcoinTable} />
                         )}
                       </div>
 
@@ -2348,7 +2350,8 @@ export default function App() {
                         )}
                         {isAdmin && editingQcoinSection === 'premiacoes' && (
                           <AdminTableEditor sectionId="premiacoes" cols={premiacoesCols} colWidths={premiacoesColWidths} rows={premiacoesRows}
-                            setCols={setPremiacoesCols} setColWidths={setPremiacoesColWidths} setRows={setPremiacoesRows} resizingRef={premiacoesResizingRef} />
+                            setCols={setPremiacoesCols} setColWidths={setPremiacoesColWidths} setRows={setPremiacoesRows} resizingRef={premiacoesResizingRef}
+                            savingQcoinSection={savingQcoinSection} qcoinTableSaveStatus={qcoinTableSaveStatus} qcoinTableSaveError={qcoinTableSaveError} onSave={handleSaveQcoinTable} />
                         )}
                       </div>
 
@@ -2398,7 +2401,8 @@ export default function App() {
                           </button>
                           {editingQcoinSection === 'consequencias' && (
                             <AdminTableEditor sectionId="consequencias" cols={consequenciasCols} colWidths={consequenciasColWidths} rows={consequenciasRows}
-                              setCols={setConsequenciasCols} setColWidths={setConsequenciasColWidths} setRows={setConsequenciasRows} resizingRef={consequenciasResizingRef} />
+                              setCols={setConsequenciasCols} setColWidths={setConsequenciasColWidths} setRows={setConsequenciasRows} resizingRef={consequenciasResizingRef}
+                              savingQcoinSection={savingQcoinSection} qcoinTableSaveStatus={qcoinTableSaveStatus} qcoinTableSaveError={qcoinTableSaveError} onSave={handleSaveQcoinTable} />
                           )}
                         </div>
                       )}
