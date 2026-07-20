@@ -1125,8 +1125,8 @@ export function AdminPanel({
         <section className="space-y-6 animate-in fade-in duration-500">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-h3 md:text-h2 font-sans">Indicações de Founders</h3>
-              <p className="text-stone-500 text-sm mt-1">Revise e aprove ou rejeite as indicações enviadas pela comunidade.</p>
+              <h3 className="text-h3 md:text-h2 font-sans">Indicações</h3>
+              <p className="text-stone-500 text-sm mt-1">Revise e aprove ou rejeite as indicações de founders e mantenedores enviadas pela comunidade.</p>
             </div>
             <div className="flex gap-3 shrink-0">
               <div className="bg-terracota-50 border border-terracota-200 px-4 py-2.5 rounded-lg flex flex-col items-center">
@@ -1157,8 +1157,9 @@ export function AdminPanel({
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-stone-50 border-b border-stone-100">
-                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Founder Indicado</th>
-                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Empresa / Projeto</th>
+                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Tipo</th>
+                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Indicado</th>
+                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Empresa / Espaço</th>
                       <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Área de Atuação</th>
                       <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Indicado por</th>
                       <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Status</th>
@@ -1169,8 +1170,17 @@ export function AdminPanel({
                     {indicacoes.map((ind: any) => {
                       const isPendente = !ind.status || ind.status === 'pendente';
                       const isAprovada = ind.status === 'aprovada';
+                      const isMantenedor = ind.tipo === 'mantenedor';
                       return (
                         <tr key={ind.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                          <td className="px-8 py-6">
+                            <span className={cn(
+                              "inline-flex items-center px-3 py-1 rounded-full text-overline font-bold uppercase tracking-widest",
+                              isMantenedor ? "bg-blue-100 text-blue-700" : "bg-stone-100 text-stone-700"
+                            )}>
+                              {isMantenedor ? 'Mantenedor' : 'Founder'}
+                            </span>
+                          </td>
                           <td className="px-8 py-6">
                             <div className="font-bold text-stone-900">{ind.nomeIndicado}</div>
                           </td>

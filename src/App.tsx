@@ -380,6 +380,14 @@ export default function App() {
   const [indicarSubmitting, setIndicarSubmitting] = useState(false);
   const [indicarSuccess, setIndicarSuccess] = useState(false);
   const [indicarError, setIndicarError] = useState('');
+  const [showIndicarMantenedorModal, setShowIndicarMantenedorModal] = useState(false);
+  const [indicarMantenedorNome, setIndicarMantenedorNome] = useState('');
+  const [indicarMantenedorEspaco, setIndicarMantenedorEspaco] = useState('');
+  const [indicarMantenedorArea, setIndicarMantenedorArea] = useState('');
+  const [indicarMantenedorContato, setIndicarMantenedorContato] = useState('');
+  const [indicarMantenedorSubmitting, setIndicarMantenedorSubmitting] = useState(false);
+  const [indicarMantenedorSuccess, setIndicarMantenedorSuccess] = useState(false);
+  const [indicarMantenedorError, setIndicarMantenedorError] = useState('');
   const [showEmailCopy, setShowEmailCopy] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
 
@@ -545,6 +553,7 @@ export default function App() {
     setIndicarError('');
     try {
       await api.post('/api/indicacoes', {
+        tipo: 'founder',
         nomeIndicado: indicarNome.trim(),
         empresa: indicarEmpresa.trim(),
         area: indicarArea.trim(),
@@ -566,6 +575,38 @@ export default function App() {
       }
     } finally {
       setIndicarSubmitting(false);
+    }
+  };
+
+  const handleIndicarMantenedorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!indicarMantenedorNome.trim() || !indicarMantenedorEspaco.trim() || !indicarMantenedorArea.trim() || !indicarMantenedorContato.trim()) return;
+    setIndicarMantenedorSubmitting(true);
+    setIndicarMantenedorError('');
+    try {
+      await api.post('/api/indicacoes', {
+        tipo: 'mantenedor',
+        nomeIndicado: indicarMantenedorNome.trim(),
+        empresa: indicarMantenedorEspaco.trim(),
+        area: indicarMantenedorArea.trim(),
+        contato: indicarMantenedorContato.trim(),
+        indicadoPorEmail: user?.email || null,
+        criadoEm: new Date().toISOString(),
+      });
+      setIndicarMantenedorSuccess(true);
+      setIndicarMantenedorNome('');
+      setIndicarMantenedorEspaco('');
+      setIndicarMantenedorArea('');
+      setIndicarMantenedorContato('');
+    } catch (error: any) {
+      console.error('Erro ao enviar indicação de mantenedor:', error);
+      if (error?.response?.status === 401) {
+        setIndicarMantenedorError('Sua sessão expirou. Faça login novamente e tente enviar a indicação de novo.');
+      } else {
+        setIndicarMantenedorError(error?.response?.data?.error || 'Não foi possível enviar a indicação. Tente novamente.');
+      }
+    } finally {
+      setIndicarMantenedorSubmitting(false);
     }
   };
 
@@ -3070,29 +3111,55 @@ export default function App() {
                 </div>
 
 
-                <button
-                  onClick={() => {
-                    setShowIndicarFounderModal(true);
-                    setIndicarSuccess(false);
-                    setIndicarError('');
-                    setIndicarNome('');
-                    setIndicarEmpresa('');
-                    setIndicarArea('');
-                  }}
-                  className="w-full bg-stone-900 text-white px-8 py-6 rounded-xl relative overflow-hidden hover:bg-stone-800 transition-all group"
-                >
-                  <div className="relative z-10 flex items-center justify-center gap-4">
-                    <div className="bg-white/10 p-2.5 rounded-lg group-hover:bg-white/20 transition-all shrink-0">
-                      <UserPlus size={22} className="text-white" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <button
+                    onClick={() => {
+                      setShowIndicarFounderModal(true);
+                      setIndicarSuccess(false);
+                      setIndicarError('');
+                      setIndicarNome('');
+                      setIndicarEmpresa('');
+                      setIndicarArea('');
+                    }}
+                    className="w-full bg-stone-900 text-white px-8 py-6 rounded-xl relative overflow-hidden hover:bg-stone-800 transition-all group"
+                  >
+                    <div className="relative z-10 flex items-center justify-center gap-4">
+                      <div className="bg-white/10 p-2.5 rounded-lg group-hover:bg-white/20 transition-all shrink-0">
+                        <UserPlus size={22} className="text-white" />
+                      </div>
+                      <div className="text-center">
+                        <h2 className="text-h3 font-sans">Indicar um Founder</h2>
+                        <p className="text-white/60 text-sm">Conhece alguém que deveria fazer parte da nossa comunidade?</p>
+                      </div>
+                      <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
                     </div>
-                    <div className="text-center">
-                      <h2 className="text-h3 font-sans">Indicar um Founder</h2>
-                      <p className="text-white/60 text-sm">Conhece alguém que deveria fazer parte da nossa comunidade?</p>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowIndicarMantenedorModal(true);
+                      setIndicarMantenedorSuccess(false);
+                      setIndicarMantenedorError('');
+                      setIndicarMantenedorNome('');
+                      setIndicarMantenedorEspaco('');
+                      setIndicarMantenedorArea('');
+                    }}
+                    className="w-full bg-stone-900 text-white px-8 py-6 rounded-xl relative overflow-hidden hover:bg-stone-800 transition-all group"
+                  >
+                    <div className="relative z-10 flex items-center justify-center gap-4">
+                      <div className="bg-white/10 p-2.5 rounded-lg group-hover:bg-white/20 transition-all shrink-0">
+                        <Building2 size={22} className="text-white" />
+                      </div>
+                      <div className="text-center">
+                        <h2 className="text-h3 font-sans">Indicar um Mantenedor</h2>
+                        <p className="text-white/60 text-sm">Conhece um mantenedor para nosso QDDO?</p>
+                      </div>
+                      <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
                     </div>
-                    <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
-                  </div>
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                </button>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                  </button>
+                </div>
               </div>
             ) : (
               <BookingFlow
@@ -3591,6 +3658,107 @@ export default function App() {
                 >
                   <Send size={18} />
                   {indicarSubmitting ? 'Enviando...' : 'Enviar indicação'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showIndicarMantenedorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowIndicarMantenedorModal(false)}>
+          <div className="bg-white rounded-xl w-full max-w-md p-8 relative shadow-2xl" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+            <button
+              onClick={() => setShowIndicarMantenedorModal(false)}
+              className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-stone-900 p-3 rounded-lg">
+                <Building2 size={22} className="text-white" />
+              </div>
+              <h2 className="text-h2 font-sans text-stone-900">Indicar um Mantenedor</h2>
+            </div>
+
+            {indicarMantenedorSuccess ? (
+              <div className="text-center py-8">
+                <div className="bg-green-50 text-green-700 rounded-lg p-6 mb-4">
+                  <p className="font-bold text-lg mb-1">Indicação enviada!</p>
+                  <p className="text-sm text-green-600">Obrigado por fortalecer a nossa rede.</p>
+                </div>
+                <button
+                  onClick={() => setShowIndicarMantenedorModal(false)}
+                  className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-primary/80 transition-all"
+                >
+                  Fechar
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleIndicarMantenedorSubmit} className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                    Nome do Mantenedor indicado
+                  </label>
+                  <input
+                    type="text"
+                    value={indicarMantenedorNome}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarMantenedorNome(e.target.value)}
+                    placeholder="Ex: João Silva"
+                    required
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                    Espaço / Empresa
+                  </label>
+                  <input
+                    type="text"
+                    value={indicarMantenedorEspaco}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarMantenedorEspaco(e.target.value)}
+                    placeholder="Ex: Espaço XYZ"
+                    required
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                    Área de atuação
+                  </label>
+                  <input
+                    type="text"
+                    value={indicarMantenedorArea}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarMantenedorArea(e.target.value)}
+                    placeholder="Ex: Mentoria, Design, Jurídico..."
+                    required
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">
+                    Contato
+                  </label>
+                  <input
+                    type="tel"
+                    value={indicarMantenedorContato}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIndicarMantenedorContato(e.target.value)}
+                    placeholder="( ) "
+                    required
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                  />
+                </div>
+                {indicarMantenedorError && (
+                  <p className="text-red-500 text-xs text-center">{indicarMantenedorError}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={indicarMantenedorSubmitting}
+                  className="mt-2 bg-primary text-white px-8 py-4 rounded-lg font-bold hover:bg-primary/80 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  <Send size={18} />
+                  {indicarMantenedorSubmitting ? 'Enviando...' : 'Enviar indicação'}
                 </button>
               </form>
             )}
