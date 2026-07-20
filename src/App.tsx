@@ -2859,7 +2859,7 @@ export default function App() {
                                             )}
                                           </div>
                                           <h5 className="font-bold text-stone-900 mb-1 group-hover:text-primary transition-colors">{event.title}</h5>
-                                          <p className="text-stone-500 text-xs line-clamp-2" dangerouslySetInnerHTML={{ __html: event.content }} />
+                                          <p className="text-stone-500 text-xs line-clamp-4" dangerouslySetInnerHTML={{ __html: event.content }} />
                                         </div>
                                         <div className="text-right shrink-0">
                                           <div className="text-h2 font-sans text-stone-300 group-hover:text-white/60 transition-colors">
