@@ -3153,7 +3153,7 @@ export default function App() {
                       </div>
                       <div className="text-center">
                         <h2 className="text-h3 font-sans">Indicar um Mantenedor</h2>
-                        <p className="text-white/60 text-sm">Conhece um espaço que poderia manter uma sala no hub?</p>
+                        <p className="text-white/60 text-sm">Conhece um mantenedor para nosso QDDO?</p>
                       </div>
                       <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
                     </div>
