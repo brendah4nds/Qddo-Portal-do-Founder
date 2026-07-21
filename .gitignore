@@ -8,3 +8,4 @@ coverage/
 !.env.example
 .claude
 .mcp.json
+__pycache__/

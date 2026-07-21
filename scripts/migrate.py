@@ -9,14 +9,18 @@ Como gerar a chave:
   2. "Gerar nova chave privada" → baixa arquivo .json
   3. Passe o caminho do arquivo com --key
 """
-import json, sys, paramiko, io
+import json, os, sys, paramiko, io
 from datetime import datetime, timezone
 from pathlib import Path
+from _env import load_env
 
 # ─── CONFIG VPS ──────────────────────────────────────────────────────────────
-VPS_HOST = "72.60.246.211"
+load_env()
+VPS_HOST = os.environ.get('VPS_IP')
 VPS_USER = "root"
-VPS_PASS = "+Yi+uoURZuq3YNtU"
+VPS_PASS = os.environ.get('VPS_PASSWORD')
+if not VPS_HOST or not VPS_PASS:
+    raise SystemExit('Defina VPS_IP e VPS_PASSWORD no .env (raiz do projeto) antes de rodar este script.')
 
 COLLECTIONS = [
     "founders", "challenges", "comments", "messages",
