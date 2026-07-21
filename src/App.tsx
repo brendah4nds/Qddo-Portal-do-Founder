@@ -549,6 +549,10 @@ export default function App() {
   const handleIndicarFounderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!indicarNome.trim() || !indicarEmpresa.trim() || !indicarArea.trim() || !indicarContato.trim()) return;
+    if (!user?.email) {
+      setIndicarError('Não foi possível identificar seu e-mail. Faça login novamente e tente enviar a indicação de novo.');
+      return;
+    }
     setIndicarSubmitting(true);
     setIndicarError('');
     try {
@@ -558,7 +562,7 @@ export default function App() {
         empresa: indicarEmpresa.trim(),
         area: indicarArea.trim(),
         contato: indicarContato.trim(),
-        indicadoPorEmail: user?.email || null,
+        indicadoPorEmail: user.email,
         criadoEm: new Date().toISOString(),
       });
       setIndicarSuccess(true);
@@ -581,6 +585,10 @@ export default function App() {
   const handleIndicarMantenedorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!indicarMantenedorNome.trim() || !indicarMantenedorEspaco.trim() || !indicarMantenedorArea.trim() || !indicarMantenedorContato.trim()) return;
+    if (!user?.email) {
+      setIndicarMantenedorError('Não foi possível identificar seu e-mail. Faça login novamente e tente enviar a indicação de novo.');
+      return;
+    }
     setIndicarMantenedorSubmitting(true);
     setIndicarMantenedorError('');
     try {
@@ -590,7 +598,7 @@ export default function App() {
         empresa: indicarMantenedorEspaco.trim(),
         area: indicarMantenedorArea.trim(),
         contato: indicarMantenedorContato.trim(),
-        indicadoPorEmail: user?.email || null,
+        indicadoPorEmail: user.email,
         criadoEm: new Date().toISOString(),
       });
       setIndicarMantenedorSuccess(true);
@@ -749,7 +757,7 @@ export default function App() {
   useEffect(() => {
     if (!user?._id) return;
     api.get(`/api/founders/${user._id}`)
-      .then(r => { setFounderData(r.data); setUser((u: any) => ({ ...u, ...r.data, uid: u.uid })); })
+      .then(r => { setFounderData(r.data); setUser((u: any) => ({ ...u, ...r.data, email: r.data.email || u.email, uid: u.uid })); })
       .catch(() => {});
   }, [user?._id]);
 
@@ -858,7 +866,7 @@ export default function App() {
         }
         return updated;
       }));
-      if (user._id && updated.id === user._id) { setFounderData(updated); setUser((u: any) => ({ ...u, ...updated, uid: u.uid })); }
+      if (user._id && updated.id === user._id) { setFounderData(updated); setUser((u: any) => ({ ...u, ...updated, email: updated.email || u.email, uid: u.uid })); }
     });
     socket.on('founder:delete', ({ id }: any) => setAllFounders(prev => prev.filter(x => x.id !== id)));
     socket.on('challenge:new',    (c: any) => setAllChallenges(prev => [{ ...c, id: c._id }, ...prev]));
