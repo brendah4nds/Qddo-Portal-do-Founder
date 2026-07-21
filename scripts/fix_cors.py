@@ -1,9 +1,16 @@
 """Add localhost to CORS allowed origins on VPS backend"""
-import paramiko, io, re
+import os, paramiko, io, re
+from _env import load_env
+
+load_env()
+VPS_HOST = os.environ.get('VPS_IP')
+VPS_PASS = os.environ.get('VPS_PASSWORD')
+if not VPS_HOST or not VPS_PASS:
+    raise SystemExit('Defina VPS_IP e VPS_PASSWORD no .env (raiz do projeto) antes de rodar este script.')
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect('72.60.246.211', port=22, username='root', password='+Yi+uoURZuq3YNtU', timeout=15)
+client.connect(VPS_HOST, port=22, username='root', password=VPS_PASS, timeout=15)
 
 def run(cmd, timeout=60):
     _, out, err = client.exec_command(cmd, timeout=timeout)
