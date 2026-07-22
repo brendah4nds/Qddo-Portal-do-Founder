@@ -77,6 +77,7 @@ import { Chat } from './components/Chat';
 import { TermsModal } from './components/TermsModal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { NewsFormModal } from './components/NewsFormModal';
+import { RecentActivity } from './components/RecentActivity';
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
@@ -307,6 +308,7 @@ export default function App() {
   const [socialSaving, setSocialSaving] = useState(false);
   const [selectedFounderDetail, setSelectedFounderDetail] = useState<any | null>(null);
   const [qcoinViewingFounderId, setQcoinViewingFounderId] = useState<string | null>(null);
+  const [activityModalFounder, setActivityModalFounder] = useState<any | null>(null);
   const [qcoinSections, setQcoinSections] = useState<any[]>([]);
   const [expandedQcoinCard, setExpandedQcoinCard] = useState<string | null>(null);
   const [editingQcoinSection, setEditingQcoinSection] = useState<string | null>(null);
@@ -1858,10 +1860,6 @@ export default function App() {
                   ? allCheckins.filter((c: any) => c.userId === qcoinViewingFounderId)
                   : _myCheckins;
 
-                const _recentCheckins = [..._targetCheckins]
-                  .sort((a: any, b: any) => _toMs(b.checkinTime || b.date) - _toMs(a.checkinTime || a.date))
-                  .slice(0, 4);
-
                 const _weekStart = new Date(_now);
                 const _dayOfWeek = _weekStart.getDay();
                 _weekStart.setDate(_weekStart.getDate() - (_dayOfWeek === 0 ? 6 : _dayOfWeek - 1));
@@ -2016,10 +2014,10 @@ export default function App() {
                               const medal = rIdx === 0 ? '🥇' : rIdx === 1 ? '🥈' : rIdx === 2 ? '🥉' : null;
                               return (
                                 <div key={item?.id || di}
-                                  onClick={isAdmin && !isMe ? () => setQcoinViewingFounderId(item?.id) : undefined}
+                                  onClick={isMe ? undefined : isAdmin ? () => setQcoinViewingFounderId(item?.id) : () => setActivityModalFounder(item)}
                                   className={cn(
                                     "flex items-center gap-3 px-5 py-2.5 border-b border-stone-50 transition-colors",
-                                    isAdmin && !isMe ? "cursor-pointer" : "",
+                                    !isMe ? "cursor-pointer" : "",
                                     isSelected ? "bg-primary/10 border-l-2 border-l-primary" : isMe ? "bg-terracota-100/20 border-l-2 border-l-primary" : "hover:bg-primary/5"
                                   )}>
                                   <div className={cn(
@@ -2098,38 +2096,41 @@ export default function App() {
                         </div>
 
                         {/* Atividade Recente */}
-                        <div className="bg-white rounded-2xl border border-stone-100 p-5">
-                          <div className="flex items-center gap-1.5 mb-4">
-                            <Clock size={11} className="text-stone-400" />
-                            <span className="text-overline font-bold uppercase tracking-widest text-stone-400">Atividade Recente</span>
-                          </div>
-                          {_recentCheckins.length > 0 ? (
-                            <div className="space-y-3">
-                              {_recentCheckins.map((c: any) => {
-                                const d = (() => { const t = c.checkinTime || c.date; if (!t) return new Date(0); if (typeof t === 'number') return new Date(t); if (t?.toDate) return t.toDate(); if (t?.seconds) return new Date(t.seconds * 1000); return new Date(t); })();
-                                const today = new Date();
-                                const diffDays = Math.floor((today.getTime() - d.getTime()) / 86400000);
-                                const label = diffDays === 0 ? 'Hoje' : diffDays === 1 ? 'Ontem' : `${diffDays} dias atrás`;
-                                return (
-                                  <div key={c.id} className="flex items-start gap-2.5">
-                                    <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
-                                      <Check size={9} className="text-emerald-600" />
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-stone-400">{label}</p>
-                                      <p className="text-xs font-medium text-stone-700">Check-in no QDDO</p>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <p className="text-xs text-stone-400 leading-relaxed">Nenhuma atividade recente registrada.</p>
-                          )}
-                        </div>
+                        <RecentActivity
+                          userId={_viewingOther ? qcoinViewingFounderId : _myFounderId}
+                          title={_viewingOther ? `Atividade de ${_view.name}` : 'Atividade Recente'}
+                        />
 
                       </div>
                     </div>
+
+                    {/* ── MODAL: ATIVIDADE DE OUTRO FOUNDER ── */}
+                    {activityModalFounder && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setActivityModalFounder(null)}>
+                        <div className="bg-white rounded-xl w-full max-w-md p-6 relative shadow-2xl max-h-[85vh] flex flex-col" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                          <button onClick={() => setActivityModalFounder(null)} className="absolute top-4 right-4 text-stone-400 hover:text-stone-700 transition-colors">
+                            <X size={20} />
+                          </button>
+                          <div className="flex items-center gap-3 mb-4 shrink-0">
+                            {activityModalFounder.photoURL ? (
+                              <img src={activityModalFounder.photoURL} alt={activityModalFounder.name} referrerPolicy="no-referrer"
+                                className="w-10 h-10 rounded-full object-cover shrink-0 border border-stone-100" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+                                <Users size={16} className="text-stone-400" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-stone-900 truncate">{activityModalFounder.name}</p>
+                              <p className="text-xs text-stone-400 truncate">@{activityModalFounder.username}</p>
+                            </div>
+                          </div>
+                          <div className="flex-1 overflow-y-auto">
+                            <RecentActivity userId={activityModalFounder.id} title="Atividade Recente" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* ── 3. COMO GANHAR QCOINS ── */}
                     <div>
