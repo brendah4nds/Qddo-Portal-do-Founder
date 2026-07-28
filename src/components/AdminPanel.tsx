@@ -356,9 +356,10 @@ export function AdminPanel({
     e.preventDefault();
     const pontos = lancarAcao === '__custom__' ? parseInt(lancarCustomPontos) : parseInt(lancarAcao.split('|')[1] || '0');
     if (!lancarFounderId || !pontos) return;
+    const descricao = lancarAcao === '__custom__' ? 'Lançamento personalizado' : (lancarAcao.split('|')[0] || 'Lançamento manual de QCoins');
     setLancarSubmitting(true);
     try {
-      await api.put(`/api/founders/${lancarFounderId}/points`, { points: pontos });
+      await api.put(`/api/founders/${lancarFounderId}/points`, { points: pontos, descricao });
       setLancarSuccess(true);
       setLancarFounderId('');
       setLancarAcao('');

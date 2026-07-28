@@ -38,6 +38,27 @@ export interface Founder {
   registeredAt: any;
   role?: 'user' | 'admin';
   totalPoints?: number;
+  monthlyPoints?: Record<string, number>;
+  eventAttendance?: string[];
+}
+
+export type ActivityType =
+  | 'checkin'
+  | 'streak_bonus'
+  | 'indicacao_criada'
+  | 'indicacao_aprovada'
+  | 'evento_checkin'
+  | 'qcoin_request'
+  | 'lancamento_manual';
+
+export interface Activity {
+  id: string;
+  userId: string;
+  tipo: ActivityType;
+  pontos: number;
+  descricao: string;
+  refId?: string;
+  criadoEm: string;
 }
 
 export interface QCoinRequest {
