@@ -14,6 +14,7 @@ import {
   Users,
   Shield,
   MapPin,
+  X,
 } from 'lucide-react';
 import {
   format,
@@ -78,7 +79,8 @@ export function CheckinSystem({
   const [loading, setLoading] = useState(true);
   const [locationLoading, setLocationLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [todayFoundersCount, setTodayFoundersCount] = useState<number | null>(null);
+  const [presentUserIds, setPresentUserIds] = useState<string[] | null>(null);
+  const [showPresentModal, setShowPresentModal] = useState(false);
   const [selectedFounderPoints, setSelectedFounderPoints] = useState<number>(0);
 
   // Use native JS local-date methods — format() uses UTC on some environments
@@ -105,7 +107,11 @@ export function CheckinSystem({
         setCheckins(prev => [...prev, norm]);
       }
       if (norm.date === todayStr) {
-        setTodayFoundersCount(prev => (prev ?? 0) + 1);
+        const uid = norm.userId?.toString?.() || norm.userId;
+        setPresentUserIds(prev => {
+          const list = prev ?? [];
+          return list.includes(uid) ? list : [...list, uid];
+        });
       }
     };
     const onUpdate = (c: any) => {
@@ -152,15 +158,30 @@ export function CheckinSystem({
     return () => clearTimeout(timer);
   }, [checkins]);
 
-  // Load today's founders count
+  // Load today's present users (who checked in today)
   useEffect(() => {
     api.get('/api/checkins', { params: { date: todayStr } })
       .then(r => {
-        const uniqueUsers = new Set(r.data.map((c: any) => c.userId?.toString?.() || c.userId));
-        setTodayFoundersCount(uniqueUsers.size);
+        const uniqueUsers = Array.from(new Set(r.data.map((c: any) => c.userId?.toString?.() || c.userId)));
+        setPresentUserIds(uniqueUsers);
       })
-      .catch(() => setTodayFoundersCount(null));
+      .catch(() => setPresentUserIds(null));
   }, [todayStr]);
+
+  const todayFoundersCount = presentUserIds !== null ? presentUserIds.length : null;
+
+  const founderById = useMemo(() => {
+    const map = new Map<string, any>();
+    founders.forEach(f => map.set(String(f._id || f.id), f));
+    map.set(String(user._id), user);
+    return map;
+  }, [founders, user]);
+
+  const presentFounders = useMemo(() => {
+    return (presentUserIds ?? [])
+      .map(id => founderById.get(String(id)) || { _id: id, name: null, username: null })
+      .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+  }, [presentUserIds, founderById]);
 
   const todayCheckin = checkins.find(c => c.date === todayStr);
 
@@ -356,7 +377,11 @@ export function CheckinSystem({
               </div>
             </div>
 
-            <div className="bg-white px-3 py-2 rounded-xl border border-stone-200 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setShowPresentModal(true)}
+              className="bg-white px-3 py-2 rounded-xl border border-stone-200 shadow-sm text-left cursor-pointer hover:border-stone-300 hover:shadow-md transition-all"
+            >
               <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">
                 No QDDO hoje
               </span>
@@ -367,7 +392,7 @@ export function CheckinSystem({
                 <Users size={9} className="text-stone-400" />
                 <span className="text-[9px] text-stone-400 leading-none">founders</span>
               </div>
-            </div>
+            </button>
 
             <div className="bg-white px-3 py-2 rounded-xl border border-stone-200 shadow-sm">
               <span className="text-[9px] font-bold uppercase tracking-widest text-stone-400 block">
@@ -570,6 +595,59 @@ export function CheckinSystem({
             </div>
           </div>
       </div>
+
+      {/* Present founders modal */}
+      {showPresentModal && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
+          onClick={() => setShowPresentModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl p-5 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300 max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3 shrink-0">
+              <h3 className="font-bold text-stone-900 text-sm flex items-center gap-1.5">
+                <Users size={14} className="text-primary" />
+                No QDDO hoje ({presentFounders.length})
+              </h3>
+              <button
+                onClick={() => setShowPresentModal(false)}
+                className="p-1 hover:bg-stone-100 rounded-full transition-colors"
+              >
+                <X size={16} className="text-stone-400" />
+              </button>
+            </div>
+
+            {presentFounders.length === 0 ? (
+              <p className="text-xs text-stone-400 text-center py-4">Ninguém fez check-in hoje ainda.</p>
+            ) : (
+              <ul className="space-y-1 overflow-y-auto">
+                {presentFounders.map(f => (
+                  <li
+                    key={f._id || f.id}
+                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-50"
+                  >
+                    {f.photoURL ? (
+                      <img src={f.photoURL} alt={f.name || 'Founder'} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+                        <UserIcon size={13} className="text-stone-400" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-stone-900 truncate">{f.name || 'Founder'}</p>
+                      {f.username && (
+                        <p className="text-[10px] text-stone-400 truncate">@{f.username}</p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
