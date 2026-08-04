@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -127,7 +128,7 @@ export function AdminPanel({
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const [adminSearch, setAdminSearch] = useState('');
@@ -1093,18 +1094,18 @@ export function AdminPanel({
                         <div className={cn(
                           "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-overline font-bold uppercase tracking-widest",
                           item.category === 'aviso' ? "bg-rose-50 text-rose-500" :
-                          item.category === 'info' ? "bg-blue-50 text-blue-500" :
-                          item.category === 'evento' ? "bg-emerald-50 text-emerald-500" :
-                          item.category === 'regras' ? "bg-terracota-50 text-primary" :
-                          item.category === 'comunicacao' ? "bg-purple-50 text-purple-500" :
-                          "bg-stone-100 text-stone-500"
+                            item.category === 'info' ? "bg-blue-50 text-blue-500" :
+                              item.category === 'evento' ? "bg-emerald-50 text-emerald-500" :
+                                item.category === 'regras' ? "bg-terracota-50 text-primary" :
+                                  item.category === 'comunicacao' ? "bg-purple-50 text-purple-500" :
+                                    "bg-stone-100 text-stone-500"
                         )}>
                           {item.category === 'aviso' ? <AlertTriangle size={12} /> :
-                           item.category === 'info' ? <Info size={12} /> :
-                           item.category === 'evento' ? <CalendarDays size={12} /> :
-                           item.category === 'regras' ? <ShieldCheck size={12} /> :
-                           item.category === 'comunicacao' ? <MessageSquare size={12} /> :
-                           <Newspaper size={12} />}
+                            item.category === 'info' ? <Info size={12} /> :
+                              item.category === 'evento' ? <CalendarDays size={12} /> :
+                                item.category === 'regras' ? <ShieldCheck size={12} /> :
+                                  item.category === 'comunicacao' ? <MessageSquare size={12} /> :
+                                    <Newspaper size={12} />}
                           {item.category}
                         </div>
                       </td>
@@ -1223,8 +1224,8 @@ export function AdminPanel({
                               isAprovada
                                 ? "bg-emerald-100 text-emerald-600"
                                 : ind.status === 'rejeitada'
-                                ? "bg-red-100 text-red-500"
-                                : "bg-terracota-100 text-primary"
+                                  ? "bg-red-100 text-red-500"
+                                  : "bg-terracota-100 text-primary"
                             )}>
                               {isAprovada ? 'Aprovada' : ind.status === 'rejeitada' ? 'Rejeitada' : 'Pendente'}
                             </span>
@@ -1277,173 +1278,173 @@ export function AdminPanel({
           .map((r: string[]) => ({ title: r[0]?.trim() || '', pts: r[1]?.trim() || '' }))
           .filter((a: any) => /^\d+$/.test(a.pts));
         return (
-        <section className="space-y-6 animate-in fade-in duration-500">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-h3 md:text-h2 font-sans">Solicitações de QCoins</h3>
-              <p className="text-stone-500 text-sm mt-1">Revise e aprove ou rejeite as solicitações enviadas pelos founders.</p>
-            </div>
-            <div className="flex gap-3 shrink-0">
-              <div className="bg-terracota-50 border border-terracota-200 px-4 py-2.5 rounded-lg flex flex-col items-center">
-                <span className="text-overline uppercase tracking-widest font-bold text-primary">Pendentes</span>
-                <span className="text-h3 md:text-h2 font-sans text-primary">{pendentes.length}</span>
-              </div>
-              <div className="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-lg flex flex-col items-center">
-                <span className="text-overline uppercase tracking-widest font-bold text-emerald-500">Aprovadas</span>
-                <span className="text-h3 md:text-h2 font-sans text-emerald-600">{aprovadas.length}</span>
-              </div>
-            </div>
-          </div>
-
-          {qcoinRequests.length === 0 ? (
-            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-12 md:p-20 text-center">
-              <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trophy size={28} className="text-stone-400" />
-              </div>
-              <p className="text-stone-400">Nenhuma solicitação recebida ainda.</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-stone-50 border-b border-stone-100">
-                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Founder</th>
-                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Ação</th>
-                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Pontos</th>
-                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Observação</th>
-                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Founder Marcado</th>
-                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Status</th>
-                      <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {qcoinRequests.map((r: any) => {
-                      const isPendente = r.status === 'pendente';
-                      const isAprovada = r.status === 'aprovada';
-                      return (
-                        <tr key={r.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
-                          <td className="px-8 py-6">
-                            <div className="font-bold text-stone-900">{r.founderNome}</div>
-                            <div className="text-xs text-stone-400">{r.founderEmail}</div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <div className="font-sans text-stone-700">{r.acao}</div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <span className="font-bold text-primary">+{r.pontos}</span>
-                          </td>
-                          <td className="px-8 py-6 max-w-xs">
-                            <div className="text-sm text-stone-600 truncate" title={r.observacao}>{r.observacao}</div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <div className="text-sm text-stone-600">{r.paraFounderNome || '—'}</div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <span className={cn(
-                              "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-overline font-bold uppercase tracking-widest",
-                              isAprovada
-                                ? "bg-emerald-100 text-emerald-600"
-                                : r.status === 'rejeitada'
-                                ? "bg-red-100 text-red-500"
-                                : r.status === 'aguardando_confirmacao'
-                                ? "bg-stone-100 text-stone-500"
-                                : "bg-terracota-100 text-primary"
-                            )}>
-                              {isAprovada ? 'Aprovada' : r.status === 'rejeitada' ? 'Rejeitada' : r.status === 'aguardando_confirmacao' ? 'Aguardando founder' : 'Pendente'}
-                            </span>
-                          </td>
-                          <td className="px-8 py-6 text-right">
-                            {isPendente && (
-                              <div className="flex items-center justify-end gap-2">
-                                <button
-                                  onClick={() => handleAprovarQcoinRequest(r.id)}
-                                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-all font-bold text-xs"
-                                >
-                                  <CheckCircle2 size={14} />
-                                  Aprovar
-                                </button>
-                                <button
-                                  onClick={() => handleRejeitarQcoinRequest(r.id)}
-                                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-md transition-all font-bold text-xs"
-                                >
-                                  <X size={14} />
-                                  Rejeitar
-                                </button>
-                              </div>
-                            )}
-                            {!isPendente && (
-                              <span className="text-xs text-stone-300">{r.status === 'aguardando_confirmacao' ? 'Aguardando founder' : 'Revisado'}</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-6 md:p-8">
-            <h3 className="text-h3 font-sans mb-1">Lançar QCoins manualmente</h3>
-            <p className="text-stone-500 text-sm mb-6">Credite pontos diretamente para um founder, com base numa ação da tabela ou um valor personalizado.</p>
-            <form onSubmit={handleLancarQcoinManual} className="flex flex-col gap-4 max-w-lg">
+          <section className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Founder</label>
-                <select
-                  value={lancarFounderId}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLancarFounderId(e.target.value)}
-                  required
-                  className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition appearance-none cursor-pointer"
-                >
-                  <option value="">Selecione um founder...</option>
-                  {founders.map((f: any) => (
-                    <option key={f._id || f.id} value={f._id || f.id}>{f.name} (@{(f.username || '').replace(/@/g, '')})</option>
-                  ))}
-                </select>
+                <h3 className="text-h3 md:text-h2 font-sans">Solicitações de QCoins</h3>
+                <p className="text-stone-500 text-sm mt-1">Revise e aprove ou rejeite as solicitações enviadas pelos founders.</p>
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Ação</label>
-                <select
-                  value={lancarAcao}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLancarAcao(e.target.value)}
-                  required
-                  className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition appearance-none cursor-pointer"
-                >
-                  <option value="">Selecione uma ação...</option>
-                  {launchableActions.map((a: any, idx: number) => (
-                    <option key={idx} value={`${a.title}|${a.pts}`}>{a.title} (+{a.pts})</option>
-                  ))}
-                  <option value="__custom__">Personalizado...</option>
-                </select>
-              </div>
-              {lancarAcao === '__custom__' && (
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Pontos</label>
-                  <input
-                    type="number"
-                    value={lancarCustomPontos}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLancarCustomPontos(e.target.value)}
-                    placeholder="Ex: 25"
-                    required
-                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
-                  />
+              <div className="flex gap-3 shrink-0">
+                <div className="bg-terracota-50 border border-terracota-200 px-4 py-2.5 rounded-lg flex flex-col items-center">
+                  <span className="text-overline uppercase tracking-widest font-bold text-primary">Pendentes</span>
+                  <span className="text-h3 md:text-h2 font-sans text-primary">{pendentes.length}</span>
                 </div>
-              )}
-              <button
-                type="submit"
-                disabled={lancarSubmitting || !lancarFounderId || !lancarAcao}
-                className="mt-2 bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-primary/80 transition-all disabled:opacity-60 self-start"
-              >
-                {lancarSubmitting ? 'Lançando...' : 'Lançar QCoins'}
-              </button>
-              {lancarSuccess && (
-                <p className="text-sm text-emerald-600 font-bold">QCoins lançados com sucesso!</p>
-              )}
-            </form>
-          </div>
-        </section>
+                <div className="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-lg flex flex-col items-center">
+                  <span className="text-overline uppercase tracking-widest font-bold text-emerald-500">Aprovadas</span>
+                  <span className="text-h3 md:text-h2 font-sans text-emerald-600">{aprovadas.length}</span>
+                </div>
+              </div>
+            </div>
+
+            {qcoinRequests.length === 0 ? (
+              <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-12 md:p-20 text-center">
+                <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trophy size={28} className="text-stone-400" />
+                </div>
+                <p className="text-stone-400">Nenhuma solicitação recebida ainda.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-stone-50 border-b border-stone-100">
+                        <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Founder</th>
+                        <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Ação</th>
+                        <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Pontos</th>
+                        <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Observação</th>
+                        <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Founder Marcado</th>
+                        <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400">Status</th>
+                        <th className="px-8 py-5 text-overline uppercase tracking-widest font-bold text-stone-400 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {qcoinRequests.map((r: any) => {
+                        const isPendente = r.status === 'pendente';
+                        const isAprovada = r.status === 'aprovada';
+                        return (
+                          <tr key={r.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                            <td className="px-8 py-6">
+                              <div className="font-bold text-stone-900">{r.founderNome}</div>
+                              <div className="text-xs text-stone-400">{r.founderEmail}</div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="font-sans text-stone-700">{r.acao}</div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <span className="font-bold text-primary">+{r.pontos}</span>
+                            </td>
+                            <td className="px-8 py-6 max-w-xs">
+                              <div className="text-sm text-stone-600 truncate" title={r.observacao}>{r.observacao}</div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="text-sm text-stone-600">{r.paraFounderNome || '—'}</div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <span className={cn(
+                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-overline font-bold uppercase tracking-widest",
+                                isAprovada
+                                  ? "bg-emerald-100 text-emerald-600"
+                                  : r.status === 'rejeitada'
+                                    ? "bg-red-100 text-red-500"
+                                    : r.status === 'aguardando_confirmacao'
+                                      ? "bg-stone-100 text-stone-500"
+                                      : "bg-terracota-100 text-primary"
+                              )}>
+                                {isAprovada ? 'Aprovada' : r.status === 'rejeitada' ? 'Rejeitada' : r.status === 'aguardando_confirmacao' ? 'Aguardando founder' : 'Pendente'}
+                              </span>
+                            </td>
+                            <td className="px-8 py-6 text-right">
+                              {isPendente && (
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => handleAprovarQcoinRequest(r.id)}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-all font-bold text-xs"
+                                  >
+                                    <CheckCircle2 size={14} />
+                                    Aprovar
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejeitarQcoinRequest(r.id)}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-md transition-all font-bold text-xs"
+                                  >
+                                    <X size={14} />
+                                    Rejeitar
+                                  </button>
+                                </div>
+                              )}
+                              {!isPendente && (
+                                <span className="text-xs text-stone-300">{r.status === 'aguardando_confirmacao' ? 'Aguardando founder' : 'Revisado'}</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl border border-stone-100 shadow-sm p-6 md:p-8">
+              <h3 className="text-h3 font-sans mb-1">Lançar QCoins manualmente</h3>
+              <p className="text-stone-500 text-sm mb-6">Credite pontos diretamente para um founder, com base numa ação da tabela ou um valor personalizado.</p>
+              <form onSubmit={handleLancarQcoinManual} className="flex flex-col gap-4 max-w-lg">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Founder</label>
+                  <select
+                    value={lancarFounderId}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLancarFounderId(e.target.value)}
+                    required
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition appearance-none cursor-pointer"
+                  >
+                    <option value="">Selecione um founder...</option>
+                    {founders.map((f: any) => (
+                      <option key={f._id || f.id} value={f._id || f.id}>{f.name} (@{(f.username || '').replace(/@/g, '')})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Ação</label>
+                  <select
+                    value={lancarAcao}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLancarAcao(e.target.value)}
+                    required
+                    className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 transition appearance-none cursor-pointer"
+                  >
+                    <option value="">Selecione uma ação...</option>
+                    {launchableActions.map((a: any, idx: number) => (
+                      <option key={idx} value={`${a.title}|${a.pts}`}>{a.title} (+{a.pts})</option>
+                    ))}
+                    <option value="__custom__">Personalizado...</option>
+                  </select>
+                </div>
+                {lancarAcao === '__custom__' && (
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Pontos</label>
+                    <input
+                      type="number"
+                      value={lancarCustomPontos}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLancarCustomPontos(e.target.value)}
+                      placeholder="Ex: 25"
+                      required
+                      className="w-full border border-stone-100 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900 transition"
+                    />
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={lancarSubmitting || !lancarFounderId || !lancarAcao}
+                  className="mt-2 bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-primary/80 transition-all disabled:opacity-60 self-start"
+                >
+                  {lancarSubmitting ? 'Lançando...' : 'Lançar QCoins'}
+                </button>
+                {lancarSuccess && (
+                  <p className="text-sm text-emerald-600 font-bold">QCoins lançados com sucesso!</p>
+                )}
+              </form>
+            </div>
+          </section>
         );
       })()}
 
@@ -1466,15 +1467,15 @@ export function AdminPanel({
               </div>
               {(() => {
                 const MENU_LABELS: Record<string, { label: string; Icon: React.ElementType }> = {
-                  geral:       { label: 'Geral',       Icon: LayoutGrid },
+                  geral: { label: 'Geral', Icon: LayoutGrid },
                   agendamento: { label: 'Agendamento', Icon: Calendar },
-                  checkin:     { label: 'Check-in',    Icon: CheckSquare },
-                  empresa:     { label: 'Empresa',     Icon: Building2 },
-                  desafios:    { label: 'Desafios',    Icon: Globe },
-                  noticias:    { label: 'Notícias',    Icon: Newspaper },
-                  qcoin:       { label: 'QCoin',       Icon: Trophy },
-                  'bate-papo': { label: 'Bate-papo',  Icon: MessageSquare },
-                  regras:      { label: 'Regras',      Icon: ShieldCheck },
+                  checkin: { label: 'Check-in', Icon: CheckSquare },
+                  empresa: { label: 'Empresa', Icon: Building2 },
+                  desafios: { label: 'Desafios', Icon: Globe },
+                  noticias: { label: 'Notícias', Icon: Newspaper },
+                  qcoin: { label: 'QCoin', Icon: Trophy },
+                  'bate-papo': { label: 'Bate-papo', Icon: MessageSquare },
+                  regras: { label: 'Regras', Icon: ShieldCheck },
                 };
                 return hiddenMenuItems.map(key => {
                   const meta = MENU_LABELS[key];
