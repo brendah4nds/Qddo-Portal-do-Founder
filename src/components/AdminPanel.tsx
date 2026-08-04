@@ -265,6 +265,7 @@ export function AdminPanel({
       const norm = { ...i, id: i._id || i.id };
       setIndicacoes(prev => prev.map(x => x.id === norm.id ? norm : x));
     };
+    const onIndicacaoDelete = ({ id }: any) => setIndicacoes(prev => prev.filter(x => x.id !== id));
 
     const onQcoinRequestNew = (r: any) => {
       const norm = { ...r, id: r._id || r.id };
@@ -283,6 +284,7 @@ export function AdminPanel({
     socket.on('news:delete', onNewsDelete);
     socket.on('indicacao:new', onIndicacaoNew);
     socket.on('indicacao:update', onIndicacaoUpdate);
+    socket.on('indicacao:delete', onIndicacaoDelete);
     socket.on('qcoin-request:new', onQcoinRequestNew);
     socket.on('qcoin-request:update', onQcoinRequestUpdate);
 
@@ -295,6 +297,7 @@ export function AdminPanel({
       socket.off('news:delete', onNewsDelete);
       socket.off('indicacao:new', onIndicacaoNew);
       socket.off('indicacao:update', onIndicacaoUpdate);
+      socket.off('indicacao:delete', onIndicacaoDelete);
       socket.off('qcoin-request:new', onQcoinRequestNew);
       socket.off('qcoin-request:update', onQcoinRequestUpdate);
     };
@@ -318,6 +321,26 @@ export function AdminPanel({
       onConfirm: async () => {
         try {
           await api.put(`/api/indicacoes/${id}`, { status: 'rejeitada' });
+          setModalConfig(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
+  };
+
+  const handleDeleteIndicacao = (ind: any) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Excluir Indicação',
+      message: ind.status === 'aprovada'
+        ? `Tem certeza que deseja excluir a indicação de ${ind.nomeIndicado}? A pontuação adicionada ao perfil de ${ind.indicadoPorEmail || 'quem indicou'} será removida. Esta ação não pode ser desfeita.`
+        : `Tem certeza que deseja excluir a indicação de ${ind.nomeIndicado}? Esta ação não pode ser desfeita.`,
+      variant: 'danger',
+      confirmText: 'Excluir',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/api/indicacoes/${ind.id}`);
           setModalConfig(prev => ({ ...prev, isOpen: false }));
         } catch (error) {
           console.error(error);
@@ -1207,27 +1230,33 @@ export function AdminPanel({
                             </span>
                           </td>
                           <td className="px-8 py-6 text-right">
-                            {isPendente && (
-                              <div className="flex items-center justify-end gap-2">
-                                <button
-                                  onClick={() => handleAprovarIndicacao(ind.id)}
-                                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-all font-bold text-xs"
-                                >
-                                  <CheckCircle2 size={14} />
-                                  Aprovar
-                                </button>
-                                <button
-                                  onClick={() => handleRejeitarIndicacao(ind.id)}
-                                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-md transition-all font-bold text-xs"
-                                >
-                                  <X size={14} />
-                                  Rejeitar
-                                </button>
-                              </div>
-                            )}
-                            {!isPendente && (
-                              <span className="text-xs text-stone-300">Revisado</span>
-                            )}
+                            <div className="flex items-center justify-end gap-2">
+                              {isPendente && (
+                                <>
+                                  <button
+                                    onClick={() => handleAprovarIndicacao(ind.id)}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-all font-bold text-xs"
+                                  >
+                                    <CheckCircle2 size={14} />
+                                    Aprovar
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejeitarIndicacao(ind.id)}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-md transition-all font-bold text-xs"
+                                  >
+                                    <X size={14} />
+                                    Rejeitar
+                                  </button>
+                                </>
+                              )}
+                              <button
+                                onClick={() => handleDeleteIndicacao(ind)}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-stone-100 text-stone-500 hover:bg-stone-200 rounded-md transition-all font-bold text-xs"
+                              >
+                                <Trash2 size={14} />
+                                Excluir
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
