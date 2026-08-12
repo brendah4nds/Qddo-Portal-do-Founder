@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Check, Star, UserPlus, CheckCircle2, CalendarDays, Repeat, Gift, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { differenceInCalendarDays } from 'date-fns';
 import { api } from '../api';
 import { getSocket } from '../socket';
 
@@ -16,9 +17,7 @@ const TYPE_META: Record<string, { icon: any; bg: string; fg: string }> = {
 const PAGE_SIZE = 4;
 
 function relativeLabel(dateStr: string): string {
-  const d = new Date(dateStr);
-  const today = new Date();
-  const diffDays = Math.floor((today.getTime() - d.getTime()) / 86400000);
+  const diffDays = differenceInCalendarDays(new Date(), new Date(dateStr));
   if (diffDays <= 0) return 'Hoje';
   if (diffDays === 1) return 'Ontem';
   return `${diffDays} dias atrás`;
