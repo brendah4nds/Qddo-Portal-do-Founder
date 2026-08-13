@@ -142,6 +142,27 @@ html.dark .bg-white {
   background-color: #D8D8D8;
 }
 
+/* Aconteceu ticker — faixa contínua de avisos/eventos passados */
+@keyframes aconteceu-ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.aconteceu-ticker-track {
+  animation: aconteceu-ticker-scroll var(--ticker-duration, 24s) linear infinite;
+}
+
+.aconteceu-ticker-viewport:hover .aconteceu-ticker-track,
+.aconteceu-ticker-viewport:focus-within .aconteceu-ticker-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aconteceu-ticker-track {
+    animation: none;
+  }
+}
+
 /* Custom scrollbar */
 aside::-webkit-scrollbar { width: 4px; }
 aside::-webkit-scrollbar-track { background: transparent; }
