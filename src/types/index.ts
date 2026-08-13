@@ -13,6 +13,7 @@ export interface Booking {
   endTime: string; // HH:mm
   userName: string;
   userEmail: string;
+  userId?: string;
   createdAt: any;
 }
 

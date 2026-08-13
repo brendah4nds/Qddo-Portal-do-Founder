@@ -3187,6 +3187,7 @@ export default function App() {
                   setActiveSubTab(subTabs[stepId - 1]);
                 }}
                 isAdmin={isAdmin}
+                currentUserId={founderData?._id || founderData?.id || user?._id}
                 onRoomUpdate={handleRoomUpdate}
                 onRoomCreate={handleRoomCreate}
               />
