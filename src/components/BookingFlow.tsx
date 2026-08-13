@@ -34,7 +34,8 @@ import {
   Image as ImageIcon,
   X,
   Settings,
-  Trash2
+  Trash2,
+  Pencil
 } from 'lucide-react';
 import { ConfirmationModal } from './ConfirmationModal';
 import { Room, Booking, BookingStatus } from '../types';
@@ -65,6 +66,7 @@ export function BookingFlow({
   activeSubTab,
   onStepChange,
   isAdmin,
+  currentUserId,
   onRoomUpdate,
   onRoomCreate
 }: {
@@ -80,6 +82,7 @@ export function BookingFlow({
   activeSubTab?: string;
   onStepChange?: (step: number) => void;
   isAdmin?: boolean;
+  currentUserId?: string;
   onRoomUpdate?: (roomId: string, updates: Partial<Room>) => Promise<void>;
   onRoomCreate?: (data: { name: string; description?: string }) => Promise<Room>;
 }) {
@@ -105,8 +108,92 @@ export function BookingFlow({
     title: string;
     message: string;
     confirmText: string;
+    variant?: 'danger' | 'primary';
     onConfirm: () => void;
   }>({ isOpen: false, title: '', message: '', confirmText: '', onConfirm: () => {} });
+
+  const [editBookingGroup, setEditBookingGroup] = useState<{
+    ids: string[];
+    roomId: string;
+    roomName: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+  } | null>(null);
+  const [editBookingDate, setEditBookingDate] = useState('');
+  const [editBookingStart, setEditBookingStart] = useState('');
+  const [editBookingEnd, setEditBookingEnd] = useState('');
+  const [editBookingLoading, setEditBookingLoading] = useState(false);
+  const [editBookingError, setEditBookingError] = useState('');
+
+  // Business hours are slot *start* times (e.g. up to 18:00); the last slot's end time
+  // (e.g. 18:30) is one increment past that and wouldn't otherwise appear as an option.
+  const timeBoundaries = useMemo(() => {
+    if (businessHours.length === 0) return businessHours;
+    const lastStart = parse(businessHours[businessHours.length - 1], 'HH:mm', new Date());
+    return [...businessHours, format(addMinutes(lastStart, 30), 'HH:mm')];
+  }, [businessHours]);
+
+  const editBookingConflicts = useMemo(() => {
+    if (!editBookingGroup) return [];
+    const others = bookings
+      .filter(b => b.roomId === editBookingGroup.roomId && b.date === editBookingDate && !editBookingGroup.ids.includes(b.id))
+      .filter(b => b.startTime < editBookingEnd && editBookingStart < b.endTime)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+    const merged: { startTime: string; endTime: string }[] = [];
+    for (const b of others) {
+      const last = merged[merged.length - 1];
+      if (last && last.endTime === b.startTime) last.endTime = b.endTime;
+      else merged.push({ startTime: b.startTime, endTime: b.endTime });
+    }
+    return merged;
+  }, [editBookingGroup, editBookingDate, editBookingStart, editBookingEnd, bookings]);
+
+  const openEditBooking = (group: { ids: string[]; roomId: string; roomName: string; date: string; startTime: string; endTime: string }) => {
+    setEditBookingGroup(group);
+    setEditBookingDate(group.date);
+    setEditBookingStart(group.startTime);
+    setEditBookingEnd(group.endTime);
+    setEditBookingError('');
+  };
+
+  const handleSaveBookingEdit = async () => {
+    if (!editBookingGroup) return;
+    if (editBookingStart >= editBookingEnd) {
+      setEditBookingError('O horário de início precisa ser antes do horário de término.');
+      return;
+    }
+    if (editBookingConflicts.length > 0) return;
+    setEditBookingLoading(true);
+    try {
+      await api.put('/api/bookings/reschedule', {
+        ids: editBookingGroup.ids,
+        date: editBookingDate,
+        startTime: editBookingStart,
+        endTime: editBookingEnd,
+      });
+      setEditBookingGroup(null);
+    } catch (error) {
+      console.error(error);
+      setEditBookingError('Não foi possível salvar as alterações. Tente novamente.');
+    } finally {
+      setEditBookingLoading(false);
+    }
+  };
+
+  const handleDeleteBookingGroup = async () => {
+    if (!editBookingGroup) return;
+    setEditBookingLoading(true);
+    try {
+      await Promise.all(editBookingGroup.ids.map(id => api.delete(`/api/bookings/${id}`)));
+      setEditBookingGroup(null);
+    } catch (error) {
+      console.error(error);
+      setEditBookingError('Não foi possível excluir o agendamento. Tente novamente.');
+    } finally {
+      setEditBookingLoading(false);
+    }
+  };
 
   const handleSettingsAddHour = async () => {
     if (!settingsNewHour.match(/^\d{2}:\d{2}$/)) return;
@@ -489,13 +576,14 @@ export function BookingFlow({
                   `${b.roomId}|${b.date}|${b.userEmail}|${b.startTime}`
                 )
               );
-              const mergedBookings: Booking[] = [];
+              const mergedBookings: (Booking & { ids: string[] })[] = [];
               for (const b of sortedForMerge) {
                 const last = mergedBookings[mergedBookings.length - 1];
                 if (last && last.roomId === b.roomId && last.date === b.date && last.userEmail === b.userEmail && last.endTime === b.startTime) {
                   last.endTime = b.endTime;
+                  last.ids.push(b.id);
                 } else {
-                  mergedBookings.push({ ...b });
+                  mergedBookings.push({ ...b, ids: [b.id] });
                 }
               }
 
@@ -517,6 +605,7 @@ export function BookingFlow({
                   <div className="bg-white rounded-xl border border-stone-100 shadow-sm divide-y divide-stone-100 overflow-hidden">
                     {visible.map(booking => {
                       const room = rooms.find(r => r.id === booking.roomId);
+                      const canManage = isAdmin || (!!currentUserId && !!booking.userId && booking.userId === currentUserId);
                       return (
                         <div key={booking.id} className="flex items-center gap-4 p-4">
                           <div className="w-10 h-10 rounded-lg bg-stone-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -537,6 +626,22 @@ export function BookingFlow({
                             <Clock size={12} className="text-stone-300" />
                             {booking.startTime} – {booking.endTime}
                           </div>
+                          {canManage && (
+                            <button
+                              onClick={() => openEditBooking({
+                                ids: booking.ids,
+                                roomId: booking.roomId,
+                                roomName: room?.name || 'Sala',
+                                date: booking.date,
+                                startTime: booking.startTime,
+                                endTime: booking.endTime,
+                              })}
+                              className="p-1.5 rounded-full text-stone-300 hover:text-primary hover:bg-primary/5 transition-colors flex-shrink-0"
+                              title="Editar agendamento"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                          )}
                         </div>
                       );
                     })}
@@ -986,12 +1091,104 @@ export function BookingFlow({
       </div>
     )}
 
+    {editBookingGroup && (
+      <div
+        className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+        onClick={() => !editBookingLoading && setEditBookingGroup(null)}
+      >
+        <div
+          className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-8 py-6 border-b border-stone-100">
+            <div>
+              <h3 className="text-lg font-sans text-stone-900">Editar agendamento</h3>
+              <p className="text-xs text-stone-400 mt-1">{editBookingGroup.roomName}</p>
+            </div>
+            <button
+              onClick={() => setEditBookingGroup(null)}
+              className="p-2 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-8 space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-2">Data</label>
+              <input
+                type="date"
+                value={editBookingDate}
+                onChange={e => setEditBookingDate(e.target.value)}
+                className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md focus:outline-none focus:border-primary"
+              />
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-stone-700 mb-2">Início</label>
+                <select
+                  value={editBookingStart}
+                  onChange={e => { setEditBookingStart(e.target.value); setEditBookingError(''); }}
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md focus:outline-none focus:border-primary"
+                >
+                  {timeBoundaries.map(h => <option key={h} value={h}>{h}</option>)}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-stone-700 mb-2">Término</label>
+                <select
+                  value={editBookingEnd}
+                  onChange={e => { setEditBookingEnd(e.target.value); setEditBookingError(''); }}
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md focus:outline-none focus:border-primary"
+                >
+                  {timeBoundaries.map(h => <option key={h} value={h}>{h}</option>)}
+                </select>
+              </div>
+            </div>
+            {editBookingConflicts.length > 0 && (
+              <p className="text-sm text-red-500">
+                O horário {editBookingConflicts.map(r => `${r.startTime}–${r.endTime}`).join(', ')} já está ocupado nesse dia — escolha outro horário para salvar.
+              </p>
+            )}
+            {editBookingError && (
+              <p className="text-sm text-red-500">{editBookingError}</p>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-3 px-8 py-6 border-t border-stone-100">
+            <button
+              onClick={() => setSettingsConfirmModal({
+                isOpen: true,
+                title: 'Excluir agendamento',
+                message: `Tem certeza que deseja excluir o agendamento de ${editBookingGroup.roomName}?`,
+                confirmText: 'Excluir',
+                variant: 'danger',
+                onConfirm: handleDeleteBookingGroup,
+              })}
+              disabled={editBookingLoading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-md text-red-500 hover:bg-red-50 transition-colors font-medium disabled:opacity-50"
+            >
+              <Trash2 size={16} />
+              Excluir
+            </button>
+            <button
+              onClick={handleSaveBookingEdit}
+              disabled={editBookingLoading || editBookingConflicts.length > 0 || editBookingStart >= editBookingEnd}
+              className="bg-primary text-white px-5 py-2.5 rounded-md hover:bg-primary/90 transition-all font-medium disabled:opacity-50"
+            >
+              {editBookingLoading ? 'Salvando...' : 'Salvar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     <ConfirmationModal
       isOpen={settingsConfirmModal.isOpen}
       title={settingsConfirmModal.title}
       message={settingsConfirmModal.message}
       confirmText={settingsConfirmModal.confirmText}
-      variant="primary"
+      variant={settingsConfirmModal.variant || 'primary'}
       onConfirm={settingsConfirmModal.onConfirm}
       onClose={() => setSettingsConfirmModal(prev => ({ ...prev, isOpen: false }))}
     />
