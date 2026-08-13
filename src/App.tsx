@@ -11,7 +11,7 @@ import {
   signOut,
 } from 'firebase/auth';
 import axios from 'axios';
-import { 
+import {
   startOfToday,
   startOfDay,
   startOfWeek,
@@ -20,7 +20,8 @@ import {
   isWithinInterval,
   format,
   startOfMonth,
-  endOfMonth
+  endOfMonth,
+  differenceInCalendarDays
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
@@ -62,7 +63,8 @@ import {
   Cake,
   EyeOff,
   Eye,
-  CheckCircle2
+  CheckCircle2,
+  History
 } from 'lucide-react';
 import { auth } from './firebase';
 import { api, API_BASE } from './api';
@@ -438,6 +440,18 @@ export default function App() {
       return 'AMANHÃ';
     }
     return format(d, 'EEEE', { locale: ptBR });
+  };
+
+  const getPastEventLabel = (eventDate: any): string => {
+    const d = toDate(eventDate) || new Date();
+    const diffDays = differenceInCalendarDays(new Date(), d);
+    if (diffDays <= 0) return 'Hoje';
+    if (diffDays === 1) return 'Ontem';
+    if (diffDays < 7) return `Há ${diffDays} dias`;
+    const weeks = Math.round(diffDays / 7);
+    if (diffDays < 30) return weeks === 1 ? 'Há 1 semana' : `Há ${weeks} semanas`;
+    const months = Math.round(diffDays / 30);
+    return months === 1 ? 'Há 1 mês' : `Há ${months} meses`;
   };
 
   // Dark mode effect
@@ -2722,6 +2736,20 @@ export default function App() {
                           return dateA.getTime() - dateB.getTime();
                         });
 
+                      const pastEvents = newsItems
+                        .filter(item => item.category === 'evento')
+                        .filter(item => {
+                          if (!item.eventDate) return false;
+                          const eventDate = toDate(item.eventDate) || new Date();
+                          return eventDate < todayStart;
+                        })
+                        .sort((a, b) => {
+                          const dateA = toDate(a.eventDate) || new Date();
+                          const dateB = toDate(b.eventDate) || new Date();
+                          return dateB.getTime() - dateA.getTime();
+                        })
+                        .slice(0, 3);
+
                       const publicChallenges = allChallenges
                         .filter(c => c.type === 'public' && c.status === 'open')
                         .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
@@ -2872,24 +2900,33 @@ export default function App() {
                                 );
                               })
                             }
-                            {/* Eventos da Semana */}
+                            {/* Eventos da Semana / Aconteceu */}
                             <div className="bg-white rounded-xl px-3 py-4 border border-stone-100 shadow-sm flex flex-col">
                               <div className="flex items-center justify-between mb-3">
                                 <h4 className="text-base font-sans text-stone-900 flex items-center gap-2">
-                                  <CalendarDays className="text-primary" size={18} />
-                                  Próximos Eventos
+                                  {relevantEvents.length > 0 ? (
+                                    <>
+                                      <CalendarDays className="text-primary" size={18} />
+                                      Próximos Eventos
+                                    </>
+                                  ) : (
+                                    <>
+                                      <History className="text-primary" size={18} />
+                                      Aconteceu
+                                    </>
+                                  )}
                                 </h4>
                                 <span className="text-overline font-bold uppercase tracking-widest text-stone-400">
-                                  {relevantEvents.length > 0 ? `${relevantEvents.length} evento${relevantEvents.length > 1 ? 's' : ''}` : ''}
+                                  {relevantEvents.length > 0
+                                    ? `${relevantEvents.length} evento${relevantEvents.length > 1 ? 's' : ''}`
+                                    : pastEvents.length > 0
+                                      ? `Últimos ${pastEvents.length}`
+                                      : ''}
                                 </span>
                               </div>
-                              
+
                               <div className="flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar">
-                                {relevantEvents.length === 0 ? (
-                                  <div className="h-full flex flex-col items-center justify-center text-center p-5 bg-stone-50 rounded-lg border border-dashed border-stone-200">
-                                    <p className="text-stone-400 text-xs">Nenhum evento programado para esta semana.</p>
-                                  </div>
-                                ) : (
+                                {relevantEvents.length > 0 ? (
                                   relevantEvents.map((event, idx) => (
                                     <div key={event.id || idx} className="p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 hover:bg-white transition-all group cursor-pointer" onClick={() => setSelectedNewsItem(event)}>
                                       <div className="flex items-start justify-between gap-4">
@@ -2926,6 +2963,27 @@ export default function App() {
                                       </div>
                                     </div>
                                   ))
+                                ) : pastEvents.length > 0 ? (
+                                  pastEvents.map((event, idx) => (
+                                    <div key={event.id || idx} className="p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-300 hover:bg-white transition-all group cursor-pointer flex items-center justify-between gap-3" onClick={() => setSelectedNewsItem(event)}>
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <div className="text-center shrink-0 w-9">
+                                          <div className="text-sm font-sans font-bold text-stone-400 group-hover:text-primary transition-colors">
+                                            {format(toDate(event.eventDate) || new Date(), 'dd')}
+                                          </div>
+                                          <div className="text-overline font-bold uppercase text-stone-300">
+                                            {format(toDate(event.eventDate) || new Date(), 'MMM', { locale: ptBR })}
+                                          </div>
+                                        </div>
+                                        <h5 className="font-bold text-stone-900 text-sm truncate group-hover:text-primary transition-colors">{event.title}</h5>
+                                      </div>
+                                      <span className="text-stone-400 text-overline font-bold uppercase shrink-0">{getPastEventLabel(event.eventDate)}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="h-full flex flex-col items-center justify-center text-center p-5 bg-stone-50 rounded-lg border border-dashed border-stone-200">
+                                    <p className="text-stone-400 text-xs">Nenhum evento programado para esta semana.</p>
+                                  </div>
                                 )}
                               </div>
                             </div>
