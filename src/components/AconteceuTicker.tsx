@@ -44,6 +44,7 @@ function useReducedMotion(): boolean {
 interface AconteceuTickerItem {
   id?: string;
   title: string;
+  content?: string;
   category: 'evento' | 'aviso' | string;
   imageUrl?: string;
   _displayDate?: any;
@@ -51,38 +52,47 @@ interface AconteceuTickerItem {
 }
 
 function TickerCard({ item, onSelect, dupe }: { item: AconteceuTickerItem; onSelect: (item: any) => void; dupe?: boolean }) {
+  const isEvento = item.category === 'evento';
   return (
     <button
       type="button"
       tabIndex={dupe ? -1 : 0}
       aria-hidden={dupe ? true : undefined}
       onClick={() => onSelect(item)}
-      className="flex items-center gap-3 pr-4 pl-3 py-2 rounded-lg border border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-white transition-all shrink-0 text-left group/card"
+      className="flex flex-col shrink-0 w-[210px] h-[248px] rounded-lg border border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-white transition-all overflow-hidden text-left group/card"
     >
-      {item.imageUrl ? (
-        <img src={item.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
-      ) : (
-        <div className={cn(
-          "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
-          item.category === 'evento' ? "bg-terracota-100 text-primary" : "bg-rose-100 text-rose-700"
-        )}>
-          {item.category === 'evento' ? <CalendarDays size={18} /> : <AlertTriangle size={18} />}
-        </div>
-      )}
-      <div className="min-w-0">
-        <div className="flex items-center gap-1.5">
+      <div className="h-24 w-full shrink-0 relative bg-stone-100">
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className={cn(
+            "w-full h-full flex items-center justify-center",
+            isEvento ? "bg-terracota-100 text-primary" : "bg-rose-100 text-rose-700"
+          )}>
+            {isEvento ? <CalendarDays size={28} /> : <AlertTriangle size={28} />}
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0 p-3 flex flex-col">
+        <div className="flex items-center gap-1.5 mb-1">
           <span className={cn(
             "text-overline font-bold uppercase tracking-widest",
-            item.category === 'evento' ? "text-primary" : "text-rose-700"
+            isEvento ? "text-primary" : "text-rose-700"
           )}>
-            {item.category === 'evento' ? 'Evento' : 'Aviso'}
+            {isEvento ? 'Evento' : 'Aviso'}
           </span>
           <span className="text-stone-300">·</span>
           <span className="text-overline font-bold uppercase tracking-widest text-stone-400">{relativeLabel(item._displayDate)}</span>
         </div>
-        <p className="text-sm font-bold text-stone-900 truncate max-w-[180px] group-hover/card:text-primary transition-colors">{item.title}</p>
+        <h5 className="font-bold text-stone-900 text-sm line-clamp-2 mb-1 group-hover/card:text-primary transition-colors">{item.title}</h5>
+        {item.content && (
+          <p className="text-stone-500 text-xs line-clamp-2 flex-1" dangerouslySetInnerHTML={{ __html: item.content }} />
+        )}
+        <span className="mt-auto pt-1 text-overline font-bold uppercase tracking-widest text-stone-400 group-hover/card:text-primary transition-colors flex items-center gap-1">
+          Ver mais
+          <ArrowRight size={11} className="group-hover/card:translate-x-0.5 transition-transform" />
+        </span>
       </div>
-      <ArrowRight size={14} className="text-stone-300 group-hover/card:text-primary group-hover/card:translate-x-0.5 transition-all shrink-0" />
     </button>
   );
 }
@@ -95,40 +105,41 @@ export function AconteceuTicker({ items, onSelect }: { items: AconteceuTickerIte
   const duration = Math.max(items.length * 6, 18);
 
   return (
-    <div className="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-stretch">
-        <div className="flex items-center gap-2 px-3 sm:px-4 pt-3 sm:py-0 bg-stone-50 sm:border-r border-stone-100 shrink-0">
-          <History size={16} className="text-primary" />
-          <span className="text-sm font-sans font-semibold text-stone-900 whitespace-nowrap">Aconteceu</span>
-        </div>
+    <div className="bg-white rounded-xl px-3 py-4 border border-stone-100 shadow-sm">
+      <div className="flex items-center gap-2 mb-3">
+        <History className="text-primary shrink-0" size={18} />
+        <h4 className="text-sm font-sans font-semibold text-stone-900">Aconteceu</h4>
+        <span className="ml-auto text-overline font-bold uppercase tracking-widest text-stone-400">
+          {`Últimos ${items.length}`}
+        </span>
+      </div>
 
-        <div
-          className="aconteceu-ticker-viewport relative overflow-hidden py-3 px-3 flex-1 min-w-0"
-          style={{
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)',
-            maskImage: 'linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)',
-          }}
-        >
-          {reducedMotion ? (
-            <div className="flex items-stretch gap-3 overflow-x-auto custom-scrollbar">
-              {items.map((item, idx) => (
-                <TickerCard key={item.id || idx} item={item} onSelect={onSelect} />
-              ))}
-            </div>
-          ) : (
-            <div
-              className="aconteceu-ticker-track flex items-stretch gap-3 w-max"
-              style={{ ['--ticker-duration' as any]: `${duration}s` }}
-            >
-              {items.map((item, idx) => (
-                <TickerCard key={`a-${item.id || idx}`} item={item} onSelect={onSelect} />
-              ))}
-              {items.map((item, idx) => (
-                <TickerCard key={`b-${item.id || idx}`} item={item} onSelect={onSelect} dupe />
-              ))}
-            </div>
-          )}
-        </div>
+      <div
+        className="aconteceu-ticker-viewport relative overflow-hidden"
+        style={{
+          WebkitMaskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)',
+          maskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)',
+        }}
+      >
+        {reducedMotion ? (
+          <div className="flex items-stretch gap-3 overflow-x-auto custom-scrollbar pb-1">
+            {items.map((item, idx) => (
+              <TickerCard key={item.id || idx} item={item} onSelect={onSelect} />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="aconteceu-ticker-track flex items-stretch gap-3 w-max"
+            style={{ ['--ticker-duration' as any]: `${duration}s` }}
+          >
+            {items.map((item, idx) => (
+              <TickerCard key={`a-${item.id || idx}`} item={item} onSelect={onSelect} />
+            ))}
+            {items.map((item, idx) => (
+              <TickerCard key={`b-${item.id || idx}`} item={item} onSelect={onSelect} dupe />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
