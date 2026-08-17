@@ -23,7 +23,6 @@ import {
   eachDayOfInterval,
   addMonths,
   subMonths,
-  subDays,
   isToday,
   parseISO,
   isWithinInterval
@@ -81,7 +80,7 @@ export function CheckinSystem({
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [presentUserIds, setPresentUserIds] = useState<string[] | null>(null);
   const [showPresentModal, setShowPresentModal] = useState(false);
-  const [selectedFounderPoints, setSelectedFounderPoints] = useState<number>(0);
+  const [selectedFounderMonthlyPoints, setSelectedFounderMonthlyPoints] = useState<number>(0);
 
   // Use native JS local-date methods — format() uses UTC on some environments
   const getLocalDateStr = (d = new Date()) =>
@@ -128,14 +127,18 @@ export function CheckinSystem({
 
   // Load selected founder's points + real-time updates
   useEffect(() => {
+    const now = new Date();
+    const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthlyPointsOf = (f: any) => f?.monthlyPoints?.[currentYM] ?? f?.monthlyPoints?.get?.(currentYM) ?? 0;
+
     api.get(`/api/founders/${selectedUserId}`)
-      .then(r => setSelectedFounderPoints(r.data?.totalPoints ?? 0))
+      .then(r => setSelectedFounderMonthlyPoints(monthlyPointsOf(r.data)))
       .catch(() => {});
 
     const socket = getSocket();
     const onUpdate = (f: any) => {
       const fId = f._id || f.id;
-      if (fId === selectedUserId) setSelectedFounderPoints(f.totalPoints ?? 0);
+      if (fId === selectedUserId) setSelectedFounderMonthlyPoints(monthlyPointsOf(f));
     };
     socket.on('founder:update', onUpdate);
     return () => { socket.off('founder:update', onUpdate); };
@@ -211,25 +214,17 @@ export function CheckinSystem({
 
         try {
           if (isCheckin) {
-            await api.post('/api/checkins', { date: todayStr });
+            const { data: checkinRes } = await api.post('/api/checkins', { date: todayStr });
 
-            const checkinDatesSet = new Set(checkins.map(c => c.date));
-            checkinDatesSet.add(todayStr);
-            let streak = 0;
-            let d = new Date();
-            while (checkinDatesSet.has(getLocalDateStr(d))) {
-              streak++;
-              d = subDays(d, 1);
-            }
-
-            const bonusPoints = streak % 5 === 0 ? 30 : 0;
-            const pointsEarned = 10 + bonusPoints;
-
-            await api.put(`/api/founders/${user._id}`, { totalPoints: selectedFounderPoints + pointsEarned });
+            // Pontos são calculados e gravados atomicamente pelo backend
+            // (ver POST /api/checkins) — não recalcular nem gravar aqui,
+            // isso já causou dessincronia com totalPoints/monthlyPoints.
+            const pointsEarned = checkinRes?.pointsEarned ?? 10;
+            const bonusPoints = checkinRes?.bonus ?? 0;
 
             const successMsg = bonusPoints > 0
-              ? `Check-in realizado! +${pointsEarned} pts (bônus streak ${streak} dias)`
-              : `Check-in realizado! +10 pts`;
+              ? `Check-in realizado! +${pointsEarned} pts (bônus streak semanal)`
+              : `Check-in realizado! +${pointsEarned} pts`;
             setActionMessage({ type: 'success', text: successMsg });
           } else {
             if (todayCheckin) {
@@ -368,12 +363,12 @@ export function CheckinSystem({
                 Score QDDO
               </span>
               <div className="flex items-baseline gap-0.5">
-                <span className="text-xl font-bold text-stone-900">{selectedFounderPoints}</span>
+                <span className="text-xl font-bold text-stone-900">{selectedFounderMonthlyPoints}</span>
                 <span className="text-[10px] font-bold text-stone-400">pts</span>
               </div>
               <div className="flex items-center gap-0.5">
                 <Trophy size={9} className="text-amber-500" />
-                <span className="text-[9px] text-stone-400 leading-none">acumulados</span>
+                <span className="text-[9px] text-stone-400 leading-none">neste mês</span>
               </div>
             </div>
 
