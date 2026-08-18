@@ -62,7 +62,8 @@ import {
   Cake,
   EyeOff,
   Eye,
-  CheckCircle2
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { auth } from './firebase';
 import { api, API_BASE } from './api';
@@ -79,6 +80,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { NewsFormModal } from './components/NewsFormModal';
 import { RecentActivity } from './components/RecentActivity';
 import { AconteceuTicker } from './components/AconteceuTicker';
+import { ImageCropModal } from './components/ImageCropModal';
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
@@ -174,8 +176,11 @@ export default function App() {
   const [activeGeneralCategory, setActiveGeneralCategory] = useState<string | null>(null);
   const [selectedNewsItem, setSelectedNewsItem] = useState<any | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
-  const [editingRuleData, setEditingRuleData] = useState<{ title: string; content: string }>({ title: '', content: '' });
+  const [editingRuleData, setEditingRuleData] = useState<{ title: string; content: string; imageUrl: string }>({ title: '', content: '', imageUrl: '' });
   const [deletingRuleId, setDeletingRuleId] = useState<string | null>(null);
+  const [isUploadingRuleImage, setIsUploadingRuleImage] = useState(false);
+  const [ruleCropImageSrc, setRuleCropImageSrc] = useState<string | null>(null);
+  const [pendingRuleImageFileName, setPendingRuleImageFileName] = useState('');
   const [showAddRegra, setShowAddRegra] = useState(false);
   const [newRegraTitle, setNewRegraTitle] = useState('');
   const [newRegraContent, setNewRegraContent] = useState('');
@@ -1048,8 +1053,32 @@ export default function App() {
 
   const handleSaveRule = async () => {
     if (!editingRuleId) return;
-    await api.put(`/api/news/${editingRuleId}`, { title: editingRuleData.title, content: editingRuleData.content });
+    await api.put(`/api/news/${editingRuleId}`, { title: editingRuleData.title, content: editingRuleData.content, imageUrl: editingRuleData.imageUrl });
     setEditingRuleId(null);
+  };
+
+  const handleRuleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    if (!file.type.startsWith('image/')) { alert('Apenas imagens são permitidas.'); return; }
+    setPendingRuleImageFileName(file.name);
+    setRuleCropImageSrc(URL.createObjectURL(file));
+  };
+
+  const handleRuleCropConfirm = async (blob: Blob) => {
+    setRuleCropImageSrc(null);
+    setIsUploadingRuleImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', blob, pendingRuleImageFileName || 'cover.jpg');
+      const { data } = await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setEditingRuleData(d => ({ ...d, imageUrl: data.url }));
+    } catch {
+      alert('Erro ao enviar imagem.');
+    } finally {
+      setIsUploadingRuleImage(false);
+    }
   };
 
   const handleAddRegra = async () => {
@@ -2571,7 +2600,7 @@ export default function App() {
                                 {isAdmin && (
                                   <div className="flex items-center gap-1 shrink-0">
                                     <button
-                                      onClick={() => { setEditingRuleId(item.id); setEditingRuleData({ title: item.title, content: item.content }); setDeletingRuleId(null); }}
+                                      onClick={() => { setEditingRuleId(item.id); setEditingRuleData({ title: item.title, content: item.content, imageUrl: item.imageUrl || '' }); setDeletingRuleId(null); }}
                                       className="p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition"
                                       title="Editar"
                                     >
@@ -3322,6 +3351,33 @@ export default function App() {
                             onChange={e => setEditingRuleData(d => ({ ...d, content: e.target.value }))}
                             className="w-full px-4 py-2 border border-stone-100 rounded-md text-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 transition resize-none"
                           />
+                          <div className="space-y-2">
+                            <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Imagem de Capa</label>
+                            <div className="flex items-center gap-3">
+                              <label className={cn(
+                                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-dashed border-stone-200 rounded-md cursor-pointer hover:bg-stone-100 transition-all",
+                                isUploadingRuleImage && "opacity-50 cursor-not-allowed"
+                              )}>
+                                <Newspaper size={16} className="text-stone-400" />
+                                <span className="text-xs font-medium text-stone-500">
+                                  {isUploadingRuleImage ? 'Enviando...' : editingRuleData.imageUrl ? 'Alterar imagem' : 'Selecionar imagem'}
+                                </span>
+                                <input type="file" accept="image/*" onChange={handleRuleImageUpload} disabled={isUploadingRuleImage} className="hidden" />
+                              </label>
+                              {editingRuleData.imageUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingRuleData(d => ({ ...d, imageUrl: '' }))}
+                                  className="p-2 hover:bg-stone-100 rounded-lg transition-colors text-stone-400 hover:text-stone-700"
+                                >
+                                  <XCircle size={16} />
+                                </button>
+                              )}
+                            </div>
+                            {editingRuleData.imageUrl && (
+                              <img src={editingRuleData.imageUrl} alt="preview" className="w-full h-28 object-cover rounded-md border border-stone-100 mt-1" />
+                            )}
+                          </div>
                           <div className="flex gap-2 justify-end">
                             <button
                               onClick={() => setEditingRuleId(null)}
@@ -3331,7 +3387,8 @@ export default function App() {
                             </button>
                             <button
                               onClick={handleSaveRule}
-                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/80 transition"
+                              disabled={isUploadingRuleImage}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/80 disabled:opacity-50 transition"
                             >
                               <Check size={13} />
                               Salvar
@@ -3349,7 +3406,7 @@ export default function App() {
                               {isAdmin && (
                                 <>
                                   <button
-                                    onClick={() => { setEditingRuleId(item.id); setEditingRuleData({ title: item.title, content: item.content }); setDeletingRuleId(null); }}
+                                    onClick={() => { setEditingRuleId(item.id); setEditingRuleData({ title: item.title, content: item.content, imageUrl: item.imageUrl || '' }); setDeletingRuleId(null); }}
                                     className="ml-2 p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-lg transition"
                                     title="Editar"
                                   >
@@ -3598,6 +3655,19 @@ export default function App() {
       {showAddNewsModal && (
         <NewsFormModal
           onClose={() => setShowAddNewsModal(false)}
+        />
+      )}
+
+      {ruleCropImageSrc && (
+        <ImageCropModal
+          imageSrc={ruleCropImageSrc}
+          onConfirm={handleRuleCropConfirm}
+          onClose={() => {
+            URL.revokeObjectURL(ruleCropImageSrc);
+            setRuleCropImageSrc(null);
+          }}
+          aspect={16 / 9}
+          title="Ajustar imagem de capa"
         />
       )}
 
