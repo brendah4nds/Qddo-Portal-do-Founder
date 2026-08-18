@@ -2987,9 +2987,6 @@ export default function App() {
                               </div>
                             </div>
 
-                            {/* Aconteceu — ticker de eventos passados */}
-                            <AconteceuTicker items={pastHighlights} onSelect={setSelectedNewsItem} />
-
                           </div>
 
                           {/* Part 2: Ranking & Score (33%) */}
@@ -3068,6 +3065,9 @@ export default function App() {
                             </div>
                           </div>
                         </div>
+
+                        {/* Aconteceu — ticker de eventos passados, largura total */}
+                        <AconteceuTicker items={pastHighlights} onSelect={setSelectedNewsItem} />
 
                         {/* Indicar um Founder / Mantenedor — largura total */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
