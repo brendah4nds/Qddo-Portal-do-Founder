@@ -269,6 +269,9 @@ export default function App() {
   const [allFounders, setAllFounders] = useState<any[]>([]);
   const [allChallenges, setAllChallenges] = useState<Challenge[]>([]);
   const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [allIndicacoes, setAllIndicacoes] = useState<any[]>([]);
+  const [selectedIndicacoesUserId, setSelectedIndicacoesUserId] = useState('');
+  const isAdminRef = useRef(false);
   const [userCheckins, setUserCheckins] = useState<any[]>([]);
   const [allCheckins, setAllCheckins] = useState<any[]>([]);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
@@ -841,7 +844,8 @@ export default function App() {
       api.get('/api/settings/qcoin_tables').catch(() => ({ data: null })),
       api.get('/api/checkins').catch(() => ({ data: [] })),
       api.get('/api/qcoin-requests').catch(() => ({ data: [] })),
-    ]).then(([rooms, bookings, settings, founders, challenges, news, qcoinSections, qcoinTables, checkins, qcoinRequestsRes]) => {
+      api.get('/api/indicacoes').catch(() => ({ data: [] })),
+    ]).then(([rooms, bookings, settings, founders, challenges, news, qcoinSections, qcoinTables, checkins, qcoinRequestsRes, indicacoesRes]) => {
       setRooms(rooms.data.map((r: any) => ({ ...r, id: r._id || r.id })));
       setBookings(bookings.data.map((b: any) => ({ ...b, id: b._id || b.id })));
       if (settings.data?.businessHours) setBusinessHours(settings.data.businessHours);
@@ -859,6 +863,8 @@ export default function App() {
       const checkinsData = checkins.data.map((c: any) => ({ ...c, id: c._id || c.id }));
       setAllCheckins(checkinsData);
       setUserCheckins(checkinsData.filter((c: any) => c.userId === user._id || c.userId === user.uid));
+      const indicacoesData = indicacoesRes.data.map((i: any) => ({ ...i, id: i._id || i.id }));
+      setAllIndicacoes(indicacoesData);
     });
 
     // Socket.io real-time updates
@@ -909,6 +915,17 @@ export default function App() {
         return [...filtered, { id, ...data }];
       });
     });
+    socket.on('indicacao:new', (i: any) => {
+      const ind = { ...i, id: i._id || i.id };
+      if (isAdminRef.current || (ind.indicadoPorEmail || '').toLowerCase() === (user.email || '').toLowerCase()) {
+        setAllIndicacoes(prev => [ind, ...prev.filter((x: any) => x.id !== ind.id)]);
+      }
+    });
+    socket.on('indicacao:update', (i: any) => {
+      const ind = { ...i, id: i._id || i.id };
+      setAllIndicacoes(prev => prev.some((x: any) => x.id === ind.id) ? prev.map((x: any) => x.id === ind.id ? ind : x) : prev);
+    });
+    socket.on('indicacao:delete', ({ id }: any) => setAllIndicacoes(prev => prev.filter((x: any) => x.id !== id)));
 
     return () => {
       socket.off('founder:new'); socket.off('founder:update'); socket.off('founder:delete');
@@ -918,6 +935,7 @@ export default function App() {
       socket.off('checkin:new'); socket.off('checkin:update');
       socket.off('qcoin-request:new'); socket.off('qcoin-request:update');
       socket.off('settings:update'); socket.off('qcoin_sections:update');
+      socket.off('indicacao:new'); socket.off('indicacao:update'); socket.off('indicacao:delete');
     };
   }, [user?._id]);
 
@@ -1141,6 +1159,14 @@ export default function App() {
 
   const isAdmin = user?.email === ADMIN_EMAIL || user?.role === 'admin' || founderData?.role === 'admin';
   const isMasterAdmin = user?.email === ADMIN_EMAIL;
+  useEffect(() => { isAdminRef.current = isAdmin; }, [isAdmin]);
+
+  const indicacoesTargetEmail = (!isAdmin || !selectedIndicacoesUserId)
+    ? (user?.email || '')
+    : (allFounders.find(f => (f._id || f.id) === selectedIndicacoesUserId)?.email || '');
+  const displayedIndicacoes = allIndicacoes.filter(
+    (i: any) => (i.indicadoPorEmail || '').toLowerCase() === indicacoesTargetEmail.toLowerCase()
+  );
 
   const toggleAvisoFromNews = async (avisoId: string) => {
     const isHidden = hiddenNewsIds.includes(avisoId);
@@ -2753,23 +2779,11 @@ export default function App() {
                         });
 
                       const pastHighlights = newsItems
-                        .filter(item => item.category === 'evento' || item.category === 'aviso')
-                        .filter(item => {
-                          if (item.category === 'evento') {
-                            if (!item.eventDate) return false;
-                            const eventDate = toDate(item.eventDate) || new Date();
-                            return eventDate < todayStart;
-                          }
-                          return !!item.createdAt;
-                        })
-                        .map(item => ({ ...item, _displayDate: item.category === 'evento' ? item.eventDate : item.createdAt }))
+                        .filter(item => item.category === 'evento' && !!item.eventDate)
+                        .filter(item => (toDate(item.eventDate) || new Date()) < todayStart)
+                        .map(item => ({ ...item, _displayDate: item.eventDate }))
                         .sort((a, b) => (toDate(b._displayDate)?.getTime() || 0) - (toDate(a._displayDate)?.getTime() || 0))
                         .slice(0, 10);
-
-                      const publicChallenges = allChallenges
-                        .filter(c => c.type === 'public' && c.status === 'open')
-                        .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
-                        .slice(0, 3);
 
                       const currentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
                       const currentMonthStart = startOfMonth(now);
@@ -2983,9 +2997,6 @@ export default function App() {
                               </div>
                             </div>
 
-                            {/* Aconteceu — ticker de avisos/eventos passados */}
-                            <AconteceuTicker items={pastHighlights} onSelect={setSelectedNewsItem} />
-
                           </div>
 
                           {/* Part 2: Ranking & Score (33%) */}
@@ -3065,59 +3076,58 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Desafios Públicos — largura total */}
-                        <div className="bg-stone-900 rounded-xl p-4 text-white shadow-xl shadow-stone-900/20">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                              <Trophy className="text-white/50" size={20} />
-                              <h4 className="text-lg font-sans">Desafios Públicos</h4>
-                            </div>
-                            <button
-                              onClick={() => { setView('portal'); setActiveSubTab('desafios-publicos'); }}
-                              className="text-overline font-bold uppercase tracking-widest text-white/50 hover:text-white transition-colors flex items-center gap-1"
-                            >
-                              Ver todos <ArrowRight size={11} />
-                            </button>
-                          </div>
+                        {/* Aconteceu — ticker de eventos passados, largura total */}
+                        <AconteceuTicker items={pastHighlights} onSelect={setSelectedNewsItem} />
 
-                          {publicChallenges.length === 0 ? (
-                            <p className="text-white/50 text-sm text-center py-4">Nenhum desafio público aberto no momento.</p>
-                          ) : (
-                            <div className="flex flex-col lg:flex-row gap-3">
-                              {/* Desafio em destaque */}
-                              <div className="lg:flex-1 bg-white/10 rounded-lg p-4 flex flex-col gap-3">
-                                <div>
-                                  <p className="text-overline uppercase tracking-widest font-bold text-white/60 mb-1">
-                                    Lançado por {allFounders.find(f => f.id === publicChallenges[0].founderId)?.name || 'Founder'}
-                                  </p>
-                                  <h5 className="text-base font-bold leading-tight mb-1">{publicChallenges[0].title}</h5>
-                                  {publicChallenges[0].description && (
-                                    <p className="text-white/60 text-xs line-clamp-2">"{publicChallenges[0].description}"</p>
-                                  )}
-                                </div>
-                                <button
-                                  onClick={() => { setView('portal'); setActiveSubTab('desafios-publicos'); }}
-                                  className="mt-auto w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-md text-overline font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                                >
-                                  Ajudar a resolver <ArrowRight size={12} />
-                                </button>
+                        {/* Indicar um Founder / Mantenedor — largura total */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          <button
+                            onClick={() => {
+                              setShowIndicarFounderModal(true);
+                              setIndicarSuccess(false);
+                              setIndicarError('');
+                              setIndicarNome('');
+                              setIndicarEmpresa('');
+                              setIndicarArea('');
+                            }}
+                            className="w-full bg-stone-900 text-white px-8 py-6 rounded-xl relative overflow-hidden hover:bg-stone-800 transition-all group"
+                          >
+                            <div className="relative z-10 flex items-center justify-center gap-4">
+                              <div className="bg-white/10 p-2.5 rounded-lg group-hover:bg-white/20 transition-all shrink-0">
+                                <UserPlus size={22} className="text-white" />
                               </div>
-
-                              {/* Outros desafios recentes */}
-                              {publicChallenges.length > 1 && (
-                                <div className="lg:w-72 flex flex-col gap-2">
-                                  {publicChallenges.slice(1).map(ch => (
-                                    <div key={ch.id} className="bg-white/5 hover:bg-white/10 rounded-lg p-3 transition-colors cursor-pointer flex flex-col gap-0.5" onClick={() => { setView('portal'); setActiveSubTab('desafios-publicos'); }}>
-                                      <p className="text-overline uppercase tracking-widest font-bold text-white/50">
-                                        {allFounders.find(f => f.id === ch.founderId)?.name || 'Founder'}
-                                      </p>
-                                      <p className="text-sm font-bold text-white line-clamp-2">{ch.title}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              <div className="text-center">
+                                <h2 className="text-h3 font-sans">Indicar um Founder</h2>
+                                <p className="text-white/60 text-sm">Conhece alguém que deveria fazer parte da nossa comunidade?</p>
+                              </div>
+                              <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
                             </div>
-                          )}
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setShowIndicarMantenedorModal(true);
+                              setIndicarMantenedorSuccess(false);
+                              setIndicarMantenedorError('');
+                              setIndicarMantenedorNome('');
+                              setIndicarMantenedorEspaco('');
+                              setIndicarMantenedorArea('');
+                            }}
+                            className="w-full bg-stone-900 text-white px-8 py-6 rounded-xl relative overflow-hidden hover:bg-stone-800 transition-all group"
+                          >
+                            <div className="relative z-10 flex items-center justify-center gap-4">
+                              <div className="bg-white/10 p-2.5 rounded-lg group-hover:bg-white/20 transition-all shrink-0">
+                                <Building2 size={22} className="text-white" />
+                              </div>
+                              <div className="text-center">
+                                <h2 className="text-h3 font-sans">Indicar um Mantenedor</h2>
+                                <p className="text-white/60 text-sm">Conhece um mantenedor para nosso QDDO?</p>
+                              </div>
+                              <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
+                            </div>
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                          </button>
                         </div>
                         </div>
                       );
@@ -3138,28 +3148,16 @@ export default function App() {
                     <p className="text-stone-400 text-xs hidden sm:block">Conheça todos os founders cadastrados na nossa comunidade.</p>
                   </div>
 
-                  {/* Avisos */}
+                  {/* Minhas Indicações */}
                   <div
-                    onClick={() => setActiveGeneralCategory('aviso')}
+                    onClick={() => { setSelectedIndicacoesUserId(''); setActiveGeneralCategory('minhas-indicacoes'); }}
                     className="bg-white p-4 lg:p-5 rounded-xl lg:rounded-xl border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
                     <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-md flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                      <AlertTriangle size={18} />
+                      <Send size={18} />
                     </div>
-                    <h3 className="text-base font-sans mb-1">Avisos</h3>
-                    <p className="text-stone-400 text-xs hidden sm:block">Comunicados importantes e atualizações de última hora.</p>
-                  </div>
-
-                  {/* Eventos */}
-                  <div
-                    onClick={() => setActiveGeneralCategory('evento')}
-                    className="bg-white p-4 lg:p-5 rounded-xl lg:rounded-xl border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
-                  >
-                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-md flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                      <CalendarDays size={18} />
-                    </div>
-                    <h3 className="text-base font-sans mb-1">Eventos</h3>
-                    <p className="text-stone-400 text-xs hidden sm:block">Calendário de workshops, meetups e encontros.</p>
+                    <h3 className="text-base font-sans mb-1">Minhas Indicações</h3>
+                    <p className="text-stone-400 text-xs hidden sm:block">Acompanhe o status das indicações que você enviou.</p>
                   </div>
 
                   {/* Comunicação */}
@@ -3173,57 +3171,17 @@ export default function App() {
                     <h3 className="text-base font-sans mb-1">Assets dos Founders</h3>
                     <p className="text-stone-400 text-xs hidden sm:block">Canais oficiais de suporte e interação entre membros.</p>
                   </div>
-                </div>
 
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => {
-                      setShowIndicarFounderModal(true);
-                      setIndicarSuccess(false);
-                      setIndicarError('');
-                      setIndicarNome('');
-                      setIndicarEmpresa('');
-                      setIndicarArea('');
-                    }}
-                    className="w-full bg-stone-900 text-white px-8 py-6 rounded-xl relative overflow-hidden hover:bg-stone-800 transition-all group"
+                  {/* Em Breve */}
+                  <div
+                    className="relative bg-white p-4 lg:p-5 rounded-xl lg:rounded-xl border border-stone-100 shadow-sm opacity-60 cursor-default"
                   >
-                    <div className="relative z-10 flex items-center justify-center gap-4">
-                      <div className="bg-white/10 p-2.5 rounded-lg group-hover:bg-white/20 transition-all shrink-0">
-                        <UserPlus size={22} className="text-white" />
-                      </div>
-                      <div className="text-center">
-                        <h2 className="text-h3 font-sans">Indicar um Founder</h2>
-                        <p className="text-white/60 text-sm">Conhece alguém que deveria fazer parte da nossa comunidade?</p>
-                      </div>
-                      <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
+                    <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-md flex items-center justify-center mb-3 lg:mb-4">
+                      <Trophy size={18} />
                     </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setShowIndicarMantenedorModal(true);
-                      setIndicarMantenedorSuccess(false);
-                      setIndicarMantenedorError('');
-                      setIndicarMantenedorNome('');
-                      setIndicarMantenedorEspaco('');
-                      setIndicarMantenedorArea('');
-                    }}
-                    className="w-full bg-stone-900 text-white px-8 py-6 rounded-xl relative overflow-hidden hover:bg-stone-800 transition-all group"
-                  >
-                    <div className="relative z-10 flex items-center justify-center gap-4">
-                      <div className="bg-white/10 p-2.5 rounded-lg group-hover:bg-white/20 transition-all shrink-0">
-                        <Building2 size={22} className="text-white" />
-                      </div>
-                      <div className="text-center">
-                        <h2 className="text-h3 font-sans">Indicar um Mantenedor</h2>
-                        <p className="text-white/60 text-sm">Conhece um mantenedor para nosso QDDO?</p>
-                      </div>
-                      <ArrowRight size={20} className="text-white/40 group-hover:text-white/70 group-hover:translate-x-1 transition-all shrink-0" />
-                    </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                  </button>
+                    <h3 className="text-base font-sans mb-1">Em Breve</h3>
+                    <p className="text-stone-400 text-xs hidden sm:block">Ajude a resolver desafios lançados pela comunidade.</p>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -3271,6 +3229,7 @@ export default function App() {
                    activeGeneralCategory === 'regras' ? <ShieldCheck size={24} /> :
                    activeGeneralCategory === 'aviso' ? <AlertTriangle size={24} /> :
                    activeGeneralCategory === 'evento' ? <CalendarDays size={24} /> :
+                   activeGeneralCategory === 'minhas-indicacoes' ? <Send size={24} /> :
                    <MessageSquare size={24} />}
                 </div>
                 <div>
@@ -3280,6 +3239,7 @@ export default function App() {
                     aviso: 'Avisos',
                     evento: 'Eventos',
                     comunicacao: 'Materiais de Apoio',
+                    'minhas-indicacoes': 'Minhas Indicações',
                   }[activeGeneralCategory] ?? activeGeneralCategory}</h3>
                   <p className="text-stone-400 text-xs uppercase tracking-widest font-bold">Portal Founder</p>
                 </div>
@@ -3332,6 +3292,72 @@ export default function App() {
                     <p className="text-stone-400">Nenhum founder cadastrado ainda.</p>
                   </div>
                 )
+              ) : activeGeneralCategory === 'minhas-indicacoes' ? (
+                <>
+                  {isAdmin && (
+                    <div className="bg-stone-50 px-4 py-2.5 rounded-xl border border-stone-100 flex items-center gap-3 mb-6">
+                      <Users size={16} className="text-stone-400 shrink-0" />
+                      <select
+                        value={selectedIndicacoesUserId}
+                        onChange={(e) => setSelectedIndicacoesUserId(e.target.value)}
+                        className="bg-transparent border-none focus:ring-0 font-bold text-stone-900 flex-1 text-sm"
+                      >
+                        <option value="">Minhas Indicações ({user.name || user.displayName || 'Eu'})</option>
+                        {[...allFounders].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR')).map(f => (
+                          <option key={f._id || f.id} value={f._id || f.id}>{f.name} (@{f.username})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {displayedIndicacoes.length > 0 ? (
+                    <div className="space-y-3">
+                      {displayedIndicacoes.map(ind => {
+                        const isPendente = !ind.status || ind.status === 'pendente';
+                        const isAprovada = ind.status === 'aprovada';
+                        const isMantenedor = ind.tipo === 'mantenedor';
+                        return (
+                          <div key={ind.id} className="p-4 bg-stone-50 rounded-lg border border-stone-100">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={cn(
+                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-overline font-bold uppercase tracking-widest",
+                                isMantenedor ? "bg-blue-100 text-blue-700" : "bg-stone-200 text-stone-700"
+                              )}>
+                                {isMantenedor ? 'Mantenedor' : 'Founder'}
+                              </span>
+                              <span className="text-overline text-stone-400 font-bold">
+                                {toDate(ind.criadoEm)?.toLocaleDateString('pt-BR') || ''}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="font-bold text-stone-900 text-sm truncate">
+                                {[ind.nomeIndicado, ind.empresa, ind.area, ind.contato].filter(Boolean).join(', ')}
+                              </p>
+                              <span className={cn(
+                                "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-overline font-bold uppercase tracking-widest shrink-0",
+                                isAprovada
+                                  ? "bg-emerald-100 text-emerald-600"
+                                  : ind.status === 'rejeitada'
+                                    ? "bg-red-100 text-red-500"
+                                    : "bg-terracota-100 text-primary"
+                              )}>
+                                {isAprovada ? 'Aprovada' : ind.status === 'rejeitada' ? 'Rejeitada' : 'Pendente'}
+                              </span>
+                            </div>
+                            {isPendente && (
+                              <p className="text-stone-400 text-xs mt-2">Aguardando análise do time.</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-stone-400">
+                        {selectedIndicacoesUserId ? 'Este founder ainda não enviou nenhuma indicação.' : 'Você ainda não enviou nenhuma indicação.'}
+                      </p>
+                    </div>
+                  )}
+                </>
               ) : newsItems.filter(item => item.category === activeGeneralCategory).length > 0 ? (
                 newsItems
                   .filter(item => item.category === activeGeneralCategory)
@@ -3486,7 +3512,7 @@ export default function App() {
                 </div>
               )}
             </div>
-            {activeGeneralCategory !== 'founders' && isAdmin && (
+            {activeGeneralCategory !== 'founders' && activeGeneralCategory !== 'minhas-indicacoes' && isAdmin && (
               <div className="p-6 bg-stone-50 border-t border-stone-100 flex justify-center">
                 <button
                   onClick={() => setShowAddNewsModal(true)}
