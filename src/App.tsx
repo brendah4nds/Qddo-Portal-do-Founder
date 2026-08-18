@@ -2753,16 +2753,9 @@ export default function App() {
                         });
 
                       const pastHighlights = newsItems
-                        .filter(item => item.category === 'evento' || item.category === 'aviso')
-                        .filter(item => {
-                          if (item.category === 'evento') {
-                            if (!item.eventDate) return false;
-                            const eventDate = toDate(item.eventDate) || new Date();
-                            return eventDate < todayStart;
-                          }
-                          return !!item.createdAt;
-                        })
-                        .map(item => ({ ...item, _displayDate: item.category === 'evento' ? item.eventDate : item.createdAt }))
+                        .filter(item => item.category === 'evento' && !!item.eventDate)
+                        .filter(item => (toDate(item.eventDate) || new Date()) < todayStart)
+                        .map(item => ({ ...item, _displayDate: item.eventDate }))
                         .sort((a, b) => (toDate(b._displayDate)?.getTime() || 0) - (toDate(a._displayDate)?.getTime() || 0))
                         .slice(0, 10);
 
@@ -2983,7 +2976,7 @@ export default function App() {
                               </div>
                             </div>
 
-                            {/* Aconteceu — ticker de avisos/eventos passados */}
+                            {/* Aconteceu — ticker de eventos passados */}
                             <AconteceuTicker items={pastHighlights} onSelect={setSelectedNewsItem} />
 
                           </div>
