@@ -269,7 +269,9 @@ export default function App() {
   const [allFounders, setAllFounders] = useState<any[]>([]);
   const [allChallenges, setAllChallenges] = useState<Challenge[]>([]);
   const [newsItems, setNewsItems] = useState<any[]>([]);
-  const [myIndicacoes, setMyIndicacoes] = useState<any[]>([]);
+  const [allIndicacoes, setAllIndicacoes] = useState<any[]>([]);
+  const [selectedIndicacoesUserId, setSelectedIndicacoesUserId] = useState('');
+  const isAdminRef = useRef(false);
   const [userCheckins, setUserCheckins] = useState<any[]>([]);
   const [allCheckins, setAllCheckins] = useState<any[]>([]);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
@@ -862,7 +864,7 @@ export default function App() {
       setAllCheckins(checkinsData);
       setUserCheckins(checkinsData.filter((c: any) => c.userId === user._id || c.userId === user.uid));
       const indicacoesData = indicacoesRes.data.map((i: any) => ({ ...i, id: i._id || i.id }));
-      setMyIndicacoes(indicacoesData.filter((i: any) => (i.indicadoPorEmail || '').toLowerCase() === (user.email || '').toLowerCase()));
+      setAllIndicacoes(indicacoesData);
     });
 
     // Socket.io real-time updates
@@ -915,15 +917,15 @@ export default function App() {
     });
     socket.on('indicacao:new', (i: any) => {
       const ind = { ...i, id: i._id || i.id };
-      if ((ind.indicadoPorEmail || '').toLowerCase() === (user.email || '').toLowerCase()) {
-        setMyIndicacoes(prev => [ind, ...prev.filter((x: any) => x.id !== ind.id)]);
+      if (isAdminRef.current || (ind.indicadoPorEmail || '').toLowerCase() === (user.email || '').toLowerCase()) {
+        setAllIndicacoes(prev => [ind, ...prev.filter((x: any) => x.id !== ind.id)]);
       }
     });
     socket.on('indicacao:update', (i: any) => {
       const ind = { ...i, id: i._id || i.id };
-      setMyIndicacoes(prev => prev.some((x: any) => x.id === ind.id) ? prev.map((x: any) => x.id === ind.id ? ind : x) : prev);
+      setAllIndicacoes(prev => prev.some((x: any) => x.id === ind.id) ? prev.map((x: any) => x.id === ind.id ? ind : x) : prev);
     });
-    socket.on('indicacao:delete', ({ id }: any) => setMyIndicacoes(prev => prev.filter((x: any) => x.id !== id)));
+    socket.on('indicacao:delete', ({ id }: any) => setAllIndicacoes(prev => prev.filter((x: any) => x.id !== id)));
 
     return () => {
       socket.off('founder:new'); socket.off('founder:update'); socket.off('founder:delete');
@@ -1157,6 +1159,14 @@ export default function App() {
 
   const isAdmin = user?.email === ADMIN_EMAIL || user?.role === 'admin' || founderData?.role === 'admin';
   const isMasterAdmin = user?.email === ADMIN_EMAIL;
+  useEffect(() => { isAdminRef.current = isAdmin; }, [isAdmin]);
+
+  const indicacoesTargetEmail = (!isAdmin || !selectedIndicacoesUserId)
+    ? (user?.email || '')
+    : (allFounders.find(f => (f._id || f.id) === selectedIndicacoesUserId)?.email || '');
+  const displayedIndicacoes = allIndicacoes.filter(
+    (i: any) => (i.indicadoPorEmail || '').toLowerCase() === indicacoesTargetEmail.toLowerCase()
+  );
 
   const toggleAvisoFromNews = async (avisoId: string) => {
     const isHidden = hiddenNewsIds.includes(avisoId);
@@ -3140,7 +3150,7 @@ export default function App() {
 
                   {/* Minhas Indicações */}
                   <div
-                    onClick={() => setActiveGeneralCategory('minhas-indicacoes')}
+                    onClick={() => { setSelectedIndicacoesUserId(''); setActiveGeneralCategory('minhas-indicacoes'); }}
                     className="bg-white p-4 lg:p-5 rounded-xl lg:rounded-xl border border-stone-100 shadow-sm hover:shadow-md transition-all group cursor-pointer"
                   >
                     <div className="w-9 h-9 lg:w-10 lg:h-10 bg-stone-100 rounded-md flex items-center justify-center mb-3 lg:mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
@@ -3283,52 +3293,71 @@ export default function App() {
                   </div>
                 )
               ) : activeGeneralCategory === 'minhas-indicacoes' ? (
-                myIndicacoes.length > 0 ? (
-                  <div className="space-y-3">
-                    {myIndicacoes.map(ind => {
-                      const isPendente = !ind.status || ind.status === 'pendente';
-                      const isAprovada = ind.status === 'aprovada';
-                      const isMantenedor = ind.tipo === 'mantenedor';
-                      return (
-                        <div key={ind.id} className="p-4 bg-stone-50 rounded-lg border border-stone-100">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className={cn(
-                              "inline-flex items-center px-2.5 py-0.5 rounded-full text-overline font-bold uppercase tracking-widest",
-                              isMantenedor ? "bg-blue-100 text-blue-700" : "bg-stone-200 text-stone-700"
-                            )}>
-                              {isMantenedor ? 'Mantenedor' : 'Founder'}
-                            </span>
-                            <span className="text-overline text-stone-400 font-bold">
-                              {toDate(ind.criadoEm)?.toLocaleDateString('pt-BR') || ''}
-                            </span>
+                <>
+                  {isAdmin && (
+                    <div className="bg-stone-50 px-4 py-2.5 rounded-xl border border-stone-100 flex items-center gap-3 mb-6">
+                      <Users size={16} className="text-stone-400 shrink-0" />
+                      <select
+                        value={selectedIndicacoesUserId}
+                        onChange={(e) => setSelectedIndicacoesUserId(e.target.value)}
+                        className="bg-transparent border-none focus:ring-0 font-bold text-stone-900 flex-1 text-sm"
+                      >
+                        <option value="">Minhas Indicações ({user.name || user.displayName || 'Eu'})</option>
+                        {[...allFounders].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR')).map(f => (
+                          <option key={f._id || f.id} value={f._id || f.id}>{f.name} (@{f.username})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {displayedIndicacoes.length > 0 ? (
+                    <div className="space-y-3">
+                      {displayedIndicacoes.map(ind => {
+                        const isPendente = !ind.status || ind.status === 'pendente';
+                        const isAprovada = ind.status === 'aprovada';
+                        const isMantenedor = ind.tipo === 'mantenedor';
+                        return (
+                          <div key={ind.id} className="p-4 bg-stone-50 rounded-lg border border-stone-100">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={cn(
+                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-overline font-bold uppercase tracking-widest",
+                                isMantenedor ? "bg-blue-100 text-blue-700" : "bg-stone-200 text-stone-700"
+                              )}>
+                                {isMantenedor ? 'Mantenedor' : 'Founder'}
+                              </span>
+                              <span className="text-overline text-stone-400 font-bold">
+                                {toDate(ind.criadoEm)?.toLocaleDateString('pt-BR') || ''}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="font-bold text-stone-900 text-sm truncate">
+                                {[ind.nomeIndicado, ind.empresa, ind.area, ind.contato].filter(Boolean).join(', ')}
+                              </p>
+                              <span className={cn(
+                                "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-overline font-bold uppercase tracking-widest shrink-0",
+                                isAprovada
+                                  ? "bg-emerald-100 text-emerald-600"
+                                  : ind.status === 'rejeitada'
+                                    ? "bg-red-100 text-red-500"
+                                    : "bg-terracota-100 text-primary"
+                              )}>
+                                {isAprovada ? 'Aprovada' : ind.status === 'rejeitada' ? 'Rejeitada' : 'Pendente'}
+                              </span>
+                            </div>
+                            {isPendente && (
+                              <p className="text-stone-400 text-xs mt-2">Aguardando análise do time.</p>
+                            )}
                           </div>
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="font-bold text-stone-900 text-sm truncate">
-                              {[ind.nomeIndicado, ind.empresa, ind.area, ind.contato].filter(Boolean).join(', ')}
-                            </p>
-                            <span className={cn(
-                              "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-overline font-bold uppercase tracking-widest shrink-0",
-                              isAprovada
-                                ? "bg-emerald-100 text-emerald-600"
-                                : ind.status === 'rejeitada'
-                                  ? "bg-red-100 text-red-500"
-                                  : "bg-terracota-100 text-primary"
-                            )}>
-                              {isAprovada ? 'Aprovada' : ind.status === 'rejeitada' ? 'Rejeitada' : 'Pendente'}
-                            </span>
-                          </div>
-                          {isPendente && (
-                            <p className="text-stone-400 text-xs mt-2">Aguardando análise do time.</p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-stone-400">Você ainda não enviou nenhuma indicação.</p>
-                  </div>
-                )
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-stone-400">
+                        {selectedIndicacoesUserId ? 'Este founder ainda não enviou nenhuma indicação.' : 'Você ainda não enviou nenhuma indicação.'}
+                      </p>
+                    </div>
+                  )}
+                </>
               ) : newsItems.filter(item => item.category === activeGeneralCategory).length > 0 ? (
                 newsItems
                   .filter(item => item.category === activeGeneralCategory)
