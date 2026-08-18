@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { History, CalendarDays, AlertTriangle, ArrowRight } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { History, CalendarDays, AlertTriangle, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { differenceInCalendarDays } from 'date-fns';
+
+const CARD_STEP = 222; // largura do card (210px) + gap (12px)
+const AUTOPLAY_SPEED = 30; // px/s
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
@@ -99,10 +102,38 @@ function TickerCard({ item, onSelect, dupe }: { item: AconteceuTickerItem; onSel
 
 export function AconteceuTicker({ items, onSelect }: { items: AconteceuTickerItem[]; onSelect: (item: any) => void }) {
   const reducedMotion = useReducedMotion();
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (reducedMotion || paused || !items || items.length === 0) return;
+    const el = viewportRef.current;
+    if (!el) return;
+
+    let rafId: number;
+    let lastTime: number | null = null;
+
+    const step = (time: number) => {
+      if (lastTime === null) lastTime = time;
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
+
+      el.scrollLeft += AUTOPLAY_SPEED * dt;
+      const half = el.scrollWidth / 2;
+      if (half > 0 && el.scrollLeft >= half) {
+        el.scrollLeft -= half;
+      }
+      rafId = requestAnimationFrame(step);
+    };
+    rafId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafId);
+  }, [reducedMotion, paused, items]);
+
+  const scrollByStep = useCallback((direction: 1 | -1) => {
+    viewportRef.current?.scrollBy({ left: direction * CARD_STEP, behavior: 'smooth' });
+  }, []);
 
   if (!items || items.length === 0) return null;
-
-  const duration = Math.max(items.length * 6, 18);
 
   return (
     <div className="bg-white rounded-xl px-3 py-4 border border-stone-100 shadow-sm">
@@ -115,31 +146,47 @@ export function AconteceuTicker({ items, onSelect }: { items: AconteceuTickerIte
       </div>
 
       <div
-        className="aconteceu-ticker-viewport relative overflow-hidden"
-        style={{
-          WebkitMaskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)',
-          maskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)',
-        }}
+        className="relative group/ticker"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={() => setPaused(false)}
       >
-        {reducedMotion ? (
-          <div className="flex items-stretch gap-3 overflow-x-auto custom-scrollbar pb-1">
-            {items.map((item, idx) => (
-              <TickerCard key={item.id || idx} item={item} onSelect={onSelect} />
-            ))}
-          </div>
-        ) : (
-          <div
-            className="aconteceu-ticker-track flex items-stretch gap-3 w-max"
-            style={{ ['--ticker-duration' as any]: `${duration}s` }}
-          >
+        <button
+          type="button"
+          onClick={() => scrollByStep(-1)}
+          aria-label="Ver eventos anteriores"
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-white border border-stone-200 shadow-sm text-stone-600 opacity-0 group-hover/ticker:opacity-100 focus-visible:opacity-100 hover:text-primary hover:border-stone-300 transition-opacity"
+        >
+          <ChevronLeft size={16} />
+        </button>
+
+        <div
+          ref={viewportRef}
+          className="aconteceu-ticker-viewport relative overflow-x-auto no-scrollbar"
+          style={{
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)',
+            maskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)',
+          }}
+        >
+          <div className="flex items-stretch gap-3 w-max pb-1">
             {items.map((item, idx) => (
               <TickerCard key={`a-${item.id || idx}`} item={item} onSelect={onSelect} />
             ))}
-            {items.map((item, idx) => (
+            {!reducedMotion && items.map((item, idx) => (
               <TickerCard key={`b-${item.id || idx}`} item={item} onSelect={onSelect} dupe />
             ))}
           </div>
-        )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => scrollByStep(1)}
+          aria-label="Ver eventos seguintes"
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-white border border-stone-200 shadow-sm text-stone-600 opacity-0 group-hover/ticker:opacity-100 focus-visible:opacity-100 hover:text-primary hover:border-stone-300 transition-opacity"
+        >
+          <ChevronRight size={16} />
+        </button>
       </div>
     </div>
   );
