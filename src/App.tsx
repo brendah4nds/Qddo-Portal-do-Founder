@@ -3291,18 +3291,21 @@ export default function App() {
                       const isMantenedor = ind.tipo === 'mantenedor';
                       return (
                         <div key={ind.id} className="p-4 bg-stone-50 rounded-lg border border-stone-100">
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className={cn(
-                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-overline font-bold uppercase tracking-widest",
-                                isMantenedor ? "bg-blue-100 text-blue-700" : "bg-stone-200 text-stone-700"
-                              )}>
-                                {isMantenedor ? 'Mantenedor' : 'Founder'}
-                              </span>
-                              <span className="text-overline text-stone-400 font-bold">
-                                {toDate(ind.criadoEm)?.toLocaleDateString('pt-BR') || ''}
-                              </span>
-                            </div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={cn(
+                              "inline-flex items-center px-2.5 py-0.5 rounded-full text-overline font-bold uppercase tracking-widest",
+                              isMantenedor ? "bg-blue-100 text-blue-700" : "bg-stone-200 text-stone-700"
+                            )}>
+                              {isMantenedor ? 'Mantenedor' : 'Founder'}
+                            </span>
+                            <span className="text-overline text-stone-400 font-bold">
+                              {toDate(ind.criadoEm)?.toLocaleDateString('pt-BR') || ''}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="font-bold text-stone-900 text-sm truncate">
+                              {[ind.nomeIndicado, ind.empresa, ind.area, ind.contato].filter(Boolean).join(', ')}
+                            </p>
                             <span className={cn(
                               "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-overline font-bold uppercase tracking-widest shrink-0",
                               isAprovada
@@ -3314,10 +3317,6 @@ export default function App() {
                               {isAprovada ? 'Aprovada' : ind.status === 'rejeitada' ? 'Rejeitada' : 'Pendente'}
                             </span>
                           </div>
-                          <h4 className="font-bold text-stone-900">{ind.nomeIndicado}</h4>
-                          {(ind.empresa || ind.area) && (
-                            <p className="text-stone-500 text-xs mt-0.5">{[ind.empresa, ind.area].filter(Boolean).join(' · ')}</p>
-                          )}
                           {isPendente && (
                             <p className="text-stone-400 text-xs mt-2">Aguardando análise do time.</p>
                           )}
