@@ -4,10 +4,17 @@ import { api } from '../api';
 
 type Company = { name: string; bio: string; cnpj: string; tipo: string; logoURL?: string };
 
-export function RegistrationFlow({ user, onComplete }: { user: any; onComplete: () => void }) {
+type PendingGoogleAuth = { idToken: string; name: string | null; email: string | null; picture: string | null };
+
+export function RegistrationFlow({ pending, onComplete, onCancel }: {
+  pending: PendingGoogleAuth;
+  onComplete: (token: string, user: any) => void;
+  onCancel: () => void;
+}) {
   const [registering, setRegistering] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
+    name: pending.name || '',
     username: '',
     instagram: '',
     bio: '',
@@ -85,14 +92,15 @@ export function RegistrationFlow({ user, onComplete }: { user: any; onComplete: 
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
     if (!termsAccepted) {
       alert('Você precisa aceitar os termos e autorizações para continuar.');
       return;
     }
     setRegistering(true);
+    setRegisterError(null);
     try {
-      await api.post('/api/founders', {
+      const { data } = await api.post('/api/auth/google/register', {
+        idToken: pending.idToken,
         name: formData.name,
         username: formData.username.replace(/@/g, '').trim().toLowerCase(),
         instagram: formData.instagram,
@@ -103,12 +111,12 @@ export function RegistrationFlow({ user, onComplete }: { user: any; onComplete: 
           cnpj: formData.cnpj,
           tipo: formData.companyTipo,
           ...(selectedCompany?.logoURL ? { logoURL: selectedCompany.logoURL } : {})
-        },
-        role: 'user'
+        }
       });
-      onComplete();
-    } catch (error) {
+      onComplete(data.token, data.user);
+    } catch (error: any) {
       console.error(error);
+      setRegisterError(error?.response?.data?.error || 'Erro ao concluir o cadastro. Tente novamente.');
     } finally {
       setRegistering(false);
     }
@@ -334,12 +342,24 @@ export function RegistrationFlow({ user, onComplete }: { user: any; onComplete: 
             </label>
           </div>
 
+          {registerError && (
+            <p className="text-sm text-red-600 text-center font-semibold">{registerError}</p>
+          )}
+
           <button
             type="submit"
             disabled={registering}
             className="w-full bg-primary text-white py-6 rounded-lg font-bold hover:bg-primary/90 transition-all shadow-2xl shadow-primary/20 text-lg"
           >
             {registering ? 'Cadastrando...' : 'Finalizar Cadastro e Entrar'}
+          </button>
+
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-full text-center text-sm text-stone-400 hover:text-stone-700 transition-colors"
+          >
+            Cancelar e voltar
           </button>
         </form>
       </div>

@@ -19,6 +19,7 @@ api.interceptors.response.use(
       try {
         const idToken = await auth.currentUser.getIdToken(true);
         const { data } = await axios.post(`${API_URL}/api/auth/google`, { idToken });
+        if (!data.token) return Promise.reject(err);
         localStorage.setItem('jwt', data.token);
         err.config.headers.Authorization = `Bearer ${data.token}`;
         return axios(err.config);

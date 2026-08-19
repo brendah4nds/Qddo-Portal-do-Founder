@@ -264,6 +264,7 @@ export default function App() {
 
   const [expandedTopics, setExpandedTopics] = useState<string[]>(['agendamento', 'portal']);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [pendingRegistration, setPendingRegistration] = useState<{ idToken: string; name: string | null; email: string | null; picture: string | null } | null>(null);
   const [founderData, setFounderData] = useState<any>(null);
   const [checkingFounder, setCheckingFounder] = useState(true);
   const [allFounders, setAllFounders] = useState<any[]>([]);
@@ -734,6 +735,7 @@ export default function App() {
       if (!firebaseUser) {
         setUser(null);
         setFounderData(null);
+        setPendingRegistration(null);
         setCheckingFounder(false);
         localStorage.removeItem('jwt');
         disconnectSocket();
@@ -743,17 +745,29 @@ export default function App() {
       try {
         const idToken = await firebaseUser.getIdToken();
         const { data } = await axios.post(`${API_BASE}/api/auth/google`, { idToken });
-        localStorage.setItem('jwt', data.token);
-        const apiUser = {
-          ...data.user,
-          uid: data.user._firebaseId || firebaseUser.uid,
-          email: data.user.email || firebaseUser.email,
-          displayName: data.user.name || firebaseUser.displayName,
-          photoURL: data.user.photoURL || firebaseUser.photoURL,
-        };
-        setUser(apiUser);
-        setFounderData(apiUser);
-        getSocket(data.token);
+        if (data.needsRegistration) {
+          setUser(null);
+          setFounderData(null);
+          setPendingRegistration({
+            idToken,
+            name: data.name || firebaseUser.displayName || null,
+            email: data.email || firebaseUser.email || null,
+            picture: data.picture || firebaseUser.photoURL || null,
+          });
+        } else {
+          localStorage.setItem('jwt', data.token);
+          const apiUser = {
+            ...data.user,
+            uid: data.user._firebaseId || firebaseUser.uid,
+            email: data.user.email || firebaseUser.email,
+            displayName: data.user.name || firebaseUser.displayName,
+            photoURL: data.user.photoURL || firebaseUser.photoURL,
+          };
+          setPendingRegistration(null);
+          setUser(apiUser);
+          setFounderData(apiUser);
+          getSocket(data.token);
+        }
       } catch (err) {
         console.error('Auth exchange failed:', err);
         setUser(null);
@@ -1190,14 +1204,31 @@ export default function App() {
   }
 
   if (!user) {
+    if (pendingRegistration) {
+      return (
+        <RegistrationFlow
+          pending={pendingRegistration}
+          onCancel={() => { setPendingRegistration(null); signOut(auth); }}
+          onComplete={(token: string, apiUser: any) => {
+            localStorage.setItem('jwt', token);
+            const mergedUser = {
+              ...apiUser,
+              uid: apiUser._firebaseId,
+              email: apiUser.email,
+              displayName: apiUser.name,
+              photoURL: apiUser.photoURL,
+            };
+            setPendingRegistration(null);
+            setUser(mergedUser);
+            setFounderData(mergedUser);
+            getSocket(token);
+            setView('general');
+            setActiveSubTab('general');
+          }}
+        />
+      );
+    }
     return <LandingPage onLogin={handleLogin} onRegister={handleRegister} />;
-  }
-
-  if (!founderData && !isAdmin) {
-    return <RegistrationFlow user={user} onComplete={() => {
-      setView('general');
-      setActiveSubTab('general');
-    }} />;
   }
 
   return (
