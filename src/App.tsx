@@ -444,6 +444,9 @@ export default function App() {
     const d = toDate(eventDate) || new Date();
     const today = new Date();
     const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    if (d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate()) {
+      return 'HOJE';
+    }
     if (d.getFullYear() === tomorrow.getFullYear() && d.getMonth() === tomorrow.getMonth() && d.getDate() === tomorrow.getDate()) {
       return 'AMANHÃ';
     }
