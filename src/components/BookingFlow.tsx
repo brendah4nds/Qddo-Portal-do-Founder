@@ -606,6 +606,7 @@ export function BookingFlow({
                     {visible.map(booking => {
                       const room = rooms.find(r => r.id === booking.roomId);
                       const canManage = isAdmin || (!!currentUserId && !!booking.userId && booking.userId === currentUserId);
+                      const isToday = isSameDay(parse(booking.date, 'yyyy-MM-dd', new Date()), today);
                       return (
                         <div key={booking.id} className="flex items-center gap-4 p-4">
                           <div className="w-10 h-10 rounded-lg bg-stone-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -617,7 +618,7 @@ export function BookingFlow({
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-sans text-sm font-bold text-stone-800 truncate">{room?.name || 'Sala'}</p>
-                            <p className="text-xs text-stone-400 truncate">
+                            <p className={`text-xs truncate ${isToday ? 'text-primary font-bold' : 'text-stone-400'}`}>
                               {format(parse(booking.date, 'yyyy-MM-dd', new Date()), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                             </p>
                             <p className="text-xs text-stone-400">{booking.userName}</p>
