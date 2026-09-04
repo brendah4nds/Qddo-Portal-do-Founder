@@ -35,7 +35,8 @@ import {
   X,
   Settings,
   Trash2,
-  Pencil
+  Pencil,
+  EyeOff
 } from 'lucide-react';
 import { ConfirmationModal } from './ConfirmationModal';
 import { Room, Booking, BookingStatus } from '../types';
@@ -68,7 +69,8 @@ export function BookingFlow({
   isAdmin,
   currentUserId,
   onRoomUpdate,
-  onRoomCreate
+  onRoomCreate,
+  onRoomDelete
 }: {
   rooms: Room[];
   bookings: Booking[];
@@ -85,6 +87,7 @@ export function BookingFlow({
   currentUserId?: string;
   onRoomUpdate?: (roomId: string, updates: Partial<Room>) => Promise<void>;
   onRoomCreate?: (data: { name: string; description?: string }) => Promise<Room>;
+  onRoomDelete?: (roomId: string) => Promise<void>;
 }) {
   const [step, setStep] = useState(1);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
@@ -148,6 +151,8 @@ export function BookingFlow({
     }
     return merged;
   }, [editBookingGroup, editBookingDate, editBookingStart, editBookingEnd, bookings]);
+
+  const visibleRooms = useMemo(() => (isAdmin ? rooms : rooms.filter(r => r.active !== false)), [rooms, isAdmin]);
 
   const openEditBooking = (group: { ids: string[]; roomId: string; roomName: string; date: string; startTime: string; endTime: string }) => {
     setEditBookingGroup(group);
@@ -223,6 +228,48 @@ export function BookingFlow({
     } finally {
       setAddRoomLoading(false);
     }
+  };
+
+  const [editInfoRoomId, setEditInfoRoomId] = useState<string | null>(null);
+  const [editInfoName, setEditInfoName] = useState('');
+  const [editInfoDescription, setEditInfoDescription] = useState('');
+  const [editInfoLoading, setEditInfoLoading] = useState(false);
+
+  const openEditInfo = (room: Room) => {
+    setEditInfoRoomId(room.id);
+    setEditInfoName(room.name);
+    setEditInfoDescription(room.description || '');
+    setOpenDropdownRoomId(null);
+  };
+
+  const handleSaveEditInfo = async () => {
+    if (!editInfoRoomId || !editInfoName.trim() || !onRoomUpdate) return;
+    setEditInfoLoading(true);
+    try {
+      await onRoomUpdate(editInfoRoomId, { name: editInfoName.trim(), description: editInfoDescription.trim() || undefined });
+      setEditInfoRoomId(null);
+    } finally {
+      setEditInfoLoading(false);
+    }
+  };
+
+  const handleToggleRoomActive = (room: Room) => {
+    setOpenDropdownRoomId(null);
+    if (!onRoomUpdate) return;
+    onRoomUpdate(room.id, { active: room.active === false ? true : false });
+  };
+
+  const handleDeleteRoom = (room: Room) => {
+    setOpenDropdownRoomId(null);
+    if (!onRoomDelete) return;
+    setSettingsConfirmModal({
+      isOpen: true,
+      title: 'Excluir sala',
+      message: `Excluir "${room.name}"? Essa ação não pode ser desfeita. As reservas já feitas nessa sala serão mantidas no histórico, mas a sala não poderá ser reservada novamente.`,
+      confirmText: 'Excluir',
+      variant: 'danger',
+      onConfirm: () => { onRoomDelete(room.id); },
+    });
   };
 
   // Sync internal step with external activeSubTab
@@ -503,17 +550,24 @@ export function BookingFlow({
             <h2 className="text-base sm:text-h1 font-sans mb-4 sm:mb-8 text-center">Qual sala você deseja reservar?</h2>
             <div
               className="flex flex-col gap-3 sm:grid sm:gap-6"
-              style={{ gridTemplateColumns: `repeat(${rooms.length}, minmax(0, 1fr))` }}
+              style={{ gridTemplateColumns: `repeat(${visibleRooms.length}, minmax(0, 1fr))` }}
             >
-              {rooms.map(room => (
+              {visibleRooms.map(room => {
+                const isInactive = room.active === false;
+                return (
                 <div key={room.id} className="relative">
                   <button
                     onClick={() => {
+                      if (isInactive) return;
                       setSelectedRoomId(room.id);
                       window.history.pushState({}, '', `/agendamento/${room.id}`);
                       setStep(2);
                     }}
-                    className="w-full rounded-xl border border-stone-100 bg-white text-left transition-all hover:border-stone-400 hover:shadow-xl hover:-translate-y-1 group overflow-hidden flex flex-row sm:flex-col"
+                    disabled={isInactive}
+                    className={cn(
+                      "w-full rounded-xl border border-stone-100 bg-white text-left transition-all group overflow-hidden flex flex-row sm:flex-col",
+                      isInactive ? "opacity-50 cursor-not-allowed" : "hover:border-stone-400 hover:shadow-xl hover:-translate-y-1"
+                    )}
                   >
                     <div className="w-24 h-20 flex-shrink-0 sm:w-full sm:h-44 bg-stone-100 overflow-hidden">
                       {room.imageUrl ? (
@@ -531,6 +585,12 @@ export function BookingFlow({
                     </div>
                   </button>
 
+                  {isInactive && (
+                    <div className="absolute top-2 left-2 z-10 bg-stone-800 text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full">
+                      Oculta
+                    </div>
+                  )}
+
                   {isAdmin && (
                     <div className="absolute top-2 right-2 z-10">
                       <button
@@ -545,7 +605,7 @@ export function BookingFlow({
                       </button>
                       {openDropdownRoomId === room.id && (
                         <div
-                          className="absolute top-9 right-0 bg-white border border-stone-100 rounded-xl shadow-xl py-1 min-w-[160px] z-20"
+                          className="absolute top-9 right-0 bg-white border border-stone-100 rounded-xl shadow-xl py-1 min-w-[180px] z-20"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button
@@ -558,12 +618,33 @@ export function BookingFlow({
                             <ImageIcon size={15} className="text-stone-400" />
                             Editar foto
                           </button>
+                          <button
+                            onClick={() => openEditInfo(room)}
+                            className="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-3 rounded-xl"
+                          >
+                            <Pencil size={15} className="text-stone-400" />
+                            Editar informações
+                          </button>
+                          <button
+                            onClick={() => handleToggleRoomActive(room)}
+                            className="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-3 rounded-xl"
+                          >
+                            <EyeOff size={15} className="text-stone-400" />
+                            {isInactive ? 'Reativar sala' : 'Ocultar sala'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRoom(room)}
+                            className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3 rounded-xl"
+                          >
+                            <Trash2 size={15} />
+                            Excluir sala
+                          </button>
                         </div>
                       )}
                     </div>
                   )}
                 </div>
-              ))}
+              );})}
             </div>
 
             {(() => {
@@ -1086,6 +1167,72 @@ export function BookingFlow({
               className="bg-primary text-white px-5 py-2.5 rounded-md hover:bg-primary/90 transition-all font-medium disabled:opacity-50"
             >
               {addRoomLoading ? 'Criando...' : 'Criar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Edit Room Info Modal */}
+    {editInfoRoomId && (
+      <div
+        className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+        onClick={() => !editInfoLoading && setEditInfoRoomId(null)}
+      >
+        <div
+          className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-8 py-6 border-b border-stone-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center">
+                <Pencil size={20} className="text-stone-600" />
+              </div>
+              <h3 className="text-lg font-sans text-stone-900">Editar Informações da Sala</h3>
+            </div>
+            <button
+              onClick={() => setEditInfoRoomId(null)}
+              className="p-2 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-8 space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-2">Nome da sala *</label>
+              <input
+                type="text"
+                value={editInfoName}
+                onChange={e => setEditInfoName(e.target.value)}
+                className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md focus:outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-2">Descrição / Capacidade</label>
+              <input
+                type="text"
+                value={editInfoDescription}
+                onChange={e => setEditInfoDescription(e.target.value)}
+                className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-md focus:outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 px-8 py-6 border-t border-stone-100">
+            <button
+              onClick={() => setEditInfoRoomId(null)}
+              disabled={editInfoLoading}
+              className="px-5 py-2.5 rounded-md text-stone-600 hover:bg-stone-100 transition-colors font-medium disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSaveEditInfo}
+              disabled={!editInfoName.trim() || editInfoLoading}
+              className="bg-primary text-white px-5 py-2.5 rounded-md hover:bg-primary/90 transition-all font-medium disabled:opacity-50"
+            >
+              {editInfoLoading ? 'Salvando...' : 'Salvar'}
             </button>
           </div>
         </div>
