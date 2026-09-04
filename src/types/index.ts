@@ -3,6 +3,7 @@ export interface Room {
   name: string;
   description?: string;
   imageUrl?: string;
+  active?: boolean;
 }
 
 export interface Booking {

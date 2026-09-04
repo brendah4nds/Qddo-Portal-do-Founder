@@ -980,6 +980,11 @@ export default function App() {
     return newRoom;
   };
 
+  const handleRoomDelete = async (roomId: string) => {
+    await api.delete(`/api/rooms/${roomId}`);
+    setRooms((prev: Room[]) => prev.filter((r: Room) => r.id !== roomId));
+  };
+
   const handleEventCheckin = async (event: any) => {
     if (!user?._id || !founderData) return;
     // Synchronous guard — prevents concurrent calls even before React re-renders
@@ -3238,6 +3243,7 @@ export default function App() {
                 currentUserId={founderData?._id || founderData?.id || user?._id}
                 onRoomUpdate={handleRoomUpdate}
                 onRoomCreate={handleRoomCreate}
+                onRoomDelete={handleRoomDelete}
               />
             )}
           </div>
