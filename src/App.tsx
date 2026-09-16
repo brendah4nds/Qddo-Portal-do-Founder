@@ -3241,6 +3241,8 @@ export default function App() {
                 }}
                 isAdmin={isAdmin}
                 currentUserId={founderData?._id || founderData?.id || user?._id}
+                currentUserName={founderData?.name || user?.displayName || user?.name}
+                currentUserEmail={user?.email || founderData?.email}
                 onRoomUpdate={handleRoomUpdate}
                 onRoomCreate={handleRoomCreate}
                 onRoomDelete={handleRoomDelete}
