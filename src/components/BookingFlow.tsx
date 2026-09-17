@@ -68,6 +68,8 @@ export function BookingFlow({
   onStepChange,
   isAdmin,
   currentUserId,
+  currentUserName,
+  currentUserEmail,
   onRoomUpdate,
   onRoomCreate,
   onRoomDelete
@@ -85,13 +87,14 @@ export function BookingFlow({
   onStepChange?: (step: number) => void;
   isAdmin?: boolean;
   currentUserId?: string;
+  currentUserName?: string;
+  currentUserEmail?: string;
   onRoomUpdate?: (roomId: string, updates: Partial<Room>) => Promise<void>;
   onRoomCreate?: (data: { name: string; description?: string }) => Promise<Room>;
   onRoomDelete?: (roomId: string) => Promise<void>;
 }) {
   const [step, setStep] = useState(1);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
-  const [formData, setFormData] = useState({ name: '', email: '' });
   const [showAllBookings, setShowAllBookings] = useState(false);
   const [bookingConfirmation, setBookingConfirmation] = useState<{
     roomName: string;
@@ -393,38 +396,66 @@ export function BookingFlow({
   };
 
   const toggleTime = (time: string) => {
-    setSelectedTimes(prev => 
-      prev.includes(time) 
-        ? prev.filter(t => t !== time) 
+    setSelectedTimes(prev =>
+      prev.includes(time)
+        ? prev.filter(t => t !== time)
         : [...prev, time].sort()
     );
   };
 
+  const TURNO_LIMIT_MINUTES = 120; // 2h por turno, por usuário (não se aplica a admins)
+  const getTurno = (time: string): 'manha' | 'tarde' => (time < '12:00' ? 'manha' : 'tarde');
+  const turnoLabel = (turno: 'manha' | 'tarde') => (turno === 'manha' ? 'manhã' : 'tarde');
+  const formatMinutes = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m === 0 ? `${h}h` : `${h}h${m}`;
+  };
+
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+
+  // Minutos já reservados pelo próprio usuário (qualquer sala) nesse turno/data,
+  // vindos de reservas já existentes — usado para acusar o limite antes de confirmar.
+  const myExistingMinutesByTurno = useMemo(() => {
+    const totals: Record<'manha' | 'tarde', number> = { manha: 0, tarde: 0 };
+    if (!currentUserEmail) return totals;
+    bookings.forEach(b => {
+      if (b.date !== selectedDateStr) return;
+      if (b.userEmail?.toLowerCase() !== currentUserEmail.toLowerCase()) return;
+      const start = parse(b.startTime, 'HH:mm', new Date());
+      const end = parse(b.endTime, 'HH:mm', new Date());
+      totals[getTurno(b.startTime)] += (end.getTime() - start.getTime()) / 60000;
+    });
+    return totals;
+  }, [bookings, selectedDateStr, currentUserEmail]);
+
+  const selectedMinutesByTurno = useMemo(() => {
+    const totals: Record<'manha' | 'tarde', number> = { manha: 0, tarde: 0 };
+    selectedTimes.forEach(t => { totals[getTurno(t)] += 30; });
+    return totals;
+  }, [selectedTimes]);
+
+  const overLimitTurnos = useMemo(() => {
+    if (isAdmin) return [];
+    return (['manha', 'tarde'] as const).filter(turno =>
+      selectedMinutesByTurno[turno] > 0 &&
+      myExistingMinutesByTurno[turno] + selectedMinutesByTurno[turno] > TURNO_LIMIT_MINUTES
+    );
+  }, [isAdmin, selectedMinutesByTurno, myExistingMinutesByTurno]);
+
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedRoomId || selectedTimes.length === 0 || !formData.name || !formData.email) return;
+    if (!selectedRoomId || selectedTimes.length === 0 || !currentUserEmail || overLimitTurnos.length > 0) return;
 
     setStatus('loading');
     try {
-      // Create a booking for each selected 30-min slot
-      const bookingPromises = selectedTimes.map(time => {
-        const start = parse(time, 'HH:mm', new Date());
-        const end = addMinutes(start, 30);
-        
-        return api.post('/api/bookings', {
-          roomId: selectedRoomId,
-          date: format(selectedDate, 'yyyy-MM-dd'),
-          startTime: time,
-          endTime: format(end, 'HH:mm'),
-          userName: formData.name,
-          userEmail: formData.email,
-        });
+      await api.post('/api/bookings/bulk', {
+        roomId: selectedRoomId,
+        date: selectedDateStr,
+        times: selectedTimes,
       });
 
-      await Promise.all(bookingPromises);
-
       const roomName = selectedRoom?.name || 'Sala';
-      const sortedTimes = [...selectedTimes].sort();
 
       setBookingConfirmation({
         roomName,
@@ -432,7 +463,6 @@ export function BookingFlow({
         times: [...selectedTimes],
       });
       setStatus('success');
-      setFormData({ name: '', email: '' });
       setSelectedTimes([]);
       setStep(1);
     } catch (error) {
@@ -871,40 +901,35 @@ export function BookingFlow({
                 })}
               </div>
 
-              <form onSubmit={handleBooking} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">Nome Completo</label>
-                  <div className="relative">
-                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={20} />
-                    <input 
-                      required
-                      type="text" 
-                      placeholder="Seu nome"
-                      value={formData.name}
-                      onChange={e => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full pl-12 pr-4 py-5 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
-                    />
+              {!isAdmin && overLimitTurnos.length > 0 && (
+                <div className="mb-6 p-4 bg-amber-50 text-amber-700 rounded-lg flex items-start gap-3 text-sm font-medium">
+                  <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-bold">Limite de 2 horas por turno atingido</p>
+                    {overLimitTurnos.map(turno => (
+                      <p key={turno}>
+                        Você já tem {formatMinutes(myExistingMinutesByTurno[turno])} reservada(s) no turno da {turnoLabel(turno)} hoje.
+                        Com os horários selecionados agora o total passaria de 2h — remova horário(s) do turno da {turnoLabel(turno)} para continuar.
+                      </p>
+                    ))}
                   </div>
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <label className="text-overline uppercase tracking-wider font-bold text-stone-400 ml-1">E-mail Corporativo</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={20} />
-                    <input
-                      required
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={formData.email}
-                      onChange={e => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full pl-12 pr-4 py-5 bg-stone-50 border border-stone-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
-                    />
+              <form onSubmit={handleBooking} className="space-y-6">
+                <div className="flex items-center gap-3 p-4 bg-stone-50 border border-stone-100 rounded-lg">
+                  <UserIcon className="text-stone-400 shrink-0" size={20} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-stone-700 truncate">{currentUserName || 'Você'}</p>
+                    <p className="text-xs text-stone-400 truncate flex items-center gap-1">
+                      <Mail size={12} /> {currentUserEmail}
+                    </p>
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={selectedTimes.length === 0 || status === 'loading'}
+                  disabled={selectedTimes.length === 0 || status === 'loading' || overLimitTurnos.length > 0}
                   className="w-full bg-primary text-white py-5 rounded-lg font-bold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-8 shadow-xl shadow-primary/20 text-lg"
                 >
                   {status === 'loading' ? 'Processando...' : `Confirmar Reserva (${selectedTimes.length} ${selectedTimes.length === 1 ? 'horário' : 'horários'})`}
