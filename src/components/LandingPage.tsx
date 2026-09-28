@@ -1,7 +1,10 @@
 import React from 'react';
-import { LogIn, UserPlus } from 'lucide-react';
+import { LogIn, UserPlus, MapPin } from 'lucide-react';
+import { isCheckinQrLink } from '../utils/checkinQr';
 
 export function LandingPage({ onLogin, onRegister }: { onLogin: () => void, onRegister: () => void }) {
+  const fromCheckinQr = isCheckinQrLink();
+
   return (
     <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center p-6">
       <div className="max-w-md w-full">
@@ -15,6 +18,13 @@ export function LandingPage({ onLogin, onRegister }: { onLogin: () => void, onRe
         </div>
 
         <div className="bg-white rounded-xl p-10 border border-stone-100 shadow-xl space-y-4">
+          {fromCheckinQr && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-orange-50 border border-orange-100 text-sm text-stone-700">
+              <MapPin size={16} className="text-primary shrink-0" />
+              <span>Entre com sua conta para registrar seu check-in no QDDO.</span>
+            </div>
+          )}
+
           <div className="space-y-4">
             <button
               onClick={onLogin}
