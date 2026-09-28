@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { api } from '../api';
 import { getSocket } from '../socket';
+import { isCheckinQrLink, clearCheckinQrParam } from '../utils/checkinQr';
 import {
   CheckCircle2,
   ChevronLeft,
@@ -81,6 +82,7 @@ export function CheckinSystem({
   const [presentUserIds, setPresentUserIds] = useState<string[] | null>(null);
   const [showPresentModal, setShowPresentModal] = useState(false);
   const [selectedFounderMonthlyPoints, setSelectedFounderMonthlyPoints] = useState<number>(0);
+  const qrAutoCheckinPending = useRef(isCheckinQrLink());
 
   // Use native JS local-date methods — format() uses UTC on some environments
   const getLocalDateStr = (d = new Date()) =>
@@ -250,6 +252,22 @@ export function CheckinSystem({
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
+
+  // Atalho do QR code: dispara o check-in (com a mesma validação de GPS do botão)
+  // assim que os check-ins do founder carregam, para saber se ele já fez hoje.
+  useEffect(() => {
+    if (!qrAutoCheckinPending.current || loading) return;
+    if (selectedUserId !== user._id) return;
+    qrAutoCheckinPending.current = false;
+    clearCheckinQrParam();
+    if (todayCheckin) {
+      const time = todayCheckin.checkinTime ? ` às ${format(new Date(todayCheckin.checkinTime), 'HH:mm')}` : '';
+      setActionMessage({ type: 'success', text: `Você já fez check-in hoje${time}.` });
+      setTimeout(() => setActionMessage(null), 5000);
+      return;
+    }
+    performCheckAction(true);
+  }, [loading, selectedUserId]);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
