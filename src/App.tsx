@@ -68,7 +68,7 @@ import {
 import { auth } from './firebase';
 import { api, API_BASE } from './api';
 import { getSocket, disconnectSocket } from './socket';
-import { Room, Booking, BookingStatus, Challenge } from './types';
+import { Room, Booking, BookingStatus, Challenge, BlockedRoomDates } from './types';
 import { BookingFlow } from './components/BookingFlow';
 import { AdminPanel } from './components/AdminPanel';
 import { FounderPortal } from './components/FounderPortal';
@@ -189,6 +189,7 @@ export default function App() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [businessHours, setBusinessHours] = useState<string[]>(DEFAULT_BUSINESS_HOURS);
+  const [blockedRoomDates, setBlockedRoomDates] = useState<BlockedRoomDates>({});
   const [hiddenMenuItems, setHiddenMenuItems] = useState<string[]>([]);
   const [hiddenNewsIds, setHiddenNewsIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -866,6 +867,7 @@ export default function App() {
       setRooms(rooms.data.map((r: any) => ({ ...r, id: r._id || r.id })));
       setBookings(bookings.data.map((b: any) => ({ ...b, id: b._id || b.id })));
       if (settings.data?.businessHours) setBusinessHours(settings.data.businessHours);
+      if (settings.data?.blockedRoomDates) setBlockedRoomDates(settings.data.blockedRoomDates);
       if (settings.data?.hiddenMenuItems) setHiddenMenuItems(settings.data.hiddenMenuItems);
       if (settings.data?.hiddenNewsIds) setHiddenNewsIds(settings.data.hiddenNewsIds);
       setAllFounders(founders.data.map((f: any) => ({ ...f, id: f._id || f.id })));
@@ -922,6 +924,7 @@ export default function App() {
     socket.on('qcoin-request:update', (r: any) => setQcoinRequests((prev: any[]) => prev.map((x: any) => x.id === (r._id || r.id) ? { ...r, id: r._id || r.id } : x)));
     socket.on('settings:update', ({ key, data }: any) => {
       if (key === 'global' && data?.businessHours) setBusinessHours(data.businessHours);
+      if (key === 'global' && data?.blockedRoomDates !== undefined) setBlockedRoomDates(data.blockedRoomDates || {});
       if (key === 'global' && data?.hiddenMenuItems !== undefined) setHiddenMenuItems(data.hiddenMenuItems || []);
       if (key === 'global' && data?.hiddenNewsIds !== undefined) setHiddenNewsIds(data.hiddenNewsIds || []);
       if (key === 'qcoin_tables' && data) hydrateQcoinTables(data);
@@ -3228,6 +3231,7 @@ export default function App() {
                 rooms={rooms}
                 bookings={bookings}
                 businessHours={businessHours}
+                blockedRoomDates={blockedRoomDates}
                 selectedRoomId={selectedRoomId}
                 setSelectedRoomId={setSelectedRoomId}
                 selectedDate={selectedDate}
@@ -3246,6 +3250,7 @@ export default function App() {
                 onRoomUpdate={handleRoomUpdate}
                 onRoomCreate={handleRoomCreate}
                 onRoomDelete={handleRoomDelete}
+                onBlockedRoomDatesChange={setBlockedRoomDates}
               />
             )}
           </div>

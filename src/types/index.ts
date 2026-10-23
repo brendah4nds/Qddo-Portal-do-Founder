@@ -18,6 +18,8 @@ export interface Booking {
   createdAt: any;
 }
 
+export type BlockedRoomDates = Record<string, string[]>;
+
 export type BookingStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export interface Founder {

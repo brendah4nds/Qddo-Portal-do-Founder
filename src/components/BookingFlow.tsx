@@ -16,7 +16,8 @@ import {
   endOfWeek,
   eachDayOfInterval,
   addMonths,
-  isSameMonth
+  isSameMonth,
+  isWithinInterval
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -36,10 +37,12 @@ import {
   Settings,
   Trash2,
   Pencil,
-  EyeOff
+  EyeOff,
+  Ban,
+  LockOpen
 } from 'lucide-react';
 import { ConfirmationModal } from './ConfirmationModal';
-import { Room, Booking, BookingStatus } from '../types';
+import { Room, Booking, BookingStatus, BlockedRoomDates } from '../types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { isBlockedDay } from '../utils/holidays';
@@ -58,6 +61,7 @@ export function BookingFlow({
   rooms,
   bookings,
   businessHours,
+  blockedRoomDates,
   selectedRoomId,
   setSelectedRoomId,
   selectedDate,
@@ -72,11 +76,13 @@ export function BookingFlow({
   currentUserEmail,
   onRoomUpdate,
   onRoomCreate,
-  onRoomDelete
+  onRoomDelete,
+  onBlockedRoomDatesChange
 }: {
   rooms: Room[];
   bookings: Booking[];
   businessHours: string[];
+  blockedRoomDates: BlockedRoomDates;
   selectedRoomId: string | null;
   setSelectedRoomId: (id: string | null) => void;
   selectedDate: Date;
@@ -92,6 +98,7 @@ export function BookingFlow({
   onRoomUpdate?: (roomId: string, updates: Partial<Room>) => Promise<void>;
   onRoomCreate?: (data: { name: string; description?: string }) => Promise<Room>;
   onRoomDelete?: (roomId: string) => Promise<void>;
+  onBlockedRoomDatesChange?: (blockedDates: BlockedRoomDates) => void;
 }) {
   const [step, setStep] = useState(1);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
@@ -109,6 +116,11 @@ export function BookingFlow({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsNewHour, setSettingsNewHour] = useState('');
+  const [blockRangeMode, setBlockRangeMode] = useState(false);
+  const [blockRangeStart, setBlockRangeStart] = useState<Date | null>(null);
+  const [blockRangeEnd, setBlockRangeEnd] = useState<Date | null>(null);
+  const [blockRangeLoading, setBlockRangeLoading] = useState(false);
+  const [blockRangeError, setBlockRangeError] = useState('');
   const [settingsConfirmModal, setSettingsConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -156,6 +168,74 @@ export function BookingFlow({
   }, [editBookingGroup, editBookingDate, editBookingStart, editBookingEnd, bookings]);
 
   const visibleRooms = useMemo(() => (isAdmin ? rooms : rooms.filter(r => r.active !== false)), [rooms, isAdmin]);
+
+  const selectedRoomBlockedDates = useMemo(
+    () => new Set(selectedRoomId ? blockedRoomDates[selectedRoomId] || [] : []),
+    [blockedRoomDates, selectedRoomId]
+  );
+
+  const selectedBlockRangeDates = useMemo(() => {
+    if (!blockRangeStart) return [];
+    const rangeEnd = blockRangeEnd || blockRangeStart;
+    return eachDayOfInterval({ start: blockRangeStart, end: rangeEnd });
+  }, [blockRangeStart, blockRangeEnd]);
+
+  const selectedBlockRangeDateStrings = useMemo(
+    () => selectedBlockRangeDates.map(date => format(date, 'yyyy-MM-dd')),
+    [selectedBlockRangeDates]
+  );
+
+  useEffect(() => {
+    setBlockRangeMode(false);
+    setBlockRangeStart(null);
+    setBlockRangeEnd(null);
+    setBlockRangeError('');
+  }, [selectedRoomId]);
+
+  const handleBlockRangeDateClick = (date: Date) => {
+    setBlockRangeError('');
+    if (!blockRangeStart || blockRangeEnd) {
+      setBlockRangeStart(date);
+      setBlockRangeEnd(null);
+      return;
+    }
+
+    if (isBefore(date, blockRangeStart)) {
+      setBlockRangeEnd(blockRangeStart);
+      setBlockRangeStart(date);
+      return;
+    }
+
+    setBlockRangeEnd(date);
+  };
+
+  const handleUpdateBlockedRange = async (shouldBlock: boolean) => {
+    if (!selectedRoomId || selectedBlockRangeDateStrings.length === 0) return;
+    setBlockRangeLoading(true);
+    setBlockRangeError('');
+
+    const roomDates = new Set(blockedRoomDates[selectedRoomId] || []);
+    selectedBlockRangeDateStrings.forEach(date => {
+      if (shouldBlock) roomDates.add(date);
+      else roomDates.delete(date);
+    });
+
+    const updatedBlockedRoomDates = { ...blockedRoomDates };
+    if (roomDates.size > 0) updatedBlockedRoomDates[selectedRoomId] = [...roomDates].sort();
+    else delete updatedBlockedRoomDates[selectedRoomId];
+
+    try {
+      await api.put('/api/settings/global', { blockedRoomDates: updatedBlockedRoomDates });
+      onBlockedRoomDatesChange?.(updatedBlockedRoomDates);
+      setBlockRangeStart(null);
+      setBlockRangeEnd(null);
+    } catch (error) {
+      console.error(error);
+      setBlockRangeError(`NÃ£o foi possÃ­vel ${shouldBlock ? 'bloquear' : 'desbloquear'} o perÃ­odo. Tente novamente.`);
+    } finally {
+      setBlockRangeLoading(false);
+    }
+  };
 
   const openEditBooking = (group: { ids: string[]; roomId: string; roomName: string; date: string; startTime: string; endTime: string }) => {
     setEditBookingGroup(group);
@@ -413,6 +493,13 @@ export function BookingFlow({
   };
 
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+  const isSelectedDateRoomBlocked = selectedRoomBlockedDates.has(selectedDateStr);
+
+  useEffect(() => {
+    if (step !== 3 || !isSelectedDateRoomBlocked) return;
+    setSelectedTimes([]);
+    setStep(2);
+  }, [step, isSelectedDateRoomBlocked]);
 
   // Minutos já reservados pelo próprio usuário (qualquer sala) nesse turno/data,
   // vindos de reservas já existentes — usado para acusar o limite antes de confirmar.
@@ -445,15 +532,36 @@ export function BookingFlow({
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedRoomId || selectedTimes.length === 0 || !currentUserEmail || overLimitTurnos.length > 0) return;
+    if (!selectedRoomId || selectedTimes.length === 0 || !currentUserEmail || overLimitTurnos.length > 0 || isSelectedDateRoomBlocked) return;
 
     setStatus('loading');
     try {
-      await api.post('/api/bookings/bulk', {
-        roomId: selectedRoomId,
-        date: selectedDateStr,
-        times: selectedTimes,
+      const bookingPayloads = selectedTimes.map(time => {
+        const start = parse(time, 'HH:mm', new Date());
+        const end = addMinutes(start, 30);
+
+        return {
+          roomId: selectedRoomId,
+          date: selectedDateStr,
+          startTime: time,
+          endTime: format(end, 'HH:mm'),
+          userName: currentUserName || 'Usuário',
+          userEmail: currentUserEmail,
+        };
       });
+
+      try {
+        await api.post('/api/bookings/bulk', {
+          roomId: selectedRoomId,
+          date: selectedDateStr,
+          times: selectedTimes,
+        });
+      } catch (bulkError) {
+        const responseStatus = (bulkError as { response?: { status?: number } }).response?.status;
+        if (responseStatus !== 404) throw bulkError;
+
+        await Promise.all(bookingPayloads.map(payload => api.post('/api/bookings', payload)));
+      }
 
       const roomName = selectedRoom?.name || 'Sala';
 
@@ -787,6 +895,72 @@ export function BookingFlow({
             </div>
             
             <div className="bg-white rounded-xl p-8 border border-stone-100 shadow-sm">
+              {isAdmin && (
+                <div className="mb-6 rounded-lg border border-stone-200 bg-stone-50 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-stone-900">Bloqueio de sala</p>
+                      <p className="text-xs text-stone-500">
+                        {blockRangeMode
+                          ? blockRangeStart && !blockRangeEnd
+                            ? 'Agora selecione o último dia do período.'
+                            : 'Selecione o primeiro e o último dia do período.'
+                          : 'Bloqueie vários dias desta sala de uma vez.'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBlockRangeMode(current => !current);
+                        setBlockRangeStart(null);
+                        setBlockRangeEnd(null);
+                        setBlockRangeError('');
+                      }}
+                      className={cn(
+                        'inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-bold transition-all',
+                        blockRangeMode ? 'bg-stone-900 text-white' : 'bg-white text-stone-700 border border-stone-200 hover:border-stone-400'
+                      )}
+                    >
+                      <Ban size={16} />
+                      {blockRangeMode ? 'Cancelar seleção' : 'Bloquear período'}
+                    </button>
+                  </div>
+
+                  {blockRangeMode && selectedBlockRangeDateStrings.length > 0 && (
+                    <div className="mt-4 flex flex-col gap-3 border-t border-stone-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-sm text-stone-600">
+                        <span className="font-bold text-stone-900">{selectedBlockRangeDateStrings.length} dia(s):</span>{' '}
+                        {format(selectedBlockRangeDates[0], 'dd/MM/yyyy')}
+                        {' até '}
+                        {format(selectedBlockRangeDates[selectedBlockRangeDates.length - 1], 'dd/MM/yyyy')}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={blockRangeLoading}
+                          onClick={() => handleUpdateBlockedRange(false)}
+                          className="inline-flex items-center gap-2 rounded-md border border-stone-200 bg-white px-3 py-2 text-xs font-bold text-stone-700 hover:border-stone-400 disabled:opacity-50"
+                        >
+                          <LockOpen size={14} />
+                          Desbloquear período
+                        </button>
+                        <button
+                          type="button"
+                          disabled={blockRangeLoading}
+                          onClick={() => handleUpdateBlockedRange(true)}
+                          className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-bold text-white hover:bg-primary/90 disabled:opacity-50"
+                        >
+                          <Ban size={14} />
+                          {blockRangeLoading ? 'Salvando...' : 'Bloquear período'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {blockRangeError && <p className="mt-3 text-xs font-medium text-red-500">{blockRangeError}</p>}
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-8">
                 <h3 className="font-sans text-h3">{format(selectedDate, "MMMM yyyy", { locale: ptBR })}</h3>
                 <div className="flex gap-2">
@@ -813,27 +987,41 @@ export function BookingFlow({
                   return days.map((date) => {
                     const isSelected = isSameDay(date, selectedDate);
                     const isPast = isBefore(date, startOfToday());
-                    const isBlocked = isBlockedDay(date);
+                    const dateString = format(date, 'yyyy-MM-dd');
+                    const isAutomaticallyBlocked = isBlockedDay(date);
+                    const isRoomBlocked = selectedRoomBlockedDates.has(dateString);
+                    const isInBlockRange = !!blockRangeStart && isWithinInterval(date, {
+                      start: blockRangeStart,
+                      end: blockRangeEnd || blockRangeStart
+                    });
                     const currentMonth = isSameMonth(date, selectedDate);
-                    const isDisabled = isPast || isBlocked || !currentMonth;
+                    const isDisabled = isPast || !currentMonth || (!blockRangeMode && (isAutomaticallyBlocked || isRoomBlocked));
                     
                     return (
                       <button
                         key={date.toISOString()}
                         disabled={isDisabled}
                         onClick={() => {
+                          if (blockRangeMode) {
+                            handleBlockRangeDateClick(date);
+                            return;
+                          }
                           setSelectedDate(date);
                           setStep(3);
                         }}
                         className={cn(
                           "aspect-square flex flex-col items-center justify-center rounded-lg transition-all",
-                          isSelected ? "bg-primary text-white shadow-md" : "hover:bg-stone-50",
-                          isDisabled ? "opacity-20 cursor-not-allowed" : "",
+                          isInBlockRange ? "bg-primary/20 text-stone-900 ring-2 ring-primary" :
+                            isRoomBlocked ? "bg-red-50 text-red-600" :
+                            isSelected ? "bg-primary text-white shadow-md" : "hover:bg-stone-50",
+                          isDisabled ? "cursor-not-allowed" : "",
+                          (isPast || isAutomaticallyBlocked) && !isRoomBlocked && !isInBlockRange ? "opacity-20" : "",
                           !currentMonth ? "invisible" : ""
                         )}
                       >
                         <span className="text-sm font-bold">{format(date, 'd')}</span>
-                        {isBlocked && !isPast && currentMonth && <span className="text-overline uppercase font-bold text-stone-400">Bloqueado</span>}
+                        {isRoomBlocked && !isPast && currentMonth && <span className="text-overline uppercase font-bold">Bloqueada</span>}
+                        {!isRoomBlocked && isAutomaticallyBlocked && !isPast && currentMonth && <span className="text-overline uppercase font-bold text-stone-400">Bloqueado</span>}
                       </button>
                     );
                   });
